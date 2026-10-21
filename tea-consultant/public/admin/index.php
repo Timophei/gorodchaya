@@ -262,7 +262,47 @@ if ($tab === 'dialogs' || $userKey !== null) {
         ];
     }
 
-    $rawLines = tailLines($logPath, MAX_LOG_LINES);
+    /**
+     * Журнал ротируется каждую ночь (logrotate: requests.log -> .1 -> .2.gz ...),
+     * поэтому читаем текущий файл и архивы, от новых к старым, пока не наберём
+     * MAX_LOG_LINES строк. Иначе после полуночи вчерашние диалоги «пропадают».
+     *
+     * @return array<int, string>
+     */
+    function readLogWithArchives(string $path, int $maxLines): array
+    {
+        $files = [$path, $path . '.1'];
+        $archives = glob($path . '.*.gz') ?: [];
+        usort($archives, static function (string $a, string $b): int {
+            preg_match('/\.(\d+)\.gz$/', $a, $ma);
+            preg_match('/\.(\d+)\.gz$/', $b, $mb);
+            return ((int) ($ma[1] ?? 0)) <=> ((int) ($mb[1] ?? 0));
+        });
+        $files = array_merge($files, $archives);
+
+        $collected = [];
+        foreach ($files as $file) {
+            if (!is_file($file) || !is_readable($file)) {
+                continue;
+            }
+            if (str_ends_with($file, '.gz')) {
+                $lines = @gzfile($file) ?: [];
+            } else {
+                $lines = tailLines($file, $maxLines);
+            }
+            $lines = array_values(array_filter(array_map('rtrim', $lines), static fn ($l) => trim($l) !== ''));
+            $collected = array_merge($lines, $collected); // более старый файл — в начало
+            if (count($collected) >= $maxLines) {
+                break;
+            }
+        }
+        if (count($collected) > $maxLines) {
+            $collected = array_slice($collected, -$maxLines);
+        }
+        return $collected;
+    }
+
+    $rawLines = readLogWithArchives($logPath, MAX_LOG_LINES);
     $totalLinesRead = count($rawLines);
 
     foreach ($rawLines as $line) {
