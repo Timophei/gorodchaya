@@ -1,0 +1,20 @@
+# Секреты — никогда не коммитить
+.env
+*.env
+!.env.example
+config.php
+*.pem
+*.key
+chaygorod-credentials.txt
+
+# Данные с сервера
+backend/data/
+tea-consultant/storage/**/*.json
+tea-consultant/logs/*.log
+btxcap/private-state/
+
+# Зависимости и мусор
+node_modules/
+.DS_Store
+._*
+*.bak-*

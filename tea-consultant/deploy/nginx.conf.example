@@ -1,0 +1,89 @@
+# Пример конфига Nginx для «Чайного города».
+# Путь на сервере обычно: /etc/nginx/sites-available/tea-consultant.conf
+# затем: ln -s /etc/nginx/sites-available/tea-consultant.conf /etc/nginx/sites-enabled/
+#
+# ВАЖНО: подставьте:
+#   - ваш домен вместо tea.example.com
+#   - реальный путь к проекту вместо /var/www/tea-consultant
+#   - сокет PHP-FPM: узнать точное имя командой `ls /run/php/` (на Ubuntu 24.04 обычно
+#     ставится PHP 8.3 из коробки, то есть /run/php/php8.3-fpm.sock — но ниже подставлено
+#     это значение по умолчанию, ПРОВЕРЬТЕ у себя перед использованием)
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name tea.example.com;
+
+    # ВРЕМЕННО, до выпуска сертификата. После certbot этот блок
+    # certbot сам допишет редирект на https — трогать не нужно.
+
+    root /var/www/tea-consultant/public;
+    index index.html;
+
+    # Логи nginx (не путать с logs/requests.log приложения)
+    access_log /var/log/nginx/tea-consultant.access.log;
+    error_log  /var/log/nginx/tea-consultant.error.log;
+
+    # DocumentRoot = public/ — всё остальное (src, data, prompts, storage, logs)
+    # физически лежит выше и nginx их вообще не видит, т.к. root указывает только на public/.
+    # Доп. слой защиты на случай неправильного root — на всякий случай запрещаем явно:
+    location ~ ^/(src|data|prompts|storage|logs|tests|deploy|preview)/ {
+        deny all;
+        return 404;
+    }
+
+    # Запрещаем отдавать .env, .git, .htaccess и подобное, если вдруг окажутся в public/
+    location ~ /\.(?!well-known) {
+        deny all;
+        return 404;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location = /api/chat.php {
+        try_files $uri =404;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;  # Ubuntu 24.04 по умолчанию — проверьте `ls /run/php/` у себя
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+
+        # Разумный таймаут — чуть больше, чем OPENAI_TIMEOUT_SECONDS в .env
+        fastcgi_read_timeout 40s;
+    }
+
+    # Смотрелка диалогов (/admin/) — служебная страница с реальной перепиской клиентов,
+    # поэтому закрыта паролем на уровне nginx (Basic Auth), а не только "неочевидным URL".
+    # Файл пароля создаётся один раз командой:
+    #   sudo apt install -y apache2-utils
+    #   sudo htpasswd -c /etc/nginx/.htpasswd-tea-admin admin
+    # (при повторном добавлении пользователей — без -c, он затирает файл)
+    location ^~ /admin/ {
+        auth_basic "Чайный город — админка";
+        auth_basic_user_file /etc/nginx/.htpasswd-tea-admin;
+
+        try_files $uri /admin/index.php$is_args$args;
+    }
+
+    location = /admin/index.php {
+        auth_basic "Чайный город — админка";
+        auth_basic_user_file /etc/nginx/.htpasswd-tea-admin;
+
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;  # тот же сокет, что и выше
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    # На всякий случай — блокируем прямой доступ к любым другим .php,
+    # если вдруг кто-то попытается их закинуть в public/
+    # (location = /admin/index.php и /api/chat.php выше — точные совпадения,
+    # у них наивысший приоритет, так что этот запрет их не затронет)
+    location ~ \.php$ {
+        deny all;
+        return 404;
+    }
+
+    client_max_body_size 1m;
+}

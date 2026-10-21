@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Каталог чая — Чайный город</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css?v=17">
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=112293654', 'ym');
+
+    ym(112293654, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/112293654" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+</head>
+<body data-nav="catalog">
+<div id="site-header"></div>
+
+<div class="crumbs wrap"><a href="index.html">Главная</a> &nbsp;/&nbsp; <span class="current">Каталог</span></div>
+
+<main class="wrap container-pad" style="padding-top:8px;padding-bottom:56px;">
+  <div style="display:flex;align-items:baseline;gap:14px;margin:16px 0 24px;">
+    <div class="serif section-title">Каталог</div>
+    <div class="muted" style="font-size:14px;" id="total-count">— товаров</div>
+  </div>
+
+  <div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap;">
+    <aside style="width:272px;flex-shrink:0;border:1px solid #E3D9C2;border-radius:18px;background:#fff;padding:24px;">
+      <div class="filter-title">Тип чая</div>
+      <div id="type-filters"></div>
+
+      <div style="height:1px;background:#E3D9C2;margin:18px 0;"></div>
+      <div class="filter-title">Регион</div>
+      <div id="region-filters"></div>
+
+      <div style="display:flex;gap:10px;margin-top:22px;">
+        <div class="btn-outline" id="reset-filters" style="flex:1;text-align:center;">Сбросить</div>
+      </div>
+    </aside>
+
+    <div style="flex:1;min-width:280px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div class="muted" style="font-size:13.5px;" id="shown-count">Показано — из —</div>
+      </div>
+      <div class="grid-4" id="catalog-grid">
+        <div class="state-msg loading">Загрузка каталога…</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<script src="assets/common.js?v=17"></script>
+<script>
+(function () {
+  var CG = window.ChayGorod;
+  var state = { teas: [], categoryCounts: {}, regionCounts: {}, type: {}, region: {} };
+
+  function cardHtml(t) {
+    var price = CG.formatPrice(t.minPrice);
+    var priceHtml = price != null ? 'от <b>' + price + ' ₽</b>' : '<span class="card-noprice">цена уточняется</span>';
+    return (
+      '<a class="card" href="tea-' + encodeURIComponent(t.id) + '.html" style="text-decoration:none;color:inherit;">' +
+      '<div style="position:relative;">' +
+      '<div class="card-img" style="' + CG.photoStyleFor(t) + '"></div>' +
+      '<button class="fav-btn" onclick="event.preventDefault()">' +
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="1.8"><path d="M12 20s-7-4.35-9.5-8.5C.7 8 2.7 4.5 6.2 4.5c2 0 3.4 1 4.8 2.7 1.4-1.7 2.8-2.7 4.8-2.7 3.5 0 5.5 3.5 3.7 7C19 15.65 12 20 12 20z"></path></svg>' +
+      '</button></div>' +
+      '<div class="card-name">' + CG.escapeHtml(t.name) + '</div>' +
+      '<div class="card-cat">' + CG.escapeHtml(CG.categoryLabel(t)) + '</div>' +
+      '<div class="card-bottom">' +
+      '<span class="card-price">' + priceHtml + '</span>' +
+      '<button class="cart-btn" data-add="' + CG.escapeHtml(t.id) + '" onclick="event.preventDefault()">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 8h12l-1 12H7L6 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>' +
+      '</button></div></a>'
+    );
+  }
+
+  function filterRowHtml(f) {
+    var check = f.on
+      ? '<svg width="12" height="12" viewBox="0 0 18 18"><path d="M4.5 9.2 7.3 12 13.5 5.5" stroke="#F7F1E4" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>'
+      : '';
+    return (
+      '<div class="chk-row" data-filter-key="' + f.key + '">' +
+      '<div style="display:flex;align-items:center;gap:10px;">' +
+      '<div class="chk-box" style="background:' + (f.on ? '#22392B' : 'transparent') + ';border-color:' + (f.on ? '#22392B' : '#C9BE9F') + ';">' + check + '</div>' +
+      CG.escapeHtml(f.label) + '</div><span class="muted">' + f.count + '</span></div>'
+    );
+  }
+
+  function render() {
+    var typeRows = Object.keys(CG.CATEGORY_LABELS).map(function (id) {
+      return { key: id, label: CG.CATEGORY_LABELS[id], count: state.categoryCounts[id] || 0, on: !!state.type[id] };
+    });
+    var regionRows = Object.keys(CG.REGION_LABELS).map(function (id) {
+      return { key: id, label: CG.REGION_LABELS[id], count: state.regionCounts[id] || 0, on: !!state.region[id] };
+    });
+    document.getElementById('type-filters').innerHTML = typeRows.map(filterRowHtml).join('');
+    document.getElementById('region-filters').innerHTML = regionRows.map(filterRowHtml).join('');
+
+    document.querySelectorAll('#type-filters [data-filter-key]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var k = row.getAttribute('data-filter-key');
+        state.type[k] = !state.type[k];
+        render();
+      });
+    });
+    document.querySelectorAll('#region-filters [data-filter-key]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var k = row.getAttribute('data-filter-key');
+        state.region[k] = !state.region[k];
+        render();
+      });
+    });
+
+    var activeTypes = Object.keys(state.type).filter(function (k) { return state.type[k]; });
+    var activeRegions = Object.keys(state.region).filter(function (k) { return state.region[k]; });
+    var filtered = state.teas;
+    if (activeTypes.length) filtered = filtered.filter(function (t) { return activeTypes.indexOf(t.category) !== -1; });
+    if (activeRegions.length) filtered = filtered.filter(function (t) { return activeRegions.indexOf(t.region) !== -1; });
+
+    document.getElementById('total-count').textContent = state.teas.length + ' товаров';
+    document.getElementById('shown-count').textContent = 'Показано ' + filtered.length + ' из ' + state.teas.length;
+
+    var grid = document.getElementById('catalog-grid');
+    if (!filtered.length) {
+      grid.innerHTML = '<div class="state-msg" style="grid-column:1/-1;">Ничего не найдено по этим фильтрам.</div>';
+    } else {
+      grid.innerHTML = filtered.map(cardHtml).join('');
+      var byId = {}; filtered.forEach(function (t) { byId[t.id] = t; });
+      grid.querySelectorAll('[data-add]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault(); e.stopPropagation();
+          var t = byId[btn.getAttribute('data-add')];
+          if (t) CG.cart.add(t, null, 1);
+        });
+      });
+    }
+  }
+
+  document.getElementById('reset-filters').addEventListener('click', function () {
+    state.type = {}; state.region = {}; render();
+  });
+
+  Promise.all([
+    CG.apiGet('/teas'),
+    CG.apiGet('/categories'),
+    CG.apiGet('/regions')
+  ]).then(function (results) {
+    var teas = results[0], categories = results[1], regions = results[2];
+    state.teas = teas;
+    categories.forEach(function (c) { state.categoryCounts[c.id] = c.count; });
+    regions.forEach(function (r) { state.regionCounts[r.id] = r.count; });
+    render();
+  }).catch(function () {
+    document.getElementById('catalog-grid').innerHTML = '<div class="state-msg error" style="grid-column:1/-1;">Не удалось загрузить каталог. Попробуйте обновить страницу.</div>';
+    document.getElementById('total-count').textContent = '';
+    document.getElementById('shown-count').textContent = '';
+  });
+})();
+</script>
+</body>
+</html>

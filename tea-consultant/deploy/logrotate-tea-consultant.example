@@ -1,0 +1,16 @@
+# Ротация лога приложения logs/requests.log (JSON Lines, растёт без ограничений).
+# Скопировать на сервере в /etc/logrotate.d/tea-consultant (без расширения .example)
+# и подставить реальный путь к проекту вместо /var/www/tea-consultant.
+#
+# Владельца (www-data) — подставьте своего, если веб-сервер работает от другого пользователя
+# (узнать: ps aux | grep -E 'nginx|apache|php-fpm' | head).
+
+/var/www/tea-consultant/logs/requests.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 www-data www-data
+}

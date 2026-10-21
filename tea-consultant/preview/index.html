@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Чайный город — консультант (демо-режим)</title>
+<style>
+:root {
+  --tea-green: #3f6b4f;
+  --tea-green-dark: #2c4d38;
+  --tea-cream: #f6f1e7;
+  --tea-paper: #ffffff;
+  --tea-text: #2a2a26;
+  --tea-muted: #767066;
+  --tea-border: #e4dcc9;
+  --tea-user-bubble: #3f6b4f;
+  --tea-bot-bubble: #f0ead9;
+  --tea-error: #b3432b;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--tea-cream);
+  color: var(--tea-text);
+}
+.demo-banner {
+  background: #fff3cd;
+  color: #6b5300;
+  font-size: 12.5px;
+  text-align: center;
+  padding: 7px 12px;
+  border-bottom: 1px solid #e9d38b;
+}
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  background: var(--tea-paper);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.06);
+}
+.app__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--tea-border);
+  background: var(--tea-paper);
+}
+.app__title { display: flex; align-items: center; gap: 10px; }
+.app__title-icon { font-size: 26px; }
+.app__title-main { font-weight: 600; font-size: 16px; color: var(--tea-green-dark); }
+.app__title-sub { font-size: 12px; color: var(--tea-muted); }
+.btn {
+  border: none; border-radius: 8px; padding: 9px 14px; font-size: 14px;
+  cursor: pointer; transition: opacity 0.15s ease;
+}
+.btn:hover { opacity: 0.85; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn--ghost { background: transparent; border: 1px solid var(--tea-border); color: var(--tea-muted); }
+.btn--primary { background: var(--tea-green); color: #fff; font-weight: 600; }
+.chat-log { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.msg { max-width: 82%; padding: 10px 14px; border-radius: 14px; line-height: 1.45; font-size: 14.5px; white-space: pre-wrap; word-wrap: break-word; }
+.msg--user { align-self: flex-end; background: var(--tea-user-bubble); color: #fff; border-bottom-right-radius: 4px; }
+.msg--bot { align-self: flex-start; background: var(--tea-bot-bubble); color: var(--tea-text); border-bottom-left-radius: 4px; }
+.msg--system { align-self: center; background: transparent; color: var(--tea-muted); font-size: 12.5px; text-align: center; }
+.msg__products { margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,0.15); font-size: 13px; color: var(--tea-green-dark); }
+.msg__followup { margin-top: 8px; font-style: italic; color: var(--tea-green-dark); }
+.typing { display: flex; align-items: center; gap: 5px; padding: 0 18px 8px; color: var(--tea-muted); font-size: 12.5px; }
+.typing span:not(.typing__label) { width: 6px; height: 6px; border-radius: 50%; background: var(--tea-muted); display: inline-block; animation: blink 1.2s infinite ease-in-out; }
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+.chat-form { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--tea-border); background: var(--tea-paper); }
+.chat-form__input { flex: 1; resize: none; border: 1px solid var(--tea-border); border-radius: 10px; padding: 10px 12px; font-size: 14.5px; font-family: inherit; max-height: 120px; }
+.chat-form__input:focus { outline: none; border-color: var(--tea-green); }
+@media (max-width: 600px) {
+  .app { max-width: 100%; }
+  .app__title-sub { display: none; }
+  .msg { max-width: 90%; }
+}
+</style>
+</head>
+<body>
+  <div class="demo-banner">
+    Демо-режим: интерфейс настоящий, а ответы консультанта подобраны по ключевым словам прямо в браузере — OpenAI здесь не участвует.
+  </div>
+  <div class="app">
+    <header class="app__header">
+      <div class="app__title">
+        <span class="app__title-icon">🍵</span>
+        <div>
+          <div class="app__title-main">Чайный мастер</div>
+          <div class="app__title-sub">Чайный город — подбор чая (демо)</div>
+        </div>
+      </div>
+      <button id="newChatBtn" class="btn btn--ghost" type="button">Новый разговор</button>
+    </header>
+
+    <main id="chatLog" class="chat-log" aria-live="polite"></main>
+
+    <div id="typingIndicator" class="typing" hidden>
+      <span></span><span></span><span></span>
+      <span class="typing__label">Мастер печатает…</span>
+    </div>
+
+    <form id="chatForm" class="chat-form">
+      <textarea
+        id="messageInput"
+        class="chat-form__input"
+        placeholder="Расскажите, какой чай вы ищете…"
+        maxlength="1000"
+        rows="1"
+        required
+      ></textarea>
+      <button id="sendBtn" class="btn btn--primary" type="submit">Отправить</button>
+    </form>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  // Тот же каталог, что в data/teas.json проекта (карточки мастера «Чайного города»),
+  // сокращённый до полей, нужных для демо-подбора.
+  const CATALOG = [
+    { id: 101, name: "Да Хун Пао", brewing: "6–8 г на 200 мл, вода 95 °C, короткие проливы 8–12 сек",
+      haystack: "тёмный уишаньский улун прогретое дерево орехи карамель какао сухофрукты холодная погода знакомство с тёмными улунами плотный чай после еды" },
+    { id: 102, name: "Те Гуань Инь", brewing: "6–8 г на 200 мл, вода 85–90 °C",
+      haystack: "светлый улун сирень орхидея свежая зелень сливочная текстура сладкое цветочное послевкусие дневное чаепитие знакомство со светлыми улунами гости предпочитающие лёгкие цветочные вкусы" },
+    { id: 103, name: "Дянь Хун", brewing: "5–6 г на 200 мл, вода 90–95 °C",
+      haystack: "юньнаньский красный чай мёд хлебная корочка какао сухофрукты пряности утро и день термос переход от чёрного чая к китайскому" },
+    { id: 104, name: "Цзинь Цзюнь Мэй", brewing: "4–5 г на 200 мл, вода 85–90 °C",
+      haystack: "золотые брови красный чай мёд печёные фрукты цветы какао сладкая выпечка древесные оттенки неспешное чаепитие подарок знакомство с более тонкими красными чаями" },
+    { id: 105, name: "Моли Хуа Ча", brewing: "4–5 г на 200 мл, вода 80–85 °C",
+      haystack: "жасминовый чай свежий жасмин цветочный мёд лёгкая зелень мягкая сладость гости которым нужен понятный ароматный чай тёплая погода лёгкая подача без сахара" },
+    { id: 106, name: "Бай Му Дань", brewing: "5–6 г на 200 мл, вода 85–90 °C",
+      haystack: "белый пион белый чай полевые цветы сено мёд груша абрикос лёгкие травяные оттенки неспешное дневное чаепитие лёгкий чай без ароматизации знакомство с белыми чаями" },
+    { id: 107, name: "Молодой Шэн Пуэр", brewing: "5 г на 200 мл, вода 90–95 °C",
+      haystack: "сырой пуэр свежая зелень цветы косточковые фрукты мёд минеральность терпкость знакомство с пуэрами внимательная дегустация дневное чаепитие" },
+    { id: 108, name: "Лун Цзын", brewing: "5 г на 200 мл, вода 70 °C",
+      haystack: "зелёный чай орхидея шоколад жареные семечки жаркая погода утоление жажды дневное чаепитие свежий вкус" },
+    { id: 109, name: "2026 Габа Си Цзы Чунь", brewing: "5–10 г на 200 мл, вода 90 °C",
+      haystack: "габа-чай печёные фрукты сдобные сладости молочная карамель слива ржаной хлеб ягодная карамель вечерние чаепития после тренировок повседневный чай расслабляющее ощущение" },
+    { id: 110, name: "Шу Пуэр v93", brewing: "5–10 г на 200 мл, вода 95 °C",
+      haystack: "сильно ферментированный чай осенний лес старая древесина сухофрукты чернослив шоколад камфора сливки любителям крепких чёрных чаёв кофе и виски плотный чай в холодное время года новичкам неприхотливый" },
+  ];
+
+  // Простейшие правила "распознавания" запроса — только для демонстрации интерфейса,
+  // ищут подстроки в haystack каждого чая (без обращения к настоящей модели).
+  const RULES = [
+    { keywords: ["вечер", "расслаб", "спокой"], include: ["вечер"], reason: "мягко подходит на спокойный вечер" },
+    { keywords: ["термос", "днём", "днем", "без мандража", "кофе"], include: ["термос"], reason: "хорошо держит вкус в термосе и бодрит ровнее, без резкости кофе" },
+    { keywords: ["гост", "офис", "угост"], include: ["гост"], reason: "хорошо подойдёт, чтобы угостить гостей" },
+    { keywords: ["тёмный", "темный", "орехов", "плотн"], include: ["орех", "плотн", "тёмн"], reason: "плотный тёмный чай с ореховыми оттенками" },
+    { keywords: ["подар", "не знаю вкус"], include: ["подарок"], reason: "универсальный вариант для подарка" },
+    { keywords: ["цветоч", "более цветочн"], include: ["цвет"], reason: "яркий цветочный аромат, как вы просили" },
+  ];
+
+  const BREW_QUESTION_HINTS = ["чайник", "заварник", "фарфор", "как заварить", "как заваривать"];
+
+  function scoreTea(tea, includeTerms) {
+    if (!includeTerms) return 0;
+    return includeTerms.filter((t) => tea.haystack.includes(t)).length;
+  }
+
+  function pickRule(text) {
+    const lower = text.toLowerCase();
+    return RULES.find((r) => r.keywords.some((k) => lower.includes(k))) || null;
+  }
+
+  function generateReply(userText, turnIndex) {
+    const lower = userText.toLowerCase();
+    const rule = pickRule(userText);
+
+    // Сценарий: уточнение по способу заваривания (продолжение диалога).
+    if (BREW_QUESTION_HINTS.some((h) => lower.includes(h))) {
+      return {
+        answer:
+          "В обычном чайнике всё то же самое, только ориентируйтесь на пропорцию \"чайная ложка на кружку\" и не держите чай в воде слишком долго, чтобы не было горечи. В фарфоровом заварнике чай раскрывается ещё лучше — можно заваривать несколько раз подряд, каждый следующий пролив чуть дольше предыдущего.",
+        product_ids: [],
+        follow_up_question: null,
+      };
+    }
+
+    if (!rule) {
+      // Недостаточно информации — задаём уточняющий вопрос, как требует ТЗ.
+      return {
+        answer:
+          "Расскажите, пожалуйста, чуть подробнее: когда планируете пить чай и какой вкус вам ближе — цветочный, ореховый, терпкий или мягкий сливочный? Так я смогу подобрать точнее.",
+        product_ids: [],
+        follow_up_question: "Вы больше любите крепкий насыщенный чай или мягкий и лёгкий?",
+      };
+    }
+
+    const scored = CATALOG
+      .map((tea) => ({ tea, score: scoreTea(tea, rule.include) }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    const picked = scored.slice(0, 2).map((x) => x.tea);
+    if (picked.length === 0) {
+      return {
+        answer: "Пока не нашёл точного совпадения в каталоге под ваш запрос — уточните, пожалуйста, вкус или ситуацию, и я подберу вариант.",
+        product_ids: [],
+        follow_up_question: "Какой вкус вам обычно нравится — цветочный, ореховый или, может быть, терпкий?",
+      };
+    }
+
+    const namesList = picked.map((t) => `«${t.name}»`).join(" и ");
+    const brewing = picked[0].brewing;
+
+    let answer = `Для вашего случая я бы предложил ${namesList}. ${rule.reason.charAt(0).toUpperCase() + rule.reason.slice(1)}.\n\nКак заварить «${picked[0].name}» проливами: ${brewing}. Для первого знакомства достаточно 25–50 г.`;
+
+    return {
+      answer,
+      product_ids: picked.map((t) => t.id),
+      follow_up_question: turnIndex === 0 ? "Такой вариант откликается, или предпочитаете другой вкус?" : null,
+    };
+  }
+
+  // ---------- UI ----------
+
+  const chatLog = document.getElementById("chatLog");
+  const chatForm = document.getElementById("chatForm");
+  const messageInput = document.getElementById("messageInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const newChatBtn = document.getElementById("newChatBtn");
+  const typingIndicator = document.getElementById("typingIndicator");
+
+  let turnIndex = 0; // имитирует "историю диалога" в рамках одной демо-сессии (в памяти вкладки)
+
+  function appendMessage({ role, text, followUp, productIds }) {
+    const el = document.createElement("div");
+    el.className = `msg msg--${role}`;
+
+    const textNode = document.createElement("div");
+    textNode.textContent = text;
+    el.appendChild(textNode);
+
+    if (followUp) {
+      const fu = document.createElement("div");
+      fu.className = "msg__followup";
+      fu.textContent = followUp;
+      el.appendChild(fu);
+    }
+
+    if (productIds && productIds.length > 0) {
+      const p = document.createElement("div");
+      p.className = "msg__products";
+      p.textContent = "Рекомендованные товары: ID " + productIds.join(", ");
+      el.appendChild(p);
+    }
+
+    chatLog.appendChild(el);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  function renderWelcome() {
+    appendMessage({
+      role: "system",
+      text: "Здравствуйте! Расскажите, какой чай вы ищете, и я подберу подходящий вариант из нашего каталога.",
+    });
+  }
+
+  function setLoading(isLoading) {
+    sendBtn.disabled = isLoading;
+    messageInput.disabled = isLoading;
+    typingIndicator.hidden = !isLoading;
+    if (isLoading) chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  function autoResizeInput() {
+    messageInput.style.height = "auto";
+    messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + "px";
+  }
+
+  chatForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const text = messageInput.value.trim();
+    if (!text) return;
+
+    appendMessage({ role: "user", text });
+    messageInput.value = "";
+    autoResizeInput();
+    setLoading(true);
+
+    // Имитируем сетевую задержку, как в реальном обращении к OpenAI.
+    const delay = 500 + Math.random() * 700;
+    setTimeout(() => {
+      const reply = generateReply(text, turnIndex);
+      turnIndex += 1;
+      appendMessage({
+        role: "bot",
+        text: reply.answer,
+        followUp: reply.follow_up_question,
+        productIds: reply.product_ids,
+      });
+      setLoading(false);
+      messageInput.focus();
+    }, delay);
+  });
+
+  messageInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      chatForm.requestSubmit();
+    }
+  });
+  messageInput.addEventListener("input", autoResizeInput);
+
+  newChatBtn.addEventListener("click", () => {
+    turnIndex = 0;
+    chatLog.innerHTML = "";
+    renderWelcome();
+    messageInput.value = "";
+    autoResizeInput();
+    messageInput.focus();
+  });
+
+  renderWelcome();
+})();
+</script>
+</body>
+</html>

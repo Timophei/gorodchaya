@@ -1,0 +1,41 @@
+# Пример VirtualHost для Apache (mod_php ИЛИ php-fpm через mod_proxy_fcgi — ниже вариант с mod_php,
+# как более простой для MVP на одной виртуалке).
+# Путь на сервере обычно: /etc/apache2/sites-available/tea-consultant.conf
+# затем: a2ensite tea-consultant.conf && systemctl reload apache2
+#
+# ВАЖНО: подставьте домен и путь к проекту.
+# Требуемые модули: a2enmod rewrite headers
+
+<VirtualHost *:80>
+    ServerName tea.example.com
+    DocumentRoot /var/www/tea-consultant/public
+
+    <Directory /var/www/tea-consultant/public>
+        Options -Indexes +FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    # DocumentRoot указывает только на public/ — папки src, data, prompts,
+    # storage, logs физически лежат ВЫШЕ этого пути и по HTTP недостижимы.
+    # .htaccess с "Require all denied" внутри каждой из них — доп. слой защиты
+    # на случай неправильного DocumentRoot, но полагаться нужно в первую очередь на этот блок.
+
+    # Смотрелка диалогов (/admin/) — служебная страница с реальной перепиской клиентов,
+    # поэтому закрыта паролем. Файл пароля создаётся один раз:
+    #   sudo apt install -y apache2-utils
+    #   sudo htpasswd -c /etc/apache2/.htpasswd-tea-admin admin
+    <Directory /var/www/tea-consultant/public/admin>
+        AuthType Basic
+        AuthName "Чайный город — админка"
+        AuthUserFile /etc/apache2/.htpasswd-tea-admin
+        Require valid-user
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/tea-consultant-error.log
+    CustomLog ${APACHE_LOG_DIR}/tea-consultant-access.log combined
+</VirtualHost>
+
+# После получения сертификата (см. РАЗВЁРТЫВАНИЕ_НА_СЕРВЕРЕ.md, шаг с certbot)
+# certbot сам создаст блок <VirtualHost *:443> с SSLEngine on и редиректом с 80 на 443 —
+# отдельно прописывать его вручную не нужно.

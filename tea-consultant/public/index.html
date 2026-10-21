@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Чайный город — мастер подбора чая</title>
+<meta name="description" content="Чайный город — уникальный чайный консультант и сообщество любителей чая. Опишите, какой чай вы ищете, и мастер подберёт то, что подойдёт именно вам.">
+
+<!-- Open Graph / превью при пересылке ссылки в соцсетях и мессенджерах -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Чайный город">
+<meta property="og:title" content="Чайный город — мастер подбора чая">
+<meta property="og:description" content="Уникальный чайный консультант и сообщество любителей чая.">
+<meta property="og:image" content="https://gorodchaya.ru/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://gorodchaya.ru/">
+<meta property="og:locale" content="ru_RU">
+
+<!-- Twitter/X card (этот же формат подхватывают и другие площадки) -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Чайный город — мастер подбора чая">
+<meta name="twitter:description" content="Уникальный чайный консультант и сообщество любителей чая.">
+<meta name="twitter:image" content="https://gorodchaya.ru/assets/og-image.png">
+
+<link rel="icon" type="image/png" href="assets/favicon-32.png">
+<link rel="stylesheet" href="css/style.css?v=2">
+
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=112293654', 'ym');
+    ym(112293654, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/112293654" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+</head>
+<body>
+  <div class="app">
+    <header class="app__header">
+      <div class="app__title">
+        <img class="app__logo" src="assets/logo-120.png" width="44" height="44" alt="Чайный город">
+        <div>
+          <div class="app__title-main">Чайный город</div>
+          <div class="app__title-sub">Мастер подбора чая</div>
+        </div>
+      </div>
+      <button id="newChatBtn" class="btn btn--ghost" type="button">Новый разговор</button>
+    </header>
+
+    <main id="chatLog" class="chat-log" aria-live="polite"></main>
+
+    <div id="typingIndicator" class="typing" hidden>
+      <span></span><span></span><span></span>
+      <span class="typing__label">Мастер печатает…</span>
+    </div>
+
+    <form id="chatForm" class="chat-form">
+      <textarea
+        id="messageInput"
+        class="chat-form__input"
+        placeholder="Расскажите, какой чай вы ищете…"
+        maxlength="1000"
+        rows="1"
+        required
+      ></textarea>
+      <button id="sendBtn" class="btn btn--primary" type="submit">Отправить</button>
+    </form>
+  </div>
+
+  <script src="js/chat.js?v=2"></script>
+</body>
+</html>

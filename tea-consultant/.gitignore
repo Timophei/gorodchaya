@@ -1,0 +1,7 @@
+.env
+storage/conversations/*.json
+storage/ratelimit/*.json
+logs/*.log
+!storage/conversations/.gitkeep
+!storage/ratelimit/.gitkeep
+!logs/.gitkeep

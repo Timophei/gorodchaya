@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Корзина — Чайный город</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css?v=17">
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=112293654', 'ym');
+
+    ym(112293654, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/112293654" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+</head>
+<body data-nav="cart">
+<div id="site-header"></div>
+
+<div class="crumbs wrap"><a href="index.html">Главная</a> &nbsp;/&nbsp; <span class="current">Корзина</span></div>
+
+<main class="wrap container-pad" style="padding-top:8px;padding-bottom:56px;">
+  <div style="display:flex;align-items:baseline;gap:14px;margin:16px 0 24px;">
+    <div class="serif section-title">Корзина</div>
+    <div class="muted" style="font-size:14px;" id="items-count-label"></div>
+  </div>
+
+  <div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap;">
+    <div style="flex:1;min-width:280px;display:flex;flex-direction:column;gap:16px;" id="items-column"></div>
+
+    <div style="width:100%;max-width:360px;flex-shrink:0;border:1px solid #E3D9C2;border-radius:18px;background:#fff;padding:24px;">
+      <div class="serif" style="font-size:19px;font-weight:700;margin-bottom:14px;">Сумма заказа</div>
+      <div class="row muted" id="row-subtotal"><span>Товары</span><span>0 ₽</span></div>
+      <div class="row muted"><span>Доставка</span><span id="delivery-label">Бесплатно</span></div>
+      <div class="row" style="color:#B5432E;display:none;" id="row-discount"><span>Скидка по промокоду</span><span id="discount-amount">0 ₽</span></div>
+
+      <div style="display:flex;gap:8px;margin:14px 0;">
+        <input id="promo-input" placeholder="Промокод" style="flex:1;border:1px solid #E3D9C2;border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;color:#20291F;outline:none;">
+        <div class="apply" id="apply-promo">Применить</div>
+      </div>
+      <div style="font-size:12px;color:#B5432E;margin:-8px 0 10px;display:none;" id="promo-error">Промокод не найден</div>
+
+      <div style="height:1px;background:#E3D9C2;margin:14px 0;"></div>
+      <div class="row" style="font-size:17px;font-weight:700;"><span>Итого</span><span id="total-amount">0 ₽</span></div>
+
+      <button class="checkout" id="checkout-btn" style="margin-top:16px;">Оформить заказ</button>
+      <div id="checkout-hint" style="font-size:11.5px;color:#9AA192;text-align:center;margin-top:10px;line-height:1.4;">Доставка 2–4 дня по России.<br>Бесплатно от 3 000 ₽.</div>
+
+      <div id="checkout-form" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #E3D9C2;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">Оформление заказа</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <input id="co-name" class="field" placeholder="Имя">
+          <input id="co-phone" class="field" type="tel" placeholder="Телефон для связи">
+          <textarea id="co-address" class="field" placeholder="Адрес доставки" rows="2"></textarea>
+          <textarea id="co-comment" class="field" placeholder="Комментарий (необязательно)" rows="2"></textarea>
+        </div>
+        <label class="consent-row">
+          <input type="checkbox" id="co-consent">
+          <span>Даю <a href="consent.html" target="_blank" rel="noopener">согласие на обработку персональных данных</a> для оформления и доставки заказа и ознакомлен с <a href="privacy.html" target="_blank" rel="noopener">политикой конфиденциальности</a>.</span>
+        </label>
+        <div id="checkout-error" style="font-size:12px;color:#B5432E;margin-top:8px;display:none;"></div>
+        <button class="checkout" id="checkout-submit" type="button" style="margin-top:12px;width:100%;">Подтвердить заказ</button>
+        <div style="text-align:center;margin-top:8px;"><a href="#" id="checkout-cancel" style="font-size:12.5px;color:#5B6357;">Отмена</a></div>
+      </div>
+
+      <div id="checkout-success" style="display:none;text-align:center;padding:12px 0 4px;">
+        <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Заказ №<span id="co-order-number"></span> принят!</div>
+        <div style="font-size:13.5px;color:#5B6357;line-height:1.5;">Мы свяжемся с вами по указанному телефону, чтобы подтвердить детали.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<script src="assets/common.js?v=17"></script>
+<script>
+(function () {
+  var CG = window.ChayGorod;
+  var promo = { code: '', applied: false, error: false };
+
+  function itemHtml(it) {
+    var lineTotal = CG.formatPrice(it.unitPrice * it.qty);
+    var weightLabel = it.weight ? it.weight + ' г' : '';
+    var href = 'tea-' + encodeURIComponent(it.teaId) + '.html';
+    return (
+      '<div class="item">' +
+      '<a href="' + href + '" style="display:block;width:88px;height:88px;border-radius:12px;background-size:cover;background-position:center;flex-shrink:0;' + CG.photoStyleFor(it) + '"></a>' +
+      '<div style="flex:1;min-width:0;">' +
+      '<a href="' + href + '" style="font-size:16px;font-weight:700;color:inherit;text-decoration:none;display:block;">' + CG.escapeHtml(it.name) + '</a>' +
+      '<div class="muted" style="font-size:12.5px;margin-top:2px;">' + CG.escapeHtml(it.category) + '</div>' +
+      (weightLabel ? '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;border:1px solid #E3D9C2;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;">' + weightLabel + '</div>' : '') +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:10px;border:1px solid #E3D9C2;border-radius:999px;padding:5px;flex-shrink:0;">' +
+      '<button class="qbtn" data-dec="' + it.lineId + '">−</button>' +
+      '<span style="font-size:14px;font-weight:700;width:16px;text-align:center;display:inline-block;">' + it.qty + '</span>' +
+      '<button class="qbtn" data-inc="' + it.lineId + '">+</button>' +
+      '</div>' +
+      '<div style="width:96px;text-align:right;font-size:16px;font-weight:700;flex-shrink:0;">' + (lineTotal != null ? lineTotal + ' ₽' : '—') + '</div>' +
+      '<button class="rm" data-remove="' + it.lineId + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA192" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>' +
+      '</div>'
+    );
+  }
+
+  function computeTotals(items, promoState) {
+    var subtotal = items.reduce(function (s, it) { return s + it.unitPrice * it.qty; }, 0);
+    var delivery = (subtotal >= 3000 || subtotal === 0) ? 0 : 300;
+    var discount = promoState.applied ? Math.round(subtotal * 0.1) : 0;
+    var total = Math.max(0, subtotal + delivery - discount);
+    return { subtotal: subtotal, delivery: delivery, discount: discount, total: total };
+  }
+
+  function render() {
+    var items = CG.cart.read();
+    var count = items.reduce(function (s, it) { return s + it.qty; }, 0);
+    var wordForm = count === 1 ? 'товар' : (count >= 2 && count <= 4 ? 'товара' : 'товаров');
+    document.getElementById('items-count-label').textContent = count + ' ' + wordForm;
+
+    var col = document.getElementById('items-column');
+    if (!items.length) {
+      col.innerHTML = '<div style="border:1px dashed #C9BE9F;border-radius:16px;background:#F1EBDB;padding:48px;text-align:center;">' +
+        '<div style="font-size:16px;font-weight:700;margin-bottom:6px;">Корзина пуста</div>' +
+        '<div style="font-size:13.5px;color:#5B6357;">Загляните в <a href="catalog.html">каталог</a> — там найдётся что заварить.</div></div>';
+    } else {
+      col.innerHTML = items.map(itemHtml).join('');
+      col.querySelectorAll('[data-inc]').forEach(function (b) { b.addEventListener('click', function () { CG.cart.changeQty(b.getAttribute('data-inc'), 1); render(); }); });
+      col.querySelectorAll('[data-dec]').forEach(function (b) { b.addEventListener('click', function () { CG.cart.changeQty(b.getAttribute('data-dec'), -1); render(); }); });
+      col.querySelectorAll('[data-remove]').forEach(function (b) { b.addEventListener('click', function () { CG.cart.remove(b.getAttribute('data-remove')); render(); }); });
+    }
+
+    var totals = computeTotals(items, promo);
+
+    document.getElementById('row-subtotal').innerHTML = '<span>Товары (' + count + ')</span><span>' + CG.formatPrice(totals.subtotal) + ' ₽</span>';
+    document.getElementById('delivery-label').textContent = totals.delivery === 0 ? 'Бесплатно' : totals.delivery + ' ₽';
+    document.getElementById('row-discount').style.display = promo.applied ? 'flex' : 'none';
+    document.getElementById('discount-amount').textContent = '−' + CG.formatPrice(totals.discount) + ' ₽';
+    document.getElementById('promo-error').style.display = promo.error ? 'block' : 'none';
+    document.getElementById('total-amount').textContent = CG.formatPrice(totals.total) + ' ₽';
+  }
+
+  document.getElementById('promo-input').addEventListener('input', function (e) {
+    promo.code = e.target.value; promo.error = false;
+  });
+  document.getElementById('apply-promo').addEventListener('click', function () {
+    var code = (promo.code || '').trim().toUpperCase();
+    if (code === 'CHAY10') { promo.applied = true; promo.error = false; }
+    else { promo.applied = false; promo.error = true; }
+    render();
+  });
+  document.getElementById('checkout-btn').addEventListener('click', function () {
+    if (!CG.cart.read().length) return;
+    document.getElementById('checkout-btn').style.display = 'none';
+    document.getElementById('checkout-hint').style.display = 'none';
+    document.getElementById('checkout-form').style.display = 'block';
+    CG.authMe().then(function (user) {
+      if (!user) return;
+      var nameEl = document.getElementById('co-name');
+      if (!nameEl.value) nameEl.value = (user.firstName + ' ' + (user.lastName || '')).trim();
+    });
+  });
+
+  document.getElementById('checkout-cancel').addEventListener('click', function (e) {
+    e.preventDefault();
+    document.getElementById('checkout-form').style.display = 'none';
+    document.getElementById('checkout-btn').style.display = '';
+    document.getElementById('checkout-hint').style.display = '';
+  });
+
+  document.getElementById('checkout-submit').addEventListener('click', function () {
+    var items = CG.cart.read();
+    var errEl = document.getElementById('checkout-error');
+    if (!items.length) return;
+
+    var name = document.getElementById('co-name').value.trim();
+    var phone = document.getElementById('co-phone').value.trim();
+    var address = document.getElementById('co-address').value.trim();
+    var comment = document.getElementById('co-comment').value.trim();
+
+    if (!name || !phone || !address) {
+      errEl.textContent = 'Заполните имя, телефон и адрес доставки.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (!document.getElementById('co-consent').checked) {
+      errEl.textContent = 'Чтобы оформить заказ, отметьте согласие на обработку персональных данных.';
+      errEl.style.display = 'block';
+      return;
+    }
+    errEl.style.display = 'none';
+
+    var totals = computeTotals(items, promo);
+    var btn = document.getElementById('checkout-submit');
+    btn.disabled = true;
+    btn.textContent = 'Отправляем…';
+
+    CG.apiPost('/orders', {
+      items: items.map(function (it) {
+        return {
+          teaId: it.teaId,
+          name: it.name,
+          weightGrams: it.weight ? parseInt(it.weight, 10) : null,
+          qty: it.qty,
+          unitPrice: it.unitPrice
+        };
+      }),
+      subtotal: totals.subtotal,
+      deliveryPrice: totals.delivery,
+      discount: totals.discount,
+      promoCode: promo.applied ? promo.code : null,
+      total: totals.total,
+      customer: { name: name, phone: phone, address: address, comment: comment || undefined }
+    }).then(function (data) {
+      CG.cart.write([]);
+      document.getElementById('checkout-form').style.display = 'none';
+      document.getElementById('co-order-number').textContent = data.order.number;
+      document.getElementById('checkout-success').style.display = 'block';
+      render();
+    }).catch(function () {
+      errEl.textContent = 'Не удалось оформить заказ. Попробуйте ещё раз или напишите мастеру в чате.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Подтвердить заказ';
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
