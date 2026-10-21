@@ -93,13 +93,20 @@ function productsPayloadFromPost(array $p): array
     $prices = [];
     $weights = $p['price_weight'] ?? [];
     $amounts = $p['price_amount'] ?? [];
+    $stocks = $p['price_stock'] ?? [];
     foreach ((array) $weights as $i => $w) {
         $w = trim((string) $w);
         $a = trim((string) ($amounts[$i] ?? ''));
         if ($w === '' && $a === '') {
             continue;
         }
-        $prices[] = ['weightGrams' => (int) preg_replace('/\D/', '', $w), 'price' => (int) preg_replace('/\D/', '', $a)];
+        $st = trim((string) ($stocks[$i] ?? ''));
+        $prices[] = [
+            'weightGrams' => (int) preg_replace('/\D/', '', $w),
+            'price' => (int) preg_replace('/\D/', '', $a),
+            // Пусто — остаток не ведётся; минус допустим (продано «под заказ»).
+            'stock' => preg_match('/^-?\d+$/', $st) ? (int) $st : null,
+        ];
     }
     usort($prices, static fn ($x, $y) => $x['weightGrams'] <=> $y['weightGrams']);
 
@@ -329,10 +336,18 @@ function productsRender(array $state): void
           <span class="prod-meta">
             /tea/<?= esc($t['slug'] ?? '—') ?>
             · <?= esc(PRODUCT_CATEGORIES[$t['category'] ?? ''] ?? ($t['category'] ?? '')) ?>
-            · <?= $prices
-                ? esc(implode(', ', array_map(static fn ($p) => ($p['weightGrams'] ?? '?') . ' г — ' . number_format((int) ($p['price'] ?? 0), 0, '', ' ') . ' ₽', $prices)))
-                : '<span class="warn">без цены</span>' ?>
+            <?= $prices ? '' : ' · <span class="warn">без цены</span>' ?>
           </span>
+        </span>
+        <span class="prod-stock">
+          <?php foreach ($prices as $p): ?>
+            <?php $st = $p['stock'] ?? null; $cls = $st === null ? 'none' : ($st > 0 ? 'in' : 'out'); ?>
+            <span class="stock-line">
+              <span class="w"><?= esc((string) ($p['weightGrams'] ?? '?')) ?> г</span>
+              <span class="pr"><?= number_format((int) ($p['price'] ?? 0), 0, '', ' ') ?> ₽</span>
+              <span class="st <?= $cls ?>" title="<?= $st === null ? 'Остаток не ведётся — на сайте «Под заказ»' : ($st > 0 ? 'В наличии' : 'Под заказ') ?>"><?= $st === null ? '—' : esc((string) $st) . ' шт' ?></span>
+            </span>
+          <?php endforeach; ?>
         </span>
         <span class="prod-short">/t/<?= esc($t['externalId'] ?? '') ?></span>
       </a>
@@ -349,8 +364,8 @@ function productsRenderForm(array $state): void
     $t = json_decode((string) json_encode($t), true) ?: []; // brewing (object) -> array
     $saved = $state['tea'] ?? [];
     $id = (string) ($saved['id'] ?? ($t['id'] ?? ''));
-    $prices = is_array($t['prices'] ?? null) && $t['prices'] ? $t['prices'] : [['weightGrams' => '', 'price' => '']];
-    $prices[] = ['weightGrams' => '', 'price' => ''];
+    $prices = is_array($t['prices'] ?? null) && $t['prices'] ? $t['prices'] : [['weightGrams' => '', 'price' => '', 'stock' => null]];
+    $prices[] = ['weightGrams' => '', 'price' => '', 'stock' => null];
     $brewing = is_array($t['brewing'] ?? null) ? $t['brewing'] : [];
     $join = static fn ($v) => is_array($v) ? implode("\n", $v) : (string) ($v ?? '');
     $img = $saved ? productsImageSrc($saved) : null;
@@ -412,11 +427,13 @@ function productsRenderForm(array $state): void
             <div class="price-row">
               <input type="text" name="price_weight[]" inputmode="numeric" placeholder="граммы" value="<?= esc((string) ($p['weightGrams'] ?? '')) ?>"> г —
               <input type="text" name="price_amount[]" inputmode="numeric" placeholder="цена" value="<?= esc((string) ($p['price'] ?? '')) ?>"> ₽
+              <span class="price-sep">остаток</span>
+              <input type="text" name="price_stock[]" inputmode="numeric" placeholder="—" value="<?= esc(isset($p['stock']) && $p['stock'] !== null ? (string) $p['stock'] : '') ?>" class="stock-input"> шт
             </div>
           <?php endforeach; ?>
         </div>
         <button class="btn btn-ghost" type="button" data-add-price>+ фасовка</button>
-        <div class="hint">Пустые строки не сохраняются. Каждая фасовка — отдельный товар в Битриксе с «ID на сайте» вида номер-граммы.</div>
+        <div class="hint">Пустые строки не сохраняются. Остаток — в пачках этой фасовки: больше нуля — на сайте «В наличии», ноль, минус или пусто — «Под заказ»; купить можно всегда. Списывается сам, когда заказ переводят в «Отправлен». Каждая фасовка — отдельный товар в Битриксе с «ID на сайте» вида номер-граммы.</div>
       </section>
 
       <section class="card-block">
@@ -533,6 +550,16 @@ function productsCss(): string
   .prod-name { font-weight: 600; font-size: 15px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .prod-meta { font-size: 12.5px; color: var(--tea-muted); }
   .prod-meta .warn { color: var(--tea-accent); }
+  .prod-stock { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; flex-shrink: 0; }
+  .stock-line { display: flex; gap: 10px; font-size: 12.5px; align-items: baseline; }
+  .stock-line .w { color: var(--tea-muted); min-width: 40px; text-align: right; }
+  .stock-line .pr { min-width: 64px; text-align: right; }
+  .stock-line .st { min-width: 58px; text-align: right; font-weight: 700; padding: 1px 8px; border-radius: 999px; }
+  .stock-line .st.in { background: #dcefdd; color: var(--tea-green-dark); }
+  .stock-line .st.out { background: var(--tea-error-bg); color: var(--tea-accent); }
+  .stock-line .st.none { color: var(--tea-muted); font-weight: 400; }
+  .price-sep { color: var(--tea-muted); margin-left: 10px; }
+  .price-row input.stock-input { max-width: 80px; }
   .prod-short { font-size: 12.5px; color: var(--tea-muted); font-family: ui-monospace, Menlo, monospace; }
   .prod-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
   .prod-head h2 { margin: 0; font-size: 22px; }

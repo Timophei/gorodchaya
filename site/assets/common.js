@@ -419,6 +419,11 @@
     return tea.minPrice;
   }
 
+  function stockForWeight(tea, w) {
+    var p = Array.isArray(tea.prices) ? tea.prices.find(function (x) { return x.weightGrams === w; }) : null;
+    return p && typeof p.stock === 'number' ? p.stock : 0;
+  }
+
   // Реальные чаи мастера почти все продаются в ОДНОЙ конкретной фасовке
   // (25 г, 100 г, 200 г — какая есть), а не тремя универсальными весами.
   // Раньше пилюли веса всегда показывали фиксированный [50,100,250], и
@@ -449,6 +454,9 @@
     var priceHtml = price != null
       ? '<span style="font-size:30px;font-weight:700;">' + formatPrice(price) + ' ₽</span><span style="font-size:14px;color:#9AA192;"> / ' + weight + ' г</span>'
       : '<span style="font-size:20px;font-weight:700;color:#9AA192;">цена уточняется</span>';
+    // Наличие выбранной фасовки. Купить можно в любом случае.
+    var inStock = stockForWeight(tea, weight) > 0;
+    priceHtml += '<div class="stock-badge ' + (inStock ? 'in' : 'order') + '">' + (inStock ? 'В наличии' : 'Под заказ') + '</div>';
 
     var weightHtml = weightTiers.map(function (w) {
       return '<div class="pill' + (w === weight ? ' on' : '') + '" data-weight="' + w + '">' + w + ' г</div>';

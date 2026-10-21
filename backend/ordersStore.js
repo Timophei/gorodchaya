@@ -68,4 +68,13 @@ function updateStatus(id, status) {
   return existing;
 }
 
-module.exports = { create, getAll, getById, getByUserId, updateStatus, ORDERS_PATH };
+// Произвольные служебные поля заказа (списание остатков и т. п.).
+function patch(id, fields) {
+  const existing = state.orders[id];
+  if (!existing) return null;
+  Object.assign(existing, fields, { updatedAt: new Date().toISOString() });
+  persist();
+  return existing;
+}
+
+module.exports = { create, getAll, getById, getByUserId, updateStatus, patch, ORDERS_PATH };

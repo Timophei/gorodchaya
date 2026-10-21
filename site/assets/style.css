@@ -292,3 +292,8 @@ textarea.field{resize:vertical;min-height:44px;}
 .legal-doc li{margin-bottom:6px;}
 @media (max-width:900px){.legal-line{padding-left:24px;padding-right:24px;}}
 @media (max-width:560px){.cookie-notice{flex-direction:column;align-items:stretch;}}
+
+/* наличие фасовки на странице чая */
+.stock-badge{display:inline-block;margin-left:12px;vertical-align:middle;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:999px;}
+.stock-badge.in{background:#E2EEDC;color:#2E5A33;}
+.stock-badge.order{background:#F4E9D3;color:#8A6A12;}

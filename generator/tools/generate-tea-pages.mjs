@@ -54,7 +54,7 @@ const OUT_DIR = process.env.OUT_DIR || path.join(__dirname, '..', 'dist');
 // поднимайте это число КАЖДЫЙ раз, когда меняете common.js/style.css, и тогда же
 // поправьте ?v= в остальных .html (иначе браузеры продолжат отдавать старые
 // файлы из кэша — именно это и было причиной "меню не обновилось").
-const ASSET_VERSION = process.env.ASSET_VERSION || '18';
+const ASSET_VERSION = process.env.ASSET_VERSION || '19';
 
 const FONT_LINK =
   '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
@@ -120,7 +120,7 @@ function jsonLdFor(tea) {
       '@type': 'Offer',
       priceCurrency: 'RUB',
       price: String(tea.minPrice),
-      availability: 'https://schema.org/InStock',
+      availability: (tea.prices || []).some((p) => p.stock > 0) ? 'https://schema.org/InStock' : 'https://schema.org/BackOrder',
       url: SITE_ORIGIN + '/' + CG.defaultTeaHref(tea)
     };
   }

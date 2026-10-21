@@ -150,6 +150,9 @@ app.get('/api/regions', (_req, res) => {
 const PriceSchema = z.object({
   weightGrams: z.coerce.number().int().positive().max(100000),
   price: z.coerce.number().int().nonnegative().max(10000000),
+  // Остаток этой фасовки в штуках (пачках). null — не ведётся. Может уйти
+  // в минус: продаём и то, чего нет («под заказ»).
+  stock: z.union([z.null(), z.coerce.number().int().min(-1000000).max(1000000)]).optional(),
 });
 
 const TeaSchema = z.object({
@@ -419,15 +422,58 @@ app.get('/api/orders', requireApiKey, (_req, res) => {
 });
 
 const OrderStatusSchema = z.object({
-  status: z.enum(['new', 'processing', 'done', 'cancelled']),
+  status: z.enum(['new', 'processing', 'shipped', 'done', 'cancelled']),
 });
+
+// --- остатки ---
+// Заказ уходит в «Отправлен» — остаток каждой позиции списывается (один раз).
+// Откатили в «Новый» / «В работе» / «Отменён» — списанное возвращается.
+// «Выполнен» после «Отправлен» ничего не меняет.
+// Позже здесь же будет создаваться списание/перемещение в Битрикс24.
+function moveStock(order, direction) {
+  const moves = [];
+  const unmatched = [];
+  const changed = new Map(); // teaId -> prices
+  for (const it of order.items || []) {
+    const tea = store.getById(it.teaId);
+    const prices = changed.get(it.teaId) || (tea && Array.isArray(tea.prices) ? tea.prices.map((p) => ({ ...p })) : null);
+    if (!tea || !prices || !prices.length) { unmatched.push(it.name || it.teaId); continue; }
+    let entry = prices.find((p) => p.weightGrams === it.weightGrams);
+    if (!entry && !it.weightGrams && prices.length === 1) entry = prices[0];
+    if (!entry) { unmatched.push(`${it.name}${it.weightGrams ? `, ${it.weightGrams} г` : ''}`); continue; }
+    const before = Number.isFinite(entry.stock) ? entry.stock : 0;
+    entry.stock = before + direction * (it.qty || 1);
+    changed.set(it.teaId, prices);
+    moves.push({ teaId: it.teaId, name: it.name, weightGrams: entry.weightGrams, qty: direction * (it.qty || 1), before, after: entry.stock });
+  }
+  for (const [teaId, prices] of changed) store.upsert(teaId, { prices });
+  return { moves, unmatched };
+}
 
 app.post('/api/orders/:id/status', requireApiKey, (req, res) => {
   const parsed = OrderStatusSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'validation_failed', details: parsed.error.issues });
-  const updated = ordersStore.updateStatus(req.params.id, parsed.data.status);
-  if (!updated) return res.status(404).json({ error: 'not_found' });
-  res.json({ order: updated });
+  const order = ordersStore.getById(req.params.id);
+  if (!order) return res.status(404).json({ error: 'not_found' });
+  const next = parsed.data.status;
+  const at = new Date().toISOString();
+  let stock = null;
+  if (next === 'shipped' && !order.stockWrittenOff) {
+    stock = moveStock(order, -1);
+    ordersStore.patch(order.id, {
+      stockWrittenOff: true,
+      stockLog: [...(order.stockLog || []), { at, action: 'writeoff', ...stock }],
+    });
+  } else if (order.stockWrittenOff && ['new', 'processing', 'cancelled'].includes(next)) {
+    stock = moveStock(order, +1);
+    ordersStore.patch(order.id, {
+      stockWrittenOff: false,
+      stockLog: [...(order.stockLog || []), { at, action: 'return', ...stock }],
+    });
+  }
+  const updated = ordersStore.updateStatus(order.id, next);
+  if (stock && stock.moves.length) catalog.onCatalogChanged(PORT);
+  res.json({ order: updated, stock });
 });
 
 // --- посетители: метка браузера, история просмотров ---

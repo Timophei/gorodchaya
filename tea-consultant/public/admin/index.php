@@ -47,6 +47,7 @@ const ORDERS_API_BASE = 'http://127.0.0.1:4000/api';
 const ORDER_STATUS_LABELS = [
     'new' => 'Новый',
     'processing' => 'В работе',
+    'shipped' => 'Отправлен',
     'done' => 'Выполнен',
     'cancelled' => 'Отменён',
 ];
@@ -604,6 +605,10 @@ header('Cache-Control: no-store');
   .status-badge { font-size: 11.5px; padding: 3px 10px; border-radius: 999px; font-weight: 600; }
   .status-badge.new { background: var(--tea-bot-bubble); color: var(--tea-green-dark); }
   .status-badge.processing { background: #fdf1cf; color: #8a6a12; }
+  .status-badge.shipped { background: #dbe7f3; color: #2b4f73; }
+  .stock-note { font-size: 12.5px; color: var(--tea-muted); margin: 8px 0; line-height: 1.5; }
+  .stock-note b { color: var(--tea-text); font-weight: 600; }
+  .stock-note .warn { color: var(--tea-accent); }
   .status-badge.done { background: #dcefdd; color: var(--tea-green-dark); }
   .status-badge.cancelled { background: var(--tea-error-bg); color: var(--tea-accent); }
   .api-error { background: var(--tea-error-bg); color: var(--tea-accent); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13.5px; }
@@ -681,6 +686,18 @@ header('Cache-Control: no-store');
           <?php endforeach; ?>
         </div>
         <div class="order-total">Итого: <?= number_format((int) ($o['total'] ?? 0), 0, '', ' ') ?> ₽<?= !empty($o['promoCode']) ? ' · промокод ' . esc($o['promoCode']) : '' ?></div>
+        <?php $lastStock = is_array($o['stockLog'] ?? null) && $o['stockLog'] ? end($o['stockLog']) : null; ?>
+        <?php if ($lastStock): ?>
+          <div class="stock-note">
+            <b><?= ($lastStock['action'] ?? '') === 'writeoff' ? 'Остаток списан' : 'Остаток возвращён' ?></b> <?= esc(fmtTime($lastStock['at'] ?? null)) ?>:
+            <?= esc(implode('; ', array_map(static fn ($m) => ($m['name'] ?? '') . ', ' . ($m['weightGrams'] ?? '?') . ' г: ' . ($m['before'] ?? '?') . ' → ' . ($m['after'] ?? '?'), (array) ($lastStock['moves'] ?? [])))) ?>
+            <?php if (!empty($lastStock['unmatched'])): ?>
+              <br><span class="warn">Не нашлась фасовка, остаток не тронут: <?= esc(implode(', ', (array) $lastStock['unmatched'])) ?></span>
+            <?php endif; ?>
+          </div>
+        <?php elseif (($o['status'] ?? '') !== 'shipped'): ?>
+          <div class="stock-note">Остаток спишется при переводе в «Отправлен».</div>
+        <?php endif; ?>
         <span class="status-badge <?= esc($status) ?>"><?= esc(ORDER_STATUS_LABELS[$status] ?? $status) ?></span>
         <form class="status-form" method="post" action="?tab=orders">
           <input type="hidden" name="order_id" value="<?= esc($o['id'] ?? '') ?>">
