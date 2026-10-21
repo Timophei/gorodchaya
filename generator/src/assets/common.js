@@ -123,11 +123,11 @@
   function track() {
     try {
       visitorId();
-      var m = location.pathname.match(/\/tea-([A-Za-z0-9_-]+)\.html$/);
+      var tea = window.__TEA__ && window.__TEA__.id ? window.__TEA__.id : null;
       fetch(API_BASE + '/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teaId: m ? m[1] : null }),
+        body: JSON.stringify({ teaId: tea }),
         keepalive: true
       }).catch(function () {});
     } catch (e) { /* счётчик не должен ломать страницу */ }
@@ -185,6 +185,7 @@
       items.push({
         lineId: id,
         teaId: tea.id,
+        slug: tea.slug || null,
         name: tea.name,
         category: categoryLabel(tea),
         gradient: gradientFor(tea),
@@ -553,8 +554,12 @@
     );
   }
 
+  // Красивый адрес страницы чая: /tea/<slug>. Ссылка относительная — на
+  // корневых страницах и на страницах чая (там <base href="/">) ведёт в одно место.
+  // Без slug (старые данные) — старый адрес, nginx перенаправит его на новый.
   function defaultTeaHref(t) {
-    return 'tea-' + encodeURIComponent(t.id) + '.html';
+    if (t && t.slug) return 'tea/' + encodeURIComponent(t.slug);
+    return 'tea-' + encodeURIComponent(t && (t.id || t.teaId)) + '.html';
   }
 
   function relatedMarkup(related, current, teaHref) {

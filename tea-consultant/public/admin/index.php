@@ -128,9 +128,11 @@ function fetchOrders(): array
     return $result['data']['orders'] ?? [];
 }
 
+require __DIR__ . '/products.php';
+
 // ---------- Параметры запроса ----------
 
-$tab = in_array($_GET['tab'] ?? '', ['orders', 'users'], true) ? $_GET['tab'] : 'dialogs';
+$tab = in_array($_GET['tab'] ?? '', ['orders', 'users', 'products'], true) ? $_GET['tab'] : 'dialogs';
 // Карточка одного пользователя: ?tab=users&u=<ключ> (u_<telegramId> или v_<метка браузера>).
 $userKey = ($tab === 'users' && isset($_GET['u']) && is_string($_GET['u']) && preg_match('/^[uv]_[A-Za-z0-9_-]{1,80}$/', $_GET['u'])) ? $_GET['u'] : null;
 
@@ -448,6 +450,10 @@ function orderPersonKey(array $o): ?string
     return null;
 }
 
+// ---------- Продукты: обработка до вывода (там бывают редиректы и JSON) ----------
+
+$productsState = $tab === 'products' ? productsHandle() : null;
+
 // ---------- Рендер ----------
 
 header('Content-Type: text/html; charset=utf-8');
@@ -601,6 +607,7 @@ header('Cache-Control: no-store');
   .status-badge.done { background: #dcefdd; color: var(--tea-green-dark); }
   .status-badge.cancelled { background: var(--tea-error-bg); color: var(--tea-accent); }
   .api-error { background: var(--tea-error-bg); color: var(--tea-accent); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13.5px; }
+<?= productsCss() ?>
 </style>
 </head>
 <body>
@@ -616,6 +623,8 @@ header('Cache-Control: no-store');
             · гостей: <?= count($byGuest) ?>
             · записей в логе: <?= count($entries) ?><?= $totalLinesRead >= MAX_LOG_LINES ? ' (показан хвост, лог больше)' : '' ?>
           </div>
+        <?php elseif ($tab === 'products'): ?>
+          <div class="sub"><?= $productsState['tea'] !== null ? 'Карточка чая' : ($productsState['isNew'] ? 'Новый чай' : 'Чаёв: ' . count($productsState['list'])) ?></div>
         <?php elseif ($tab === 'users'): ?>
           <div class="sub"><?= $userKey !== null ? 'Карточка пользователя' : 'Пользователей: ' . count($people) ?></div>
         <?php else: ?>
@@ -628,6 +637,7 @@ header('Cache-Control: no-store');
       <a class="tab <?= $tab === 'dialogs' ? 'active' : '' ?>" href="?tab=dialogs">Диалоги</a>
       <a class="tab <?= $tab === 'orders' ? 'active' : '' ?>" href="?tab=orders">Заказы</a>
       <a class="tab <?= $tab === 'users' ? 'active' : '' ?>" href="?tab=users">Пользователи</a>
+      <a class="tab <?= $tab === 'products' ? 'active' : '' ?>" href="?tab=products">Продукты</a>
     </div>
   </div>
 </header>
@@ -684,6 +694,10 @@ header('Cache-Control: no-store');
       </div>
     <?php endforeach; ?>
   <?php endif; ?>
+
+<?php elseif ($tab === 'products'): ?>
+
+  <?php productsRender($productsState); ?>
 
 <?php elseif ($tab === 'users'): ?>
 
@@ -953,5 +967,6 @@ header('Cache-Control: no-store');
 <?php endif; ?>
 
 </div>
+<?php if ($tab === 'products') { echo productsScript(); } ?>
 </body>
 </html>

@@ -63,6 +63,7 @@ if ! "php-fpm$PHP_VER" -t 2>/dev/null; then
   rm -f "/etc/php/$PHP_VER/fpm/conf.d/99-tea-consultant.ini"
   echo "ВНИМАНИЕ: php-production.ini не принят php-fpm, пропущен."
 fi
+install -m 644 "$HERE/deploy/php-admin-upload.ini" "/etc/php/$PHP_VER/fpm/conf.d/99z-chaygorod-admin-upload.ini"
 systemctl restart "php$PHP_VER-fpm"
 cp "$TC/deploy/logrotate-tea-consultant.example" /etc/logrotate.d/tea-consultant
 echo "15 4 * * * www-data $TC/deploy/cleanup.sh $TC >> /var/log/tea-consultant-cleanup.log 2>&1" > /etc/cron.d/tea-consultant-cleanup
@@ -152,6 +153,7 @@ server {
     server_name gorodchaya.ru www.gorodchaya.ru gorodchaya.online www.gorodchaya.online;
 
     root $SITE;
+    include snippets/chaygorod-tea-routes.conf;
     index index.html;
 
     access_log /var/log/nginx/gorodchaya.access.log;
@@ -183,6 +185,7 @@ server {
     # Админка (диалоги и заказы) — под паролем
     location = /admin { return 301 /admin/; }
     location ^~ /admin/ {
+        client_max_body_size 12m;
         auth_basic "Chay Gorod admin";
         auth_basic_user_file $HT;
         include fastcgi_params;
@@ -220,6 +223,7 @@ server {
     location / { try_files \$uri \$uri/ =404; }
 }
 NGXEOF
+install -m 644 "$HERE/deploy/nginx-tea-routes.conf" /etc/nginx/snippets/chaygorod-tea-routes.conf
 rm -f /etc/nginx/sites-enabled/default
 ln -sf /etc/nginx/sites-available/gorodchaya.conf /etc/nginx/sites-enabled/gorodchaya.conf
 ln -sf /etc/nginx/sites-available/btxcap.conf /etc/nginx/sites-enabled/btxcap.conf

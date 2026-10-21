@@ -1,0 +1,705 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Вкладка «Продукты»: список чаёв, редактор карточки (включая SEO и адрес
+ * страницы), загрузка фото, QR с короткой ссылкой /t/<номер>, добавление и
+ * удаление. Данные живут в бэкенде витрины (127.0.0.1:4000) — эта страница
+ * только ходит в его API с ключом CHAYGOROD_API_KEY (см. ordersApiRequest()
+ * в index.php). После каждой правки бэкенд сам перепекает страницы чаёв и
+ * обновляет базу знаний мастера в чате.
+ *
+ * Подключается из index.php; адрес: ?tab=products, ?tab=products&id=<id>,
+ * ?tab=products&new=1.
+ */
+
+const PRODUCT_CATEGORIES = [
+    'oolong' => 'Улун',
+    'black' => 'Чёрный (красный) чай',
+    'green' => 'Зелёный чай',
+    'white' => 'Белый чай',
+    'yellow' => 'Жёлтый чай',
+    'puer' => 'Пуэр',
+    'herbal' => 'Травяной сбор',
+];
+
+const PRODUCT_REGIONS = [
+    'china' => 'Китай',
+    'thailand' => 'Таиланд',
+    'japan' => 'Япония',
+    'india' => 'Индия',
+    'russia' => 'Россия',
+];
+
+const PRODUCT_BREWING = [
+    'gongfu_proliv' => 'Гунфу-пролив',
+    'teapot_or_press' => 'Чайник / френч-пресс',
+    'thermos' => 'Термос',
+];
+
+const PRODUCT_SITE_ORIGIN = 'https://gorodchaya.ru';
+
+/** Сырые байты в API (фото). */
+function productsApiRaw(string $path, string $contentType, string $body): array
+{
+    $apiKey = ordersApiKey();
+    if ($apiKey === '') {
+        return ['ok' => false, 'data' => null, 'error' => 'CHAYGOROD_API_KEY не задан в .env'];
+    }
+    $ctx = stream_context_create(['http' => [
+        'method' => 'POST',
+        'header' => "X-Api-Key: {$apiKey}\r\nAccept: application/json\r\nContent-Type: {$contentType}\r\n",
+        'content' => $body,
+        'timeout' => 20,
+        'ignore_errors' => true,
+    ]]);
+    $raw = @file_get_contents(ORDERS_API_BASE . $path, false, $ctx);
+    if ($raw === false) {
+        return ['ok' => false, 'data' => null, 'error' => 'Бэкенд недоступен (127.0.0.1:4000)'];
+    }
+    $statusOk = (bool) preg_match('#\s(2\d\d)\s#', $http_response_header[0] ?? '');
+    $decoded = json_decode($raw, true);
+    return ['ok' => $statusOk, 'data' => $decoded, 'error' => $statusOk ? null : ($decoded['error'] ?? 'Ошибка запроса')];
+}
+
+/** Защита от подделки запроса с чужого сайта: POST принимаем только со своих страниц. */
+function productsSameOrigin(): bool
+{
+    $src = $_SERVER['HTTP_ORIGIN'] ?? ($_SERVER['HTTP_REFERER'] ?? '');
+    if ($src === '') {
+        return true; // старые браузеры/закладки — Basic Auth всё равно уже пройден
+    }
+    $host = parse_url($src, PHP_URL_HOST);
+    $own = parse_url('http://' . (string) ($_SERVER['HTTP_HOST'] ?? ''), PHP_URL_HOST); // без порта
+    return is_string($host) && is_string($own) && strcasecmp($host, $own) === 0;
+}
+
+function productsLines(string $text): array
+{
+    $out = [];
+    foreach (preg_split('/\r\n|\r|\n/', $text) ?: [] as $line) {
+        $line = trim($line);
+        if ($line !== '') {
+            $out[] = $line;
+        }
+    }
+    return $out;
+}
+
+/** Форма -> тело запроса POST /api/teas. */
+function productsPayloadFromPost(array $p): array
+{
+    $prices = [];
+    $weights = $p['price_weight'] ?? [];
+    $amounts = $p['price_amount'] ?? [];
+    foreach ((array) $weights as $i => $w) {
+        $w = trim((string) $w);
+        $a = trim((string) ($amounts[$i] ?? ''));
+        if ($w === '' && $a === '') {
+            continue;
+        }
+        $prices[] = ['weightGrams' => (int) preg_replace('/\D/', '', $w), 'price' => (int) preg_replace('/\D/', '', $a)];
+    }
+    usort($prices, static fn ($x, $y) => $x['weightGrams'] <=> $y['weightGrams']);
+
+    $brewing = [];
+    foreach (PRODUCT_BREWING as $key => $_label) {
+        $v = trim((string) ($p['brewing'][$key] ?? ''));
+        if ($v !== '') {
+            $brewing[$key] = $v;
+        }
+    }
+
+    $category = (string) ($p['category'] ?? '');
+    $region = (string) ($p['region'] ?? '');
+
+    $payload = [
+        'name' => trim((string) ($p['name'] ?? '')),
+        'subtitle' => trim((string) ($p['subtitle'] ?? '')) ?: null,
+        'externalId' => trim((string) ($p['externalId'] ?? '')) ?: null,
+        'category' => $category,
+        'categoryLabel' => PRODUCT_CATEGORIES[$category] ?? $category,
+        'region' => $region !== '' ? $region : null,
+        'regionLabel' => trim((string) ($p['regionLabel'] ?? '')) ?: null,
+        'description' => trim((string) ($p['description'] ?? '')) ?: null,
+        'taste' => productsLines((string) ($p['taste'] ?? '')),
+        'tasteNote' => trim((string) ($p['tasteNote'] ?? '')) ?: null,
+        'situations' => productsLines((string) ($p['situations'] ?? '')),
+        'effectsNote' => trim((string) ($p['effectsNote'] ?? '')) ?: null,
+        'liquorColor' => trim((string) ($p['liquorColor'] ?? '')) ?: null,
+        'waterTemperature' => trim((string) ($p['waterTemperature'] ?? '')) ?: null,
+        'vessels' => productsLines((string) ($p['vessels'] ?? '')),
+        'contraindications' => productsLines((string) ($p['contraindications'] ?? '')),
+        'cityOpinion' => trim((string) ($p['cityOpinion'] ?? '')) ?: null,
+        'brewing' => (object) $brewing,
+        'featured' => !empty($p['featured']),
+        'sortOrder' => (int) ($p['sortOrder'] ?? 0),
+        'prices' => $prices,
+        'slug' => strtolower(trim((string) ($p['slug'] ?? ''))),
+        'seoTitle' => trim((string) ($p['seoTitle'] ?? '')) ?: null,
+        'seoDescription' => trim((string) ($p['seoDescription'] ?? '')) ?: null,
+    ];
+    $id = trim((string) ($p['id'] ?? ''));
+    if ($id !== '') {
+        $payload['id'] = $id;
+    }
+    return $payload;
+}
+
+/** Ошибки валидации бэкенда -> понятные строки. */
+function productsErrorLines(array $result): array
+{
+    $labels = [
+        'name' => 'Название', 'category' => 'Категория', 'externalId' => 'Номер', 'slug' => 'Адрес страницы',
+        'seoTitle' => 'SEO-заголовок', 'seoDescription' => 'SEO-описание', 'prices' => 'Фасовки и цены',
+        'description' => 'Описание', 'cityOpinion' => 'Мнение Города',
+    ];
+    $details = is_array($result['data']['details'] ?? null) ? $result['data']['details'] : [];
+    if (!$details) {
+        return [(string) ($result['error'] ?? 'Не удалось сохранить')];
+    }
+    $out = [];
+    foreach ($details as $d) {
+        $field = (string) (($d['path'] ?? [])[0] ?? '');
+        $out[] = ($labels[$field] ?? $field ?: 'Поле') . ': ' . (string) ($d['message'] ?? 'ошибка');
+    }
+    return $out;
+}
+
+/**
+ * Обработка запроса до вывода страницы (редиректы, JSON статуса).
+ *
+ * @return array{list: array, tea: ?array, isNew: bool, errors: array, flash: ?string, formOverride: ?array, apiError: ?string}
+ */
+function productsHandle(): array
+{
+    $state = ['list' => [], 'tea' => null, 'isNew' => false, 'errors' => [], 'flash' => null, 'formOverride' => null, 'apiError' => null];
+    $id = isset($_GET['id']) && is_string($_GET['id']) && preg_match('/^[A-Za-z0-9_-]{1,100}$/', $_GET['id']) ? $_GET['id'] : null;
+
+    if (isset($_GET['sync_status'])) {
+        $r = ordersApiRequest('GET', '/admin/catalog-status');
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store');
+        echo json_encode($r['data'] ?? ['message' => $r['error']], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (!productsSameOrigin()) {
+            http_response_code(403);
+            exit('Запрос отклонён: отправлен не со страницы админки.');
+        }
+        $action = (string) ($_POST['action'] ?? '');
+
+        if ($action === 'save') {
+            $payload = productsPayloadFromPost($_POST);
+            $result = ordersApiRequest('POST', '/teas', $payload);
+            if ($result['ok'] && is_array($result['data'])) {
+                header('Location: ?tab=products&id=' . rawurlencode((string) $result['data']['id']) . '&saved=1');
+                exit;
+            }
+            $state['errors'] = productsErrorLines($result);
+            $state['formOverride'] = $payload;
+        } elseif ($action === 'delete' && $id !== null) {
+            $result = ordersApiRequest('DELETE', '/teas/' . rawurlencode($id));
+            if ($result['ok']) {
+                header('Location: ?tab=products&deleted=1');
+                exit;
+            }
+            $state['errors'] = productsErrorLines($result);
+        } elseif ($action === 'photo' && $id !== null) {
+            $f = $_FILES['photo'] ?? null;
+            if (!is_array($f) || ($f['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+                $code = is_array($f) ? (int) $f['error'] : UPLOAD_ERR_NO_FILE;
+                $state['errors'] = [$code === UPLOAD_ERR_INI_SIZE || $code === UPLOAD_ERR_FORM_SIZE
+                    ? 'Файл слишком большой.'
+                    : 'Файл не загрузился — выберите фото ещё раз.'];
+            } else {
+                $info = @getimagesize($f['tmp_name']);
+                $mime = is_array($info) ? (string) ($info['mime'] ?? '') : '';
+                if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+                    $state['errors'] = ['Нужна картинка JPEG, PNG или WebP.'];
+                } else {
+                    $result = productsApiRaw('/admin/teas/' . rawurlencode($id) . '/photo', $mime, (string) file_get_contents($f['tmp_name']));
+                    if ($result['ok']) {
+                        header('Location: ?tab=products&id=' . rawurlencode($id) . '&photo=1');
+                        exit;
+                    }
+                    $state['errors'] = ['Фото не сохранилось: ' . ($result['error'] ?? 'ошибка')];
+                }
+            }
+        } elseif ($action === 'sync') {
+            ordersApiRequest('POST', '/admin/catalog-sync', []);
+            header('Location: ?tab=products&synced=1');
+            exit;
+        }
+    }
+
+    if (isset($_GET['saved'])) { $state['flash'] = 'Сохранено. Страница чая и знания мастера обновятся через пару секунд.'; }
+    if (isset($_GET['photo'])) { $state['flash'] = 'Фото загружено.'; }
+    if (isset($_GET['deleted'])) { $state['flash'] = 'Чай удалён. Его страница исчезнет с сайта, а старые ссылки поведут на «чай не найден».'; }
+    if (isset($_GET['synced'])) { $state['flash'] = 'Запущено обновление страниц и знаний мастера.'; }
+
+    if ($id !== null) {
+        $r = ordersApiRequest('GET', '/teas/' . rawurlencode($id));
+        if ($r['ok'] && is_array($r['data'])) {
+            $state['tea'] = $r['data'];
+        } else {
+            $state['apiError'] = $r['error'] === 'not_found' ? 'Такого чая нет.' : ($r['error'] ?? 'Не удалось получить чай');
+        }
+    } elseif (isset($_GET['new'])) {
+        $state['isNew'] = true;
+    } else {
+        $r = ordersApiRequest('GET', '/teas');
+        if ($r['ok'] && is_array($r['data'])) {
+            $state['list'] = $r['data'];
+            usort($state['list'], static fn ($a, $b) => ((int) ($a['externalId'] ?? 0)) <=> ((int) ($b['externalId'] ?? 0)));
+        } else {
+            $state['apiError'] = $r['error'] ?? 'Не удалось получить каталог';
+        }
+    }
+    return $state;
+}
+
+function productsShortUrl(array $t): string
+{
+    return PRODUCT_SITE_ORIGIN . '/t/' . rawurlencode((string) ($t['externalId'] ?? ''));
+}
+
+function productsPageUrl(array $t): string
+{
+    return PRODUCT_SITE_ORIGIN . '/tea/' . rawurlencode((string) ($t['slug'] ?? ''));
+}
+
+function productsAutoTitle(array $t): string
+{
+    $cat = mb_strtolower((string) (PRODUCT_CATEGORIES[$t['category'] ?? ''] ?? 'чай'));
+    return trim((string) ($t['name'] ?? '')) . ' — купить ' . $cat . ' | Чайный город';
+}
+
+function productsImageSrc(array $t): ?string
+{
+    $u = (string) ($t['imageUrl'] ?? '');
+    if ($u === '') {
+        return null;
+    }
+    return preg_match('#^https?://#', $u) ? $u : '/' . ltrim($u, '/');
+}
+
+function productsRender(array $state): void
+{
+    if ($state['flash']): ?>
+      <div class="flash"><?= esc($state['flash']) ?></div>
+    <?php endif;
+    if ($state['apiError']): ?>
+      <div class="api-error"><?= esc($state['apiError']) ?></div>
+    <?php endif;
+
+    if ($state['tea'] !== null || $state['isNew']) {
+        productsRenderForm($state);
+        return;
+    }
+    if ($state['apiError']) {
+        return;
+    }
+    ?>
+    <div class="prod-toolbar">
+      <a class="btn" href="?tab=products&new=1">+ Добавить чай</a>
+      <form method="post" action="?tab=products" style="margin:0">
+        <input type="hidden" name="action" value="sync">
+        <button class="btn btn-ghost" type="submit" title="Перепечь страницы чаёв и обновить знания мастера">Обновить страницы сайта</button>
+      </form>
+      <span class="sync-status" data-sync-status></span>
+    </div>
+    <?php if (empty($state['list'])): ?>
+      <div class="empty">Чаёв пока нет.</div>
+    <?php endif; ?>
+    <?php foreach ($state['list'] as $t): ?>
+      <?php
+        $img = productsImageSrc($t);
+        $prices = is_array($t['prices'] ?? null) ? $t['prices'] : [];
+      ?>
+      <a class="prod-row" href="?tab=products&id=<?= esc(rawurlencode((string) $t['id'])) ?>">
+        <span class="prod-thumb"<?= $img ? ' style="background-image:url(\'' . esc($img) . '\')"' : '' ?>><?= $img ? '' : 'нет фото' ?></span>
+        <span class="prod-main">
+          <span class="prod-name">№<?= esc($t['externalId'] ?? '—') ?> · <?= esc($t['name'] ?? '—') ?>
+            <?php if (!empty($t['featured'])): ?><span class="badge">на главной</span><?php endif; ?>
+          </span>
+          <span class="prod-meta">
+            /tea/<?= esc($t['slug'] ?? '—') ?>
+            · <?= esc(PRODUCT_CATEGORIES[$t['category'] ?? ''] ?? ($t['category'] ?? '')) ?>
+            · <?= $prices
+                ? esc(implode(', ', array_map(static fn ($p) => ($p['weightGrams'] ?? '?') . ' г — ' . number_format((int) ($p['price'] ?? 0), 0, '', ' ') . ' ₽', $prices)))
+                : '<span class="warn">без цены</span>' ?>
+          </span>
+        </span>
+        <span class="prod-short">/t/<?= esc($t['externalId'] ?? '') ?></span>
+      </a>
+    <?php endforeach;
+}
+
+function productsRenderForm(array $state): void
+{
+    $isNew = $state['isNew'];
+    $t = $state['formOverride'] ?? $state['tea'] ?? [];
+    if ($state['formOverride'] !== null && $state['tea'] !== null) {
+        $t = array_merge($state['tea'], $state['formOverride']);
+    }
+    $t = json_decode((string) json_encode($t), true) ?: []; // brewing (object) -> array
+    $saved = $state['tea'] ?? [];
+    $id = (string) ($saved['id'] ?? ($t['id'] ?? ''));
+    $prices = is_array($t['prices'] ?? null) && $t['prices'] ? $t['prices'] : [['weightGrams' => '', 'price' => '']];
+    $prices[] = ['weightGrams' => '', 'price' => ''];
+    $brewing = is_array($t['brewing'] ?? null) ? $t['brewing'] : [];
+    $join = static fn ($v) => is_array($v) ? implode("\n", $v) : (string) ($v ?? '');
+    $img = $saved ? productsImageSrc($saved) : null;
+    ?>
+    <a class="back-link" href="?tab=products">← ко всем чаям</a>
+
+    <?php if ($state['errors']): ?>
+      <div class="api-error"><b>Не сохранено.</b><br><?= implode('<br>', array_map('esc', $state['errors'])) ?></div>
+    <?php endif; ?>
+
+    <div class="prod-head">
+      <h2><?= $isNew ? 'Новый чай' : esc($saved['name'] ?? '') ?></h2>
+      <?php if (!$isNew && $saved): ?>
+        <a class="ext" href="<?= esc(productsPageUrl($saved)) ?>" target="_blank" rel="noopener">открыть на сайте ↗</a>
+        <span class="sync-status" data-sync-status></span>
+      <?php endif; ?>
+    </div>
+
+    <?php if (!$isNew && $saved): ?>
+    <div class="prod-side">
+      <section class="card-block">
+        <h3>Фото</h3>
+        <div class="photo-preview"<?= $img ? ' style="background-image:url(\'' . esc($img) . '\')"' : '' ?>><?= $img ? '' : 'Фото нет — на сайте показывается цветная плашка' ?></div>
+        <form method="post" enctype="multipart/form-data" action="?tab=products&id=<?= esc(rawurlencode($id)) ?>" data-photo-form>
+          <input type="hidden" name="action" value="photo">
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
+          <div class="hint">Квадрат или близко к нему смотрится лучше всего. Большие фото ужимаются до 1600 px прямо в браузере.</div>
+          <button class="btn" type="submit">Загрузить фото</button>
+        </form>
+      </section>
+
+      <section class="card-block">
+        <h3>QR и короткая ссылка</h3>
+        <div class="qr-box" data-qr="<?= esc(productsShortUrl($saved)) ?>"></div>
+        <div class="short-link">
+          <input type="text" readonly value="<?= esc(productsShortUrl($saved)) ?>" onclick="this.select()">
+          <button class="btn btn-ghost" type="button" data-copy="<?= esc(productsShortUrl($saved)) ?>">Копировать</button>
+        </div>
+        <div class="qr-actions">
+          <button class="btn btn-ghost" type="button" data-qr-png="qr-<?= esc((string) ($saved['externalId'] ?? '')) ?>-<?= esc((string) ($saved['slug'] ?? '')) ?>.png">Скачать PNG</button>
+          <button class="btn btn-ghost" type="button" data-qr-svg="qr-<?= esc((string) ($saved['externalId'] ?? '')) ?>-<?= esc((string) ($saved['slug'] ?? '')) ?>.svg">Скачать SVG (для печати)</button>
+        </div>
+        <div class="hint">Короткая ссылка ведёт на страницу чая и не меняется, даже если поменять адрес страницы. Номер меняйте, только если QR ещё нигде не напечатан.</div>
+      </section>
+    </div>
+    <?php endif; ?>
+
+    <form method="post" class="prod-form" action="?tab=products<?= $isNew ? '&new=1' : '&id=' . esc(rawurlencode($id)) ?>">
+      <input type="hidden" name="action" value="save">
+      <input type="hidden" name="id" value="<?= esc($isNew ? '' : $id) ?>">
+
+      <section class="card-block">
+        <h3>Основное</h3>
+        <label class="f">Название*<input type="text" name="name" required maxlength="200" value="<?= esc($t['name'] ?? '') ?>" data-name></label>
+        <label class="f">Подзаголовок<input type="text" name="subtitle" maxlength="300" value="<?= esc($t['subtitle'] ?? '') ?>" placeholder="Большой красный халат · тёмный уишаньский улун"></label>
+        <div class="f-row">
+          <label class="f">Категория*
+            <select name="category" required data-category>
+              <?php foreach (PRODUCT_CATEGORIES as $val => $label): ?>
+                <option value="<?= esc($val) ?>" <?= ($t['category'] ?? '') === $val ? 'selected' : '' ?>><?= esc($label) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </label>
+          <label class="f">Страна
+            <select name="region">
+              <option value="">—</option>
+              <?php foreach (PRODUCT_REGIONS as $val => $label): ?>
+                <option value="<?= esc($val) ?>" <?= ($t['region'] ?? '') === $val ? 'selected' : '' ?>><?= esc($label) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </label>
+          <label class="f">Номер
+            <input type="text" name="externalId" inputmode="numeric" pattern="\d{1,9}" maxlength="9" value="<?= esc($t['externalId'] ?? '') ?>" placeholder="авто">
+          </label>
+        </div>
+        <label class="f">Регион подробно<input type="text" name="regionLabel" maxlength="200" value="<?= esc($t['regionLabel'] ?? '') ?>" placeholder="Уишань, провинция Фуцзянь, Китай"></label>
+        <div class="f-row">
+          <label class="f f-check"><input type="checkbox" name="featured" value="1" <?= !empty($t['featured']) ? 'checked' : '' ?>> Показывать в «Популярных» на главной</label>
+          <label class="f">Порядок в каталоге<input type="number" name="sortOrder" value="<?= esc((string) ($t['sortOrder'] ?? 0)) ?>" style="max-width:110px"></label>
+        </div>
+        <div class="hint">Номер — это короткая ссылка /t/<?= esc((string) ($t['externalId'] ?? 'N')) ?>, «ID на сайте» для Битрикса (например <?= esc((string) ($t['externalId'] ?? '110')) ?>-50) и номер, которым мастер в чате ссылается на чай.</div>
+      </section>
+
+      <section class="card-block">
+        <h3>Фасовки и цены</h3>
+        <div class="prices" data-prices>
+          <?php foreach ($prices as $p): ?>
+            <div class="price-row">
+              <input type="text" name="price_weight[]" inputmode="numeric" placeholder="граммы" value="<?= esc((string) ($p['weightGrams'] ?? '')) ?>"> г —
+              <input type="text" name="price_amount[]" inputmode="numeric" placeholder="цена" value="<?= esc((string) ($p['price'] ?? '')) ?>"> ₽
+            </div>
+          <?php endforeach; ?>
+        </div>
+        <button class="btn btn-ghost" type="button" data-add-price>+ фасовка</button>
+        <div class="hint">Пустые строки не сохраняются. Каждая фасовка — отдельный товар в Битриксе с «ID на сайте» вида номер-граммы.</div>
+      </section>
+
+      <section class="card-block">
+        <h3>Описание и вкус</h3>
+        <label class="f">Описание<textarea name="description" rows="6" maxlength="5000"><?= esc($t['description'] ?? '') ?></textarea></label>
+        <div class="f-row">
+          <label class="f">Вкус и аромат <span class="muted">— по строке</span><textarea name="taste" rows="5"><?= esc($join($t['taste'] ?? [])) ?></textarea></label>
+          <label class="f">Когда пить <span class="muted">— по строке</span><textarea name="situations" rows="5"><?= esc($join($t['situations'] ?? [])) ?></textarea></label>
+        </div>
+        <label class="f">Заметка о вкусе<input type="text" name="tasteNote" maxlength="1000" value="<?= esc($t['tasteNote'] ?? '') ?>"></label>
+        <label class="f">Ощущения<textarea name="effectsNote" rows="2" maxlength="1000"><?= esc($t['effectsNote'] ?? '') ?></textarea></label>
+        <div class="f-row">
+          <label class="f">Цвет настоя<input type="text" name="liquorColor" maxlength="200" value="<?= esc($t['liquorColor'] ?? '') ?>"></label>
+          <label class="f">Температура воды<input type="text" name="waterTemperature" maxlength="50" value="<?= esc($t['waterTemperature'] ?? '') ?>" placeholder="85–90 °C"></label>
+        </div>
+        <div class="f-row">
+          <label class="f">Посуда <span class="muted">— по строке</span><textarea name="vessels" rows="3"><?= esc($join($t['vessels'] ?? [])) ?></textarea></label>
+          <label class="f">Противопоказания <span class="muted">— по строке</span><textarea name="contraindications" rows="3"><?= esc($join($t['contraindications'] ?? [])) ?></textarea></label>
+        </div>
+      </section>
+
+      <section class="card-block">
+        <h3>Заваривание</h3>
+        <?php foreach (PRODUCT_BREWING as $key => $label): ?>
+          <label class="f"><?= esc($label) ?><textarea name="brewing[<?= esc($key) ?>]" rows="3" maxlength="2000"><?= esc($brewing[$key] ?? '') ?></textarea></label>
+        <?php endforeach; ?>
+      </section>
+
+      <section class="card-block">
+        <h3>Мнение Города</h3>
+        <label class="f"><textarea name="cityOpinion" rows="6" maxlength="3000"><?= esc($t['cityOpinion'] ?? '') ?></textarea></label>
+      </section>
+
+      <section class="card-block">
+        <h3>SEO и адрес страницы</h3>
+        <label class="f">Адрес страницы
+          <span class="slug-input"><span><?= esc(PRODUCT_SITE_ORIGIN) ?>/tea/</span><input type="text" name="slug" maxlength="80" pattern="[a-z0-9]+(-[a-z0-9]+)*" value="<?= esc($t['slug'] ?? '') ?>" placeholder="придумается из названия" data-slug></span>
+        </label>
+        <div class="hint">Латиница в нижнем регистре, цифры и дефисы. Если поменять адрес, старый продолжит работать и будет перенаправлять на новый.</div>
+        <label class="f">Заголовок для поисковиков <span class="counter" data-count-for="seoTitle" data-max="60"></span>
+          <input type="text" name="seoTitle" maxlength="120" value="<?= esc($t['seoTitle'] ?? '') ?>" placeholder="<?= esc(productsAutoTitle($t)) ?>" data-seo-title>
+        </label>
+        <label class="f">Описание для поисковиков <span class="counter" data-count-for="seoDescription" data-max="155"></span>
+          <textarea name="seoDescription" rows="3" maxlength="300" placeholder="Пусто — возьмётся начало описания" data-seo-desc><?= esc($t['seoDescription'] ?? '') ?></textarea>
+        </label>
+        <div class="hint">Пустые поля заполняются автоматически. Оптимально: заголовок до 60 знаков, описание 120–155.</div>
+        <div class="serp" data-serp>
+          <div class="serp-url"></div>
+          <div class="serp-title"></div>
+          <div class="serp-desc"></div>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <button class="btn btn-big" type="submit"><?= $isNew ? 'Создать чай' : 'Сохранить' ?></button>
+        <a class="back-link" href="?tab=products">Отмена</a>
+      </div>
+    </form>
+
+    <?php if (!$isNew && $saved): ?>
+      <form method="post" class="danger-zone" action="?tab=products&id=<?= esc(rawurlencode($id)) ?>" onsubmit="return confirm('Удалить «<?= esc(addslashes((string) ($saved['name'] ?? ''))) ?>»? Страница исчезнет с сайта, мастер перестанет его советовать. Отменить нельзя.');">
+        <input type="hidden" name="action" value="delete">
+        <button class="btn btn-danger" type="submit">Удалить чай</button>
+        <span class="hint">Заказы с этим чаем останутся в истории.</span>
+      </form>
+    <?php endif; ?>
+    <?php
+}
+
+function productsCss(): string
+{
+    return <<<'CSS'
+  /* --- продукты --- */
+  .flash { background: #e6efe3; color: var(--tea-green-dark); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13.5px; }
+  .prod-toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+  .btn { display: inline-block; text-decoration: none; }
+  .btn-ghost { background: transparent; color: var(--tea-green-dark); border: 1px solid var(--tea-border); }
+  .btn-ghost:hover { border-color: var(--tea-green); }
+  .btn-danger { background: transparent; color: var(--tea-accent); border: 1px solid #e3b8ae; }
+  .btn-big { padding: 12px 26px; font-size: 15px; }
+  .sync-status { font-size: 12.5px; color: var(--tea-muted); }
+  .sync-status.err { color: var(--tea-accent); }
+  .prod-row { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; background: var(--tea-paper); border: 1px solid var(--tea-border); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; }
+  .prod-row:hover { border-color: var(--tea-green); }
+  .prod-thumb { width: 56px; height: 56px; border-radius: 10px; background: var(--tea-bot-bubble) center/cover no-repeat; flex-shrink: 0; font-size: 10px; color: var(--tea-muted); display: flex; align-items: center; justify-content: center; text-align: center; }
+  .prod-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .prod-name { font-weight: 600; font-size: 15px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .prod-meta { font-size: 12.5px; color: var(--tea-muted); }
+  .prod-meta .warn { color: var(--tea-accent); }
+  .prod-short { font-size: 12.5px; color: var(--tea-muted); font-family: ui-monospace, Menlo, monospace; }
+  .prod-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .prod-head h2 { margin: 0; font-size: 22px; }
+  .prod-head .ext { font-size: 13px; color: var(--tea-green-dark); }
+  .prod-side { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .card-block { background: var(--tea-paper); border: 1px solid var(--tea-border); border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; }
+  .prod-side .card-block { margin-bottom: 0; }
+  .card-block h3 { margin: 0 0 12px; font-size: 15px; }
+  .f { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 600; color: var(--tea-text); margin-bottom: 12px; flex: 1; min-width: 0; }
+  .f .muted { font-weight: 400; color: var(--tea-muted); }
+  .f input[type=text], .f input[type=number], .f select, .f textarea, .price-row input, .short-link input {
+    font: inherit; font-weight: 400; font-size: 14px; padding: 8px 10px; border: 1px solid var(--tea-border); border-radius: 8px; background: #fff; color: var(--tea-text); width: 100%; box-sizing: border-box;
+  }
+  .f textarea { resize: vertical; line-height: 1.45; }
+  .f-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .f-check { flex-direction: row; align-items: center; font-weight: 400; gap: 8px; }
+  .price-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13.5px; }
+  .price-row input { max-width: 120px; }
+  .hint { font-size: 12px; color: var(--tea-muted); line-height: 1.5; margin: 4px 0 8px; }
+  .slug-input { display: flex; align-items: center; border: 1px solid var(--tea-border); border-radius: 8px; background: #fff; overflow: hidden; }
+  .slug-input span { padding: 8px 0 8px 10px; color: var(--tea-muted); font-weight: 400; font-size: 13px; white-space: nowrap; }
+  .slug-input input { border: none !important; padding-left: 2px !important; }
+  .counter { font-weight: 400; color: var(--tea-muted); font-size: 12px; }
+  .counter.over { color: var(--tea-accent); }
+  .serp { border: 1px dashed var(--tea-border); border-radius: 10px; padding: 12px 14px; font-family: Arial, sans-serif; background: #fff; }
+  .serp-url { font-size: 12.5px; color: #3c7a4f; margin-bottom: 3px; word-break: break-all; }
+  .serp-title { font-size: 17px; color: #1a0dab; margin-bottom: 4px; }
+  .serp-desc { font-size: 13px; color: #4d5156; line-height: 1.45; }
+  .photo-preview { height: 200px; border-radius: 10px; background: var(--tea-bot-bubble) center/cover no-repeat; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12.5px; color: var(--tea-muted); padding: 10px; }
+  .qr-box { display: flex; justify-content: center; margin-bottom: 10px; min-height: 160px; align-items: center; }
+  .qr-box canvas { width: 160px; height: 160px; image-rendering: pixelated; }
+  .short-link { display: flex; gap: 8px; margin-bottom: 8px; }
+  .short-link input { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+  .qr-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .form-actions { display: flex; align-items: center; gap: 16px; margin: 6px 0 24px; position: sticky; bottom: 0; background: var(--tea-cream); padding: 10px 0; }
+  .danger-zone { display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--tea-border); padding-top: 18px; }
+  @media (max-width: 720px) { .prod-side { grid-template-columns: 1fr; } .prod-short { display: none; } }
+CSS;
+}
+
+function productsScript(): string
+{
+    $origin = json_encode(PRODUCT_SITE_ORIGIN);
+    return <<<JS
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+(function () {
+  var ORIGIN = {$origin};
+
+  // --- QR короткой ссылки ---
+  var box = document.querySelector('[data-qr]');
+  var qr = null;
+  if (box) {
+    if (typeof qrcode !== 'function') {
+      box.textContent = 'Не удалось загрузить генератор QR — проверьте интернет и обновите страницу.';
+    } else {
+      qr = qrcode(0, 'M');
+      qr.addData(box.getAttribute('data-qr'));
+      qr.make();
+      box.appendChild(qrCanvas(qr, 8, 4));
+    }
+  }
+  function qrCanvas(q, cell, margin) {
+    var n = q.getModuleCount(), size = (n + margin * 2) * cell;
+    var c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#000';
+    for (var r = 0; r < n; r++) for (var col = 0; col < n; col++) {
+      if (q.isDark(r, col)) ctx.fillRect((col + margin) * cell, (r + margin) * cell, cell, cell);
+    }
+    return c;
+  }
+  function download(name, href) {
+    var a = document.createElement('a'); a.href = href; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  document.querySelectorAll('[data-qr-png]').forEach(function (b) {
+    b.addEventListener('click', function () { if (qr) download(b.getAttribute('data-qr-png'), qrCanvas(qr, 24, 4).toDataURL('image/png')); });
+  });
+  document.querySelectorAll('[data-qr-svg]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (!qr) return;
+      var svg = qr.createSvgTag({ cellSize: 10, margin: 4, scalable: true });
+      download(b.getAttribute('data-qr-svg'), URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })));
+    });
+  });
+  document.querySelectorAll('[data-copy]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = b.getAttribute('data-copy');
+      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
+        b.textContent = 'Скопировано'; setTimeout(function () { b.textContent = 'Копировать'; }, 1500);
+      }, function () { window.prompt('Скопируйте ссылку:', t); });
+    });
+  });
+
+  // --- ещё одна строка фасовки ---
+  var addPrice = document.querySelector('[data-add-price]');
+  if (addPrice) addPrice.addEventListener('click', function () {
+    var wrap = document.querySelector('[data-prices]');
+    var row = wrap.querySelector('.price-row').cloneNode(true);
+    row.querySelectorAll('input').forEach(function (i) { i.value = ''; });
+    wrap.appendChild(row);
+    row.querySelector('input').focus();
+  });
+
+  // --- счётчики и предпросмотр сниппета в поиске ---
+  var form = document.querySelector('.prod-form');
+  function val(sel) { var el = form && form.querySelector(sel); return el ? el.value.trim() : ''; }
+  function updateSeo() {
+    if (!form) return;
+    document.querySelectorAll('[data-count-for]').forEach(function (c) {
+      var el = form.querySelector('[name="' + c.getAttribute('data-count-for') + '"]');
+      var max = +c.getAttribute('data-max'), len = (el.value || '').length;
+      c.textContent = len ? len + ' / ' + max : '';
+      c.classList.toggle('over', len > max);
+    });
+    var serp = document.querySelector('[data-serp]');
+    if (!serp) return;
+    var title = val('[data-seo-title]') || (form.querySelector('[data-seo-title]').placeholder || '');
+    var desc = val('[data-seo-desc]') || val('[name="description"]') || val('[name="subtitle"]');
+    if (desc.length > 155) desc = desc.slice(0, 155).replace(/\\s+\\S*$/, '') + '…';
+    serp.querySelector('.serp-url').textContent = ORIGIN.replace(/^https?:\\/\\//, '') + ' › tea › ' + (val('[data-slug]') || '…');
+    serp.querySelector('.serp-title').textContent = title.length > 65 ? title.slice(0, 64) + '…' : title;
+    serp.querySelector('.serp-desc').textContent = desc || 'Описание появится, когда заполните описание чая.';
+  }
+  if (form) { form.addEventListener('input', updateSeo); updateSeo(); }
+
+  // --- фото: ужимаем в браузере до 1600 px, чтобы не упираться в лимиты ---
+  var pf = document.querySelector('[data-photo-form]');
+  if (pf) pf.addEventListener('submit', function (e) {
+    var input = pf.querySelector('input[type=file]');
+    var file = input.files && input.files[0];
+    if (!file || !window.createImageBitmap || !window.DataTransfer) return;
+    e.preventDefault();
+    var btn = pf.querySelector('button'); btn.disabled = true; btn.textContent = 'Готовим фото…';
+    createImageBitmap(file).then(function (bmp) {
+      var max = 1600, k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+      var c = document.createElement('canvas');
+      c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      c.toBlob(function (blob) {
+        var dt = new DataTransfer();
+        dt.items.add(new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
+        input.files = dt.files;
+        btn.textContent = 'Загружаем…';
+        pf.submit();
+      }, 'image/jpeg', 0.86);
+    }).catch(function () { btn.disabled = false; btn.textContent = 'Загрузить фото'; pf.submit(); });
+  });
+
+  // --- статус перепечки страниц ---
+  var st = document.querySelector('[data-sync-status]');
+  function poll(n) {
+    fetch('?tab=products&sync_status=1', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (s) {
+      if (!st) return;
+      if (s.running && n < 20) { st.textContent = 'Обновляем страницы…'; setTimeout(function () { poll(n + 1); }, 1000); return; }
+      var when = s.lastRunAt ? new Date(s.lastRunAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '';
+      st.textContent = s.ok === false ? 'Ошибка обновления страниц: ' + s.message : (when ? 'Страницы сайта обновлены в ' + when : '');
+      st.classList.toggle('err', s.ok === false);
+    }).catch(function () {});
+  }
+  if (st) setTimeout(function () { poll(0); }, /saved|photo|synced/.test(location.search) ? 1500 : 0);
+})();
+</script>
+JS;
+}

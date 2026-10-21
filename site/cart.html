@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=17">
+<link rel="stylesheet" href="assets/style.css?v=18">
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
     (function(m,e,t,r,i,k,a){
@@ -79,7 +79,7 @@
 </main>
 
 <div id="site-footer"></div>
-<script src="assets/common.js?v=17"></script>
+<script src="assets/common.js?v=18"></script>
 <script>
 (function () {
   var CG = window.ChayGorod;
@@ -88,7 +88,7 @@
   function itemHtml(it) {
     var lineTotal = CG.formatPrice(it.unitPrice * it.qty);
     var weightLabel = it.weight ? it.weight + ' г' : '';
-    var href = 'tea-' + encodeURIComponent(it.teaId) + '.html';
+    var href = CG.defaultTeaHref(it);
     return (
       '<div class="item">' +
       '<a href="' + href + '" style="display:block;width:88px;height:88px;border-radius:12px;background-size:cover;background-position:center;flex-shrink:0;' + CG.photoStyleFor(it) + '"></a>' +

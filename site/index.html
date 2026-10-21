@@ -20,7 +20,7 @@
 <meta name="twitter:image" content="https://gorodchaya.ru/assets/og-share.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=17">
+<link rel="stylesheet" href="assets/style.css?v=18">
 
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
@@ -113,7 +113,7 @@
 </main>
 
 <div id="site-footer"></div>
-<script src="assets/common.js?v=17"></script>
+<script src="assets/common.js?v=18"></script>
 <script>
 (function () {
   var CG = window.ChayGorod;
@@ -218,7 +218,7 @@
     // интернет-магазинах); кнопка «Купить» внутри останавливает переход
     // по ссылке через preventDefault/stopPropagation в wireAddButtons.
     mount.innerHTML = teas.map(function (t) {
-      return '<a class="mini-card-link" href="tea-' + encodeURIComponent(t.id) + '.html">' + miniCardHtml(t) + '</a>';
+      return '<a class="mini-card-link" href="' + CG.defaultTeaHref(t) + '">' + miniCardHtml(t) + '</a>';
     }).join('');
     wireAddButtons(mount, byId);
   }
@@ -273,7 +273,7 @@
     for (var i = 0; i < parts.length; i += 2) {
       parts[i] = parts[i].replace(re, function (whole, pre, matched) {
         return pre + '<a class="tea-mention" data-tea-id="' + escapeHtml(t.id) +
-          '" href="tea-' + encodeURIComponent(t.id) + '.html" target="_blank" rel="noopener">' +
+          '" href="' + CG.defaultTeaHref(t) + '" target="_blank" rel="noopener">' +
           matched + '</a>';
       });
     }
@@ -487,7 +487,7 @@
     // и ссылка на страницу товара (кнопка «Купить» это клику не мешает,
     // у неё свой preventDefault/stopPropagation).
     mount.innerHTML = top4.map(function (t) {
-      return '<a href="tea-' + encodeURIComponent(t.id) + '.html" style="display:block;text-decoration:none;color:inherit;">' + miniCardHtml(t) + '</a>';
+      return '<a href="' + CG.defaultTeaHref(t) + '" style="display:block;text-decoration:none;color:inherit;">' + miniCardHtml(t) + '</a>';
     }).join('') +
       '<a class="cta-tile" href="catalog.html" style="text-decoration:none;color:inherit;">' +
       '<div style="width:44px;height:44px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;">' +

@@ -7,6 +7,7 @@ const auth = require('./auth');
 const userStore = require('./userStore');
 const ordersStore = require('./ordersStore');
 const visitorStore = require('./visitorStore');
+const catalog = require('./catalogSync');
 
 // Cookie посетителя: cg_vid — метка браузера (ставит assets/common.js),
 // tea_cid — id диалога с мастером (ставит чат на главной).
@@ -40,6 +41,7 @@ if (!process.env.API_KEY) {
   console.log('Set API_KEY in the environment to pin it across restarts.');
 }
 
+const PORT = process.env.PORT || 4000;
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '200kb' }));
@@ -151,7 +153,11 @@ const PriceSchema = z.object({
 });
 
 const TeaSchema = z.object({
-  id: z.string().trim().min(1).max(100).regex(/^[a-zA-Z0-9_-]+$/, 'id must be alphanumeric, "-", or "_"'),
+  // Без id — новый чай: id и адрес придумываются из названия.
+  id: z.string().trim().min(1).max(100).regex(/^[a-zA-Z0-9_-]+$/, 'id must be alphanumeric, "-", or "_"').optional(),
+  slug: z.string().trim().max(80).regex(catalog.SLUG_RE, 'адрес: только латиница в нижнем регистре, цифры и дефисы').optional().or(z.literal('')),
+  seoTitle: z.string().trim().max(120).nullable().optional(),
+  seoDescription: z.string().trim().max(300).nullable().optional(),
   externalId: z.string().max(50).nullable().optional(),
   name: z.string().trim().min(1).max(200),
   subtitle: z.string().max(300).nullable().optional(),
@@ -191,21 +197,115 @@ app.post('/api/teas', requireApiKey, (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: 'validation_failed', details: parsed.error.issues });
   }
-  const { id, ...patch } = parsed.data;
+  let { id, ...patch } = parsed.data;
+  if (!id) {
+    id = catalog.uniqueSlug(catalog.slugify(patch.name), null).replace(/-/g, '').slice(0, 40) || `tea${Date.now()}`;
+    while (store.getById(id)) id += 'x';
+  }
+  const existing = store.getById(id);
+
+  // Номер (короткая ссылка /t/<номер>, связь с Битриксом и мастером) — уникальный.
+  if (patch.externalId === undefined || patch.externalId === null || patch.externalId === '') {
+    patch.externalId = existing?.externalId || catalog.nextExternalId();
+  }
+  if (!/^\d{1,9}$/.test(String(patch.externalId))) {
+    return res.status(400).json({ error: 'validation_failed', details: [{ path: ['externalId'], message: 'номер — только цифры' }] });
+  }
+  const numOwner = store.getByExternalId(patch.externalId);
+  if (numOwner && numOwner.id !== id) {
+    return res.status(409).json({ error: 'external_id_taken', details: [{ path: ['externalId'], message: `номер ${patch.externalId} уже у «${numOwner.name}»` }] });
+  }
+
+  // Адрес страницы: пустой — придумываем из названия; занятый — ошибка;
+  // сменился — старый запоминаем, чтобы по нему был редирект.
+  if (!patch.slug) patch.slug = existing?.slug || catalog.uniqueSlug(catalog.slugify(patch.name), id);
+  if (catalog.slugTaken(patch.slug, id)) {
+    return res.status(409).json({ error: 'slug_taken', details: [{ path: ['slug'], message: `адрес /tea/${patch.slug} уже занят` }] });
+  }
+  if (existing?.slug && existing.slug !== patch.slug) {
+    patch.oldSlugs = [...new Set([...(existing.oldSlugs || []), existing.slug])].filter((x) => x !== patch.slug);
+  }
+
   // categoryLabel defaults to the raw category if neither the request nor
   // the existing row already has a nicer label.
   if (!patch.categoryLabel) {
-    const existing = store.getById(id);
     patch.categoryLabel = existing?.categoryLabel || patch.category;
   }
   const saved = store.upsert(id, patch);
+  catalog.onCatalogChanged(PORT);
   res.status(201).json(withMinPrice(saved));
 });
 
 app.delete('/api/teas/:id', requireApiKey, (req, res) => {
   const existed = store.remove(req.params.id);
   if (!existed) return res.status(404).json({ error: 'not_found' });
+  catalog.onCatalogChanged(PORT);
   res.status(204).end();
+});
+
+// --- админка, вкладка «Продукты» ---
+// Фото: браузер уже ужал картинку, сюда приходят сырые байты.
+const IMAGE_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+
+function sniffImage(buf) {
+  if (buf.length > 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'jpg';
+  if (buf.length > 8 && buf.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'png';
+  if (buf.length > 12 && buf.slice(0, 4).toString() === 'RIFF' && buf.slice(8, 12).toString() === 'WEBP') return 'webp';
+  return null;
+}
+
+app.post('/api/admin/teas/:id/photo', requireApiKey,
+  express.raw({ type: Object.keys(IMAGE_TYPES), limit: '10mb' }),
+  (req, res) => {
+    const tea = store.getById(req.params.id);
+    if (!tea) return res.status(404).json({ error: 'not_found' });
+    const ext = Buffer.isBuffer(req.body) ? sniffImage(req.body) : null;
+    if (!ext) return res.status(400).json({ error: 'not_an_image' });
+    const dir = require('path').join(catalog.SITE_DIR, 'assets', 'teas');
+    const name = `${tea.id}-${Date.now().toString(36)}.${ext}`;
+    try {
+      require('fs').mkdirSync(dir, { recursive: true });
+      require('fs').writeFileSync(require('path').join(dir, name), req.body);
+    } catch (e) {
+      return res.status(500).json({ error: 'write_failed', message: e.message });
+    }
+    const saved = store.upsert(tea.id, { imageUrl: `assets/teas/${name}` });
+    catalog.onCatalogChanged(PORT);
+    res.json(withMinPrice(saved));
+  });
+
+app.get('/api/admin/catalog-status', requireApiKey, (_req, res) => {
+  res.json({ ...catalog.status, origin: catalog.SITE_ORIGIN });
+});
+
+app.post('/api/admin/catalog-sync', requireApiKey, (_req, res) => {
+  catalog.syncNow(PORT);
+  res.status(202).json({ ok: true });
+});
+
+// --- короткие и старые ссылки (nginx отдаёт сюда /t/<номер>, tea-<id>.html и
+// неизвестные /tea/<адрес>) ---
+function teaPath(t) { return `/tea/${t.slug}`; }
+
+function notFoundPage(res) {
+  res.status(404).type('html').send('<!doctype html><meta charset="utf-8"><title>Чай не найден — Чайный город</title>' +
+    '<body style="font-family:sans-serif;text-align:center;padding:60px 20px;background:#F4EFE2;color:#22392B">' +
+    '<h1 style="font-size:22px">Такого чая у нас нет</h1><p><a href="/catalog.html" style="color:#22392B">Перейти в каталог</a></p></body>');
+}
+
+app.get('/go/t/:num', (req, res) => {
+  const t = store.getByExternalId(req.params.num);
+  return t && t.slug ? res.redirect(301, teaPath(t)) : notFoundPage(res);
+});
+
+app.get('/go/id/:id', (req, res) => {
+  const t = store.getById(req.params.id);
+  return t && t.slug ? res.redirect(301, teaPath(t)) : notFoundPage(res);
+});
+
+app.get('/go/slug/:slug', (req, res) => {
+  const t = store.getByOldSlug(req.params.slug);
+  return t && t.slug ? res.redirect(301, teaPath(t)) : notFoundPage(res);
 });
 
 // Счётчик нажатий «Купить» (assets/common.js: buyClick). Эндпоинт был добавлен
@@ -432,5 +532,8 @@ app.get('/api/admin/people/:key', requireApiKey, (req, res) => {
 
 app.use(jsonErrorHandler);
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, '127.0.0.1', () => console.log(`Чайный город API listening on :${PORT}`));
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`Чайный город API listening on :${PORT}`);
+  catalog.ensureSlugsAndNumbers();
+  catalog.onCatalogChanged(PORT); // страницы и база мастера — по актуальному каталогу
+});

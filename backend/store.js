@@ -17,11 +17,14 @@ function load() {
   try {
     const raw = fs.readFileSync(STORE_PATH, 'utf8');
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object' && parsed.teas) return parsed;
+    if (parsed && typeof parsed === 'object' && parsed.teas) {
+      if (!Array.isArray(parsed.removed)) parsed.removed = [];
+      return parsed;
+    }
   } catch {
     // no file yet, or corrupt — start fresh
   }
-  return { teas: {} };
+  return { teas: {}, removed: [] };
 }
 
 const state = load();
@@ -52,6 +55,7 @@ function upsert(id, patch) {
     updatedAt: new Date().toISOString(),
   };
   state.teas[id] = merged;
+  state.removed = state.removed.filter((x) => x !== id);
   persist();
   return merged;
 }
@@ -60,9 +64,27 @@ function remove(id) {
   const existed = Object.prototype.hasOwnProperty.call(state.teas, id);
   if (existed) {
     delete state.teas[id];
+    // Запоминаем удалённое, чтобы seed.js при переустановке не вернул его.
+    if (!state.removed.includes(id)) state.removed.push(id);
     persist();
   }
   return existed;
 }
 
-module.exports = { getAll, getById, upsert, remove, STORE_PATH };
+function isRemoved(id) {
+  return state.removed.includes(id);
+}
+
+function getBySlug(slug) {
+  return getAll().find((t) => t.slug === slug) || null;
+}
+
+function getByOldSlug(slug) {
+  return getAll().find((t) => Array.isArray(t.oldSlugs) && t.oldSlugs.includes(slug)) || null;
+}
+
+function getByExternalId(num) {
+  return getAll().find((t) => String(t.externalId) === String(num)) || null;
+}
+
+module.exports = { getAll, getById, getBySlug, getByOldSlug, getByExternalId, upsert, remove, isRemoved, STORE_PATH };

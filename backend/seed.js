@@ -31,7 +31,14 @@ for (const id of REMOVED_IDS) {
   }
 }
 
+// Каталог теперь редактируется в админке (вкладка «Продукты»), поэтому seed
+// только ДОБАВЛЯЕТ чаи, которых ещё нет, и не возвращает удалённые.
+// Перезаписать всё данными мастера из этого файла: FORCE=1 node seed.js
+const FORCE = process.env.FORCE === '1';
+let added = 0;
 for (const t of TEAS) {
+  if (!FORCE && (store.getById(t.id) || store.isRemoved(t.id))) continue;
+  added += 1;
   store.upsert(t.id, {
     externalId: String(t.externalId),
     name: t.name,
@@ -59,4 +66,4 @@ for (const t of TEAS) {
   });
 }
 
-console.log(`Загружено ${TEAS.length} чаёв из настоящей базы мастера.`);
+console.log(FORCE ? `Перезаписано ${added} чаёв данными мастера.` : `Добавлено новых чаёв: ${added} (существующие и удалённые не тронуты).`);

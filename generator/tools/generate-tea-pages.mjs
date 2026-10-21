@@ -54,7 +54,7 @@ const OUT_DIR = process.env.OUT_DIR || path.join(__dirname, '..', 'dist');
 // поднимайте это число КАЖДЫЙ раз, когда меняете common.js/style.css, и тогда же
 // поправьте ?v= в остальных .html (иначе браузеры продолжат отдавать старые
 // файлы из кэша — именно это и было причиной "меню не обновилось").
-const ASSET_VERSION = process.env.ASSET_VERSION || '17';
+const ASSET_VERSION = process.env.ASSET_VERSION || '18';
 
 const FONT_LINK =
   '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
@@ -133,14 +133,19 @@ function embeddedJson(value) {
 
 function pageHtml(tea, allTeas) {
   const id = tea.id;
-  const title = CG.escapeHtml(tea.name) + ' — купить ' + CG.escapeHtml((CG.categoryLabel(tea) || 'чай').toLowerCase()) + ' | Чайный город';
-  const description = CG.escapeHtml(metaDescriptionFor(tea));
+  // SEO-заголовок и описание задаются в админке; пустые — собираем сами.
+  const title = tea.seoTitle
+    ? CG.escapeHtml(tea.seoTitle)
+    : CG.escapeHtml(tea.name) + ' — купить ' + CG.escapeHtml((CG.categoryLabel(tea) || 'чай').toLowerCase()) + ' | Чайный город';
+  const description = CG.escapeHtml(tea.seoDescription || metaDescriptionFor(tea));
   const canonical = SITE_ORIGIN + '/' + CG.defaultTeaHref(tea);
   const related = CG.relatedMarkup(allTeas, tea);
 
   return (
     '<!doctype html>\n<html lang="ru">\n<head>\n' +
     '<meta charset="utf-8">\n' +
+    // Страница живёт по адресу /tea/<slug>: все относительные ссылки и стили — от корня.
+    '<base href="/">\n' +
     '<title>' + title + '</title>\n' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
     '<meta name="description" content="' + description + '">\n' +
@@ -189,7 +194,7 @@ function pageHtml(tea, allTeas) {
 
 function buildSitemap(teas) {
   const staticUrls = ['/', '/catalog.html', '/guild.html', '/about.html'];
-  const teaUrls = teas.map((t) => '/' + CG.defaultTeaHref(t));
+  const teaUrls = teas.filter((t) => t.slug).map((t) => '/' + CG.defaultTeaHref(t));
   const urls = staticUrls.concat(teaUrls);
   const today = new Date().toISOString().slice(0, 10);
   const body = urls.map((u) =>
@@ -231,27 +236,36 @@ async function main() {
   }
   log('Получено чаёв: ' + teas.length);
 
+  // Страницы товара: OUT_DIR/tea/<slug>.html, адрес — /tea/<slug>
+  // (nginx: try_files $uri.html). Чай без slug пропускаем — бэкенд проставляет
+  // адреса при старте, так что это только совсем старые данные.
+  const teaDir = path.join(OUT_DIR, 'tea');
+  fs.mkdirSync(teaDir, { recursive: true });
   let written = 0;
   const currentFiles = new Set();
   for (const tea of teas) {
-    if (!tea || !tea.id) continue;
-    const html = pageHtml(tea, teas);
-    const fileName = CG.defaultTeaHref(tea);
-    fs.writeFileSync(path.join(OUT_DIR, fileName), html);
+    if (!tea || !tea.id || !tea.slug) { if (tea) log('Нет адреса (slug), пропущен: ' + tea.id); continue; }
+    const fileName = tea.slug + '.html';
+    const tmp = path.join(teaDir, '.' + fileName + '.tmp');
+    fs.writeFileSync(tmp, pageHtml(tea, teas));
+    fs.renameSync(tmp, path.join(teaDir, fileName));
     currentFiles.add(fileName);
     written++;
   }
   log('Записано страниц товара: ' + written);
 
-  // Товар мог быть удалён или переименован (сменился id) — например, когда
-  // "Моли Хуа Ча" заменили на "Хуо Шань Хуан Я": tea-molihuacha.html иначе
-  // остался бы висеть на сайте как мёртвая, никуда не связанная страница.
-  // Убираем любой tea-*.html, которого больше нет среди текущих товаров.
+  // Удалённые и переименованные чаи: убираем их файлы. Старые адреса не
+  // пропадают — nginx отправляет их в бэкенд, а тот делает редирект на новый.
   let removed = 0;
+  for (const entry of fs.readdirSync(teaDir)) {
+    if (!/\.html$/.test(entry) || currentFiles.has(entry)) continue;
+    fs.unlinkSync(path.join(teaDir, entry));
+    removed++;
+  }
+  // Страницы старого формата tea-<id>.html в корне больше не нужны.
   for (const entry of fs.readdirSync(OUT_DIR)) {
-    if (!/^tea-.+\.html$/.test(entry) || currentFiles.has(entry)) continue;
+    if (!/^tea-.+\.html$/.test(entry)) continue;
     fs.unlinkSync(path.join(OUT_DIR, entry));
-    log('Удалена устаревшая страница товара: ' + entry);
     removed++;
   }
   if (removed) log('Удалено устаревших страниц товара: ' + removed);
