@@ -369,35 +369,6 @@ function productsRenderForm(array $state): void
       <?php endif; ?>
     </div>
 
-    <?php if (!$isNew && $saved): ?>
-    <div class="prod-side">
-      <section class="card-block">
-        <h3>Фото</h3>
-        <div class="photo-preview"<?= $img ? ' style="background-image:url(\'' . esc($img) . '\')"' : '' ?>><?= $img ? '' : 'Фото нет — на сайте показывается цветная плашка' ?></div>
-        <form method="post" enctype="multipart/form-data" action="?tab=products&id=<?= esc(rawurlencode($id)) ?>" data-photo-form>
-          <input type="hidden" name="action" value="photo">
-          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
-          <div class="hint">Квадрат или близко к нему смотрится лучше всего. Большие фото ужимаются до 1600 px прямо в браузере.</div>
-          <button class="btn" type="submit">Загрузить фото</button>
-        </form>
-      </section>
-
-      <section class="card-block">
-        <h3>QR и короткая ссылка</h3>
-        <div class="qr-box" data-qr="<?= esc(productsShortUrl($saved)) ?>"></div>
-        <div class="short-link">
-          <input type="text" readonly value="<?= esc(productsShortUrl($saved)) ?>" onclick="this.select()">
-          <button class="btn btn-ghost" type="button" data-copy="<?= esc(productsShortUrl($saved)) ?>">Копировать</button>
-        </div>
-        <div class="qr-actions">
-          <button class="btn btn-ghost" type="button" data-qr-png="qr-<?= esc((string) ($saved['externalId'] ?? '')) ?>-<?= esc((string) ($saved['slug'] ?? '')) ?>.png">Скачать PNG</button>
-          <button class="btn btn-ghost" type="button" data-qr-svg="qr-<?= esc((string) ($saved['externalId'] ?? '')) ?>-<?= esc((string) ($saved['slug'] ?? '')) ?>.svg">Скачать SVG (для печати)</button>
-        </div>
-        <div class="hint">Короткая ссылка ведёт на страницу чая и не меняется, даже если поменять адрес страницы. Номер меняйте, только если QR ещё нигде не напечатан.</div>
-      </section>
-    </div>
-    <?php endif; ?>
-
     <form method="post" class="prod-form" action="?tab=products<?= $isNew ? '&new=1' : '&id=' . esc(rawurlencode($id)) ?>">
       <input type="hidden" name="action" value="save">
       <input type="hidden" name="id" value="<?= esc($isNew ? '' : $id) ?>">
@@ -506,6 +477,33 @@ function productsRenderForm(array $state): void
     </form>
 
     <?php if (!$isNew && $saved): ?>
+    <div class="prod-bottom">
+      <section class="card-block photo-block">
+        <div class="photo-thumb"<?= $img ? ' style="background-image:url(\'' . esc($img) . '\')"' : '' ?>><?= $img ? '' : 'нет фото' ?></div>
+        <form method="post" enctype="multipart/form-data" action="?tab=products&id=<?= esc(rawurlencode($id)) ?>" data-photo-form>
+          <h3>Фото</h3>
+          <input type="hidden" name="action" value="photo">
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
+          <div class="hint">Лучше квадратное. Большие фото ужимаются до 1600 px прямо в браузере.</div>
+          <button class="btn btn-ghost" type="submit">Загрузить фото</button>
+        </form>
+      </section>
+
+      <section class="card-block qr-block" title="Короткая ссылка не меняется, даже если поменять адрес страницы. Номер меняйте, только если QR ещё нигде не напечатан.">
+        <div class="qr-box" data-qr="<?= esc(productsShortUrl($saved)) ?>"></div>
+        <div class="qr-info">
+          <a class="qr-link" href="<?= esc(productsShortUrl($saved)) ?>" target="_blank" rel="noopener"><?= esc(preg_replace('#^https?://#', '', productsShortUrl($saved))) ?></a>
+          <div class="qr-actions">
+            <a href="#" data-copy="<?= esc(productsShortUrl($saved)) ?>">копировать</a>
+            <a href="#" data-qr-png="qr-<?= esc((string) ($saved['externalId'] ?? '')) ?>-<?= esc((string) ($saved['slug'] ?? '')) ?>.png">PNG</a>
+            <a href="#" data-qr-svg="qr-<?= esc((string) ($saved['externalId'] ?? '')) ?>-<?= esc((string) ($saved['slug'] ?? '')) ?>.svg">SVG</a>
+          </div>
+        </div>
+      </section>
+    </div>
+    <?php endif; ?>
+
+    <?php if (!$isNew && $saved): ?>
       <form method="post" class="danger-zone" action="?tab=products&id=<?= esc(rawurlencode($id)) ?>" onsubmit="return confirm('Удалить «<?= esc(addslashes((string) ($saved['name'] ?? ''))) ?>»? Страница исчезнет с сайта, мастер перестанет его советовать. Отменить нельзя.');">
         <input type="hidden" name="action" value="delete">
         <button class="btn btn-danger" type="submit">Удалить чай</button>
@@ -539,13 +537,13 @@ function productsCss(): string
   .prod-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
   .prod-head h2 { margin: 0; font-size: 22px; }
   .prod-head .ext { font-size: 13px; color: var(--tea-green-dark); }
-  .prod-side { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .prod-bottom { display: flex; gap: 12px; align-items: stretch; margin-bottom: 12px; }
+  .prod-bottom .card-block { margin-bottom: 0; }
   .card-block { background: var(--tea-paper); border: 1px solid var(--tea-border); border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; }
-  .prod-side .card-block { margin-bottom: 0; }
   .card-block h3 { margin: 0 0 12px; font-size: 15px; }
   .f { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 600; color: var(--tea-text); margin-bottom: 12px; flex: 1; min-width: 0; }
   .f .muted { font-weight: 400; color: var(--tea-muted); }
-  .f input[type=text], .f input[type=number], .f select, .f textarea, .price-row input, .short-link input {
+  .f input[type=text], .f input[type=number], .f select, .f textarea, .price-row input {
     font: inherit; font-weight: 400; font-size: 14px; padding: 8px 10px; border: 1px solid var(--tea-border); border-radius: 8px; background: #fff; color: var(--tea-text); width: 100%; box-sizing: border-box;
   }
   .f textarea { resize: vertical; line-height: 1.45; }
@@ -563,15 +561,21 @@ function productsCss(): string
   .serp-url { font-size: 12.5px; color: #3c7a4f; margin-bottom: 3px; word-break: break-all; }
   .serp-title { font-size: 17px; color: #1a0dab; margin-bottom: 4px; }
   .serp-desc { font-size: 13px; color: #4d5156; line-height: 1.45; }
-  .photo-preview { height: 200px; border-radius: 10px; background: var(--tea-bot-bubble) center/cover no-repeat; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12.5px; color: var(--tea-muted); padding: 10px; }
-  .qr-box { display: flex; justify-content: center; margin-bottom: 10px; min-height: 160px; align-items: center; }
-  .qr-box canvas { width: 160px; height: 160px; image-rendering: pixelated; }
-  .short-link { display: flex; gap: 8px; margin-bottom: 8px; }
-  .short-link input { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
-  .qr-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .photo-block { flex: 1; display: flex; gap: 16px; align-items: flex-start; }
+  .photo-block h3 { margin-bottom: 8px; }
+  .photo-block input[type=file] { font-size: 13px; }
+  .photo-thumb { width: 120px; height: 120px; border-radius: 10px; flex-shrink: 0; background: var(--tea-bot-bubble) center/cover no-repeat; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--tea-muted); }
+  .qr-block { flex: 0 0 auto; display: flex; gap: 12px; align-items: center; padding: 12px 14px; }
+  .qr-box { width: 84px; height: 84px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--tea-muted); text-align: center; }
+  .qr-box canvas { width: 84px; height: 84px; image-rendering: pixelated; }
+  .qr-info { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; }
+  .qr-link { font-family: ui-monospace, Menlo, monospace; color: var(--tea-green-dark); }
+  .qr-actions { display: flex; gap: 10px; }
+  .qr-actions a { color: var(--tea-muted); }
+  .qr-actions a:hover { color: var(--tea-green-dark); }
   .form-actions { display: flex; align-items: center; gap: 16px; margin: 6px 0 24px; position: sticky; bottom: 0; background: var(--tea-cream); padding: 10px 0; }
   .danger-zone { display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--tea-border); padding-top: 18px; }
-  @media (max-width: 720px) { .prod-side { grid-template-columns: 1fr; } .prod-short { display: none; } }
+  @media (max-width: 720px) { .prod-bottom { flex-direction: column; } .prod-short { display: none; } }
 CSS;
 }
 
@@ -589,7 +593,7 @@ function productsScript(): string
   var qr = null;
   if (box) {
     if (typeof qrcode !== 'function') {
-      box.textContent = 'Не удалось загрузить генератор QR — проверьте интернет и обновите страницу.';
+      box.textContent = 'QR не загрузился';
     } else {
       qr = qrcode(0, 'M');
       qr.addData(box.getAttribute('data-qr'));
@@ -614,20 +618,22 @@ function productsScript(): string
     document.body.appendChild(a); a.click(); a.remove();
   }
   document.querySelectorAll('[data-qr-png]').forEach(function (b) {
-    b.addEventListener('click', function () { if (qr) download(b.getAttribute('data-qr-png'), qrCanvas(qr, 24, 4).toDataURL('image/png')); });
+    b.addEventListener('click', function (e) { e.preventDefault(); if (qr) download(b.getAttribute('data-qr-png'), qrCanvas(qr, 24, 4).toDataURL('image/png')); });
   });
   document.querySelectorAll('[data-qr-svg]').forEach(function (b) {
-    b.addEventListener('click', function () {
+    b.addEventListener('click', function (e) {
+      e.preventDefault();
       if (!qr) return;
       var svg = qr.createSvgTag({ cellSize: 10, margin: 4, scalable: true });
       download(b.getAttribute('data-qr-svg'), URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })));
     });
   });
   document.querySelectorAll('[data-copy]').forEach(function (b) {
-    b.addEventListener('click', function () {
+    b.addEventListener('click', function (e) {
+      e.preventDefault();
       var t = b.getAttribute('data-copy');
       (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
-        b.textContent = 'Скопировано'; setTimeout(function () { b.textContent = 'Копировать'; }, 1500);
+        b.textContent = 'скопировано'; setTimeout(function () { b.textContent = 'копировать'; }, 1500);
       }, function () { window.prompt('Скопируйте ссылку:', t); });
     });
   });
