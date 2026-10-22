@@ -51,6 +51,7 @@ const ORDER_STATUS_LABELS = [
     'done' => 'Выполнен',
     'cancelled' => 'Отменён',
 ];
+const PAYMENT_LABELS = ['cash' => 'наличные', 'card' => 'карта', 'transfer' => 'перевод'];
 
 function esc($value): string
 {
@@ -135,7 +136,7 @@ require __DIR__ . '/products.php';
 
 $tab = in_array($_GET['tab'] ?? '', ['orders', 'users', 'products'], true) ? $_GET['tab'] : 'dialogs';
 // Карточка одного пользователя: ?tab=users&u=<ключ> (u_<telegramId> или v_<метка браузера>).
-$userKey = ($tab === 'users' && isset($_GET['u']) && is_string($_GET['u']) && preg_match('/^[uv]_[A-Za-z0-9_-]{1,80}$/', $_GET['u'])) ? $_GET['u'] : null;
+$userKey = ($tab === 'users' && isset($_GET['u']) && is_string($_GET['u']) && preg_match('/^[uvp]_[A-Za-z0-9_-]{1,80}$/', $_GET['u'])) ? $_GET['u'] : null;
 
 // Смена статуса заказа — обычный POST-редирект (PRG), чтобы обновление
 // страницы не отправляло форму повторно.
@@ -149,6 +150,69 @@ if ($tab === 'orders' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['
         exit;
     }
     $statusUpdateError = $result['error'] ?? 'Не удалось обновить статус';
+}
+
+// Продажа в магазине, удаление заказа, удаление всех тестовых — тоже PRG.
+$saleError = null;
+$saleForm = [];
+if ($tab === 'orders' && $_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST['action'] ?? '', ['offline', 'delete', 'delete_tests'], true)) {
+    $action = (string) $_POST['action'];
+    if ($action === 'offline') {
+        $saleForm = $_POST;
+        $items = [];
+        foreach ((array) ($_POST['sale_item'] ?? []) as $i => $key) {
+            $key = (string) $key;
+            if ($key === '') {
+                continue;
+            }
+            [$teaId, $w] = array_pad(explode('|', $key, 2), 2, '0');
+            $item = ['teaId' => $teaId, 'weightGrams' => (int) $w, 'qty' => max(1, (int) ($_POST['sale_qty'][$i] ?? 1))];
+            $priceRaw = preg_replace('/\D/', '', (string) ($_POST['sale_price'][$i] ?? ''));
+            if ($priceRaw !== '') {
+                $item['unitPrice'] = (int) $priceRaw;
+            }
+            $items[] = $item;
+        }
+        if (!$items) {
+            $saleError = 'Выберите хотя бы один товар.';
+        } else {
+            $result = ordersApiRequest('POST', '/admin/orders/offline', [
+                'items' => $items,
+                'payment' => in_array($_POST['sale_payment'] ?? '', array_keys(PAYMENT_LABELS), true) ? $_POST['sale_payment'] : 'cash',
+                'customer' => [
+                    'name' => trim((string) ($_POST['sale_name'] ?? '')),
+                    'phone' => trim((string) ($_POST['sale_phone'] ?? '')),
+                    'comment' => trim((string) ($_POST['sale_comment'] ?? '')),
+                ],
+                'seller' => trim((string) ($_POST['sale_seller'] ?? '')),
+                'test' => !empty($_POST['sale_test']),
+            ]);
+            if ($result['ok']) {
+                header('Location: ?tab=orders&sold=' . (int) ($result['data']['order']['number'] ?? 0));
+                exit;
+            }
+            $saleError = $result['error'] ?? 'Не удалось провести продажу';
+        }
+    } else {
+        $ids = [];
+        if ($action === 'delete') {
+            $ids[] = (string) ($_POST['order_id'] ?? '');
+        } else {
+            foreach (fetchOrders() as $o) {
+                if (!empty($o['test'])) {
+                    $ids[] = (string) $o['id'];
+                }
+            }
+        }
+        $n = 0;
+        foreach ($ids as $id) {
+            if ($id !== '' && ordersApiRequest('DELETE', '/orders/' . rawurlencode($id))['ok']) {
+                $n++;
+            }
+        }
+        header('Location: ?tab=orders&deleted=' . $n);
+        exit;
+    }
 }
 
 // ---------- Загрузка и разбор лога диалогов (только когда нужно) ----------
@@ -380,6 +444,8 @@ if ($tab === 'orders') {
     if ($apiKey === '') {
         $ordersError = 'В .env не задан CHAYGOROD_API_KEY — страница не может получить заказы у бэкенда.';
     } else {
+        $catalogResult = ordersApiRequest('GET', '/teas');
+        $saleCatalog = $catalogResult['ok'] && is_array($catalogResult['data']) ? $catalogResult['data'] : [];
         $result = ordersApiRequest('GET', '/orders');
         if ($result['ok'] && is_array($result['data'])) {
             $orders = $result['data']['orders'] ?? [];
@@ -425,10 +491,40 @@ if ($tab === 'users') {
 
 function personTitle(array $p): string
 {
-    if (($p['kind'] ?? '') === 'guest' && is_array($p['contact'] ?? null) && !empty($p['contact']['name'])) {
+    if (in_array($p['kind'] ?? '', ['guest', 'shop'], true) && is_array($p['contact'] ?? null) && !empty($p['contact']['name'])) {
         return (string) $p['contact']['name'];
     }
     return (string) ($p['name'] ?? '—');
+}
+
+function personKindLabel(array $p): string
+{
+    return ['user' => 'Telegram', 'shop' => 'покупатель магазина'][$p['kind'] ?? ''] ?? 'гость';
+}
+
+/** Позиция заказа: «Название · 50 г × 2», посуда — без граммов. */
+function orderItemLabel(array $it): string
+{
+    return ($it['name'] ?? '—') . (!empty($it['weightGrams']) ? ' · ' . $it['weightGrams'] . ' г' : '') . ' × ' . (int) ($it['qty'] ?? 1);
+}
+
+/** Варианты для выбора товара в продаже: «id|граммы» => подпись, по разделам. */
+function saleOptions(array $teas): array
+{
+    $groups = [];
+    foreach ($teas as $t) {
+        foreach ((array) ($t['prices'] ?? []) as $p) {
+            $w = (int) ($p['weightGrams'] ?? 0);
+            $st = $p['stock'] ?? null;
+            $label = ($t['name'] ?? '') . ($w ? ' · ' . $w . ' г' : '') . ' — ' . number_format((int) ($p['price'] ?? 0), 0, '', ' ') . ' ₽'
+                . ' (' . ($st === null ? 'остаток не ведётся' : 'ост. ' . $st) . ')';
+            $groups[PRODUCT_CATEGORIES[$t['category'] ?? ''] ?? 'Другое'][] = [
+                'value' => ($t['id'] ?? '') . '|' . $w, 'label' => $label, 'price' => (int) ($p['price'] ?? 0),
+            ];
+        }
+    }
+    ksort($groups);
+    return $groups;
 }
 
 function plural(int $n, string $one, string $few, string $many): string
@@ -611,6 +707,31 @@ header('Cache-Control: no-store');
   .stock-note .warn { color: var(--tea-accent); }
   .status-badge.done { background: #dcefdd; color: var(--tea-green-dark); }
   .status-badge.cancelled { background: var(--tea-error-bg); color: var(--tea-accent); }
+  .src-badge, .pre-badge, .test-badge, .pre-tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; margin-left: 6px; }
+  .src-badge.site { background: var(--tea-bot-bubble); color: var(--tea-green-dark); }
+  .src-badge.shop { background: #e9e2f3; color: #4f3b73; }
+  .pre-badge, .pre-tag { background: #fdf1cf; color: #8a6a12; }
+  .test-badge { background: #eee; color: #666; }
+  .order-card.has-preorder { border-left: 4px solid #e0b43c; }
+  .order-card.is-test { opacity: .75; border-style: dashed; }
+  .order-items .item-pre { background: #fff8e3; margin: 0 -6px; padding: 2px 6px !important; border-radius: 6px; }
+  .del-form { margin-top: 6px; text-align: right; }
+  .link-btn { background: none; border: none; color: var(--tea-muted); font-size: 12px; text-decoration: underline; cursor: pointer; padding: 0; }
+  .link-btn:hover { color: var(--tea-accent); }
+  .sale-box { background: var(--tea-paper); border: 1px solid var(--tea-border); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; }
+  .sale-box summary { cursor: pointer; font-weight: 700; color: var(--tea-green-dark); font-size: 14.5px; }
+  .sale-box form { margin-top: 12px; }
+  .sale-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .sale-row select { flex: 1; min-width: 0; }
+  .sale-box select, .sale-box input[type=text], .sale-box input[type=tel], .sale-box input[type=number] { padding: 8px 10px; border: 1px solid var(--tea-border); border-radius: 8px; font-size: 13.5px; background: #fff; font-family: inherit; }
+  .sale-qty { width: 70px; } .sale-price { width: 90px; }
+  .sale-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 8px; }
+  .sale-comment { width: 100%; box-sizing: border-box; }
+  .sale-foot { display: flex; align-items: center; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+  .sale-test { font-size: 13px; color: var(--tea-muted); flex: 1; }
+  .sale-total { font-size: 15px; }
+  .tests-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #f3f1ec; border-radius: 10px; padding: 8px 14px; margin-bottom: 14px; font-size: 13.5px; }
+  @media (max-width: 640px) { .sale-grid { grid-template-columns: 1fr; } .sale-row { flex-wrap: wrap; } .sale-row select { flex-basis: 100%; } }
   .api-error { background: var(--tea-error-bg); color: var(--tea-accent); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13.5px; }
 <?= productsCss() ?>
 </style>
@@ -655,6 +776,65 @@ header('Cache-Control: no-store');
     <div class="api-error">Не удалось сохранить статус: <?= esc($statusUpdateError) ?></div>
   <?php endif; ?>
 
+  <?php if (isset($_GET['sold'])): ?>
+    <div class="flash">Продажа проведена — заказ №<?= (int) $_GET['sold'] ?>, остаток списан.</div>
+  <?php elseif (isset($_GET['deleted'])): ?>
+    <div class="flash">Удалено заказов: <?= (int) $_GET['deleted'] ?>. Списанный по ним остаток возвращён.</div>
+  <?php endif; ?>
+
+  <?php if (!$ordersError): ?>
+    <?php $saleGroups = saleOptions($saleCatalog ?? []); $saleOpen = $saleError !== null || isset($_GET['sell']); ?>
+    <details class="sale-box" <?= $saleOpen ? 'open' : '' ?>>
+      <summary>+ Продажа в магазине</summary>
+      <?php if ($saleError): ?><div class="api-error"><?= esc($saleError) ?></div><?php endif; ?>
+      <form method="post" action="?tab=orders" data-sale-form>
+        <input type="hidden" name="action" value="offline">
+        <div data-sale-rows>
+          <?php $rowsN = max(1, count(array_filter((array) ($saleForm['sale_item'] ?? []), 'strlen'))); for ($r = 0; $r < $rowsN; $r++): $selVal = (string) (($saleForm['sale_item'] ?? [])[$r] ?? ''); ?>
+          <div class="sale-row">
+            <select name="sale_item[]" data-sale-item>
+              <option value="">— товар —</option>
+              <?php foreach ($saleGroups as $group => $opts): ?>
+                <optgroup label="<?= esc($group) ?>">
+                  <?php foreach ($opts as $o): ?>
+                    <option value="<?= esc($o['value']) ?>" data-price="<?= $o['price'] ?>" <?= $selVal === $o['value'] ? 'selected' : '' ?>><?= esc($o['label']) ?></option>
+                  <?php endforeach; ?>
+                </optgroup>
+              <?php endforeach; ?>
+            </select>
+            <input type="number" name="sale_qty[]" min="1" value="<?= esc((string) (($saleForm['sale_qty'] ?? [])[$r] ?? 1)) ?>" class="sale-qty" data-sale-qty title="Количество">
+            <input type="text" name="sale_price[]" inputmode="numeric" placeholder="цена" value="<?= esc((string) (($saleForm['sale_price'] ?? [])[$r] ?? '')) ?>" class="sale-price" data-sale-price title="Цена за штуку; пусто — по каталогу">
+          </div>
+          <?php endfor; ?>
+        </div>
+        <button class="btn btn-ghost" type="button" data-sale-add>+ ещё товар</button>
+        <div class="sale-grid">
+          <input type="text" name="sale_name" placeholder="Имя покупателя" value="<?= esc((string) ($saleForm['sale_name'] ?? '')) ?>">
+          <input type="tel" name="sale_phone" placeholder="Телефон — чтобы покупатель попал в базу" value="<?= esc((string) ($saleForm['sale_phone'] ?? '')) ?>">
+          <select name="sale_payment">
+            <?php foreach (PAYMENT_LABELS as $v => $l): ?><option value="<?= $v ?>" <?= ($saleForm['sale_payment'] ?? 'cash') === $v ? 'selected' : '' ?>><?= esc(ucfirst($l)) ?></option><?php endforeach; ?>
+          </select>
+          <input type="text" name="sale_seller" placeholder="Кто продал" value="<?= esc((string) ($saleForm['sale_seller'] ?? '')) ?>">
+        </div>
+        <input type="text" name="sale_comment" placeholder="Комментарий" value="<?= esc((string) ($saleForm['sale_comment'] ?? '')) ?>" class="sale-comment">
+        <div class="sale-foot">
+          <label class="sale-test"><input type="checkbox" name="sale_test" value="1" <?= !empty($saleForm['sale_test']) ? 'checked' : '' ?>> тестовая (потом удалить одной кнопкой)</label>
+          <span class="sale-total">Итого: <b data-sale-total>0</b> ₽</span>
+          <button class="btn" type="submit">Провести продажу</button>
+        </div>
+        <div class="hint">Заказ сразу получает статус «Выполнен», остаток списывается. Если товара не было на полке — позиция помечается «под заказ», остаток уходит в минус.</div>
+      </form>
+    </details>
+    <?php $testCount = count(array_filter($orders, static fn ($o) => !empty($o['test']))); ?>
+    <?php if ($testCount): ?>
+      <form method="post" action="?tab=orders" class="tests-bar" onsubmit="return confirm('Удалить все тестовые заказы (<?= $testCount ?>) и вернуть их остаток?')">
+        <input type="hidden" name="action" value="delete_tests">
+        <span>Тестовых заказов: <?= $testCount ?></span>
+        <button class="btn btn-ghost" type="submit">Удалить все тестовые</button>
+      </form>
+    <?php endif; ?>
+  <?php endif; ?>
+
   <?php if ($ordersError): ?>
     <div class="api-error"><?= esc($ordersError) ?></div>
   <?php elseif (empty($orders)): ?>
@@ -666,22 +846,29 @@ header('Cache-Control: no-store');
         $customer = is_array($o['customer'] ?? null) ? $o['customer'] : [];
         $items = is_array($o['items'] ?? null) ? $o['items'] : [];
       ?>
-      <div class="order-card">
+      <?php $isShop = ($o['source'] ?? '') === 'offline'; $preItems = array_filter($items, static fn ($it) => (int) ($it['preorderQty'] ?? 0) > 0); ?>
+      <div class="order-card<?= $preItems ? ' has-preorder' : '' ?><?= !empty($o['test']) ? ' is-test' : '' ?>">
         <div class="row1">
-          <span class="order-number">Заказ №<?= esc($o['number'] ?? '—') ?></span>
-          <span><?= esc(fmtTime($o['createdAt'] ?? null)) ?></span>
+          <span>
+            <span class="order-number">Заказ №<?= esc($o['number'] ?? '—') ?></span>
+            <span class="src-badge <?= $isShop ? 'shop' : 'site' ?>"><?= $isShop ? 'магазин' . (!empty($o['payment']) ? ' · ' . esc(PAYMENT_LABELS[$o['payment']] ?? $o['payment']) : '') : 'сайт' ?></span>
+            <?php if ($preItems): ?><span class="pre-badge">есть под заказ</span><?php endif; ?>
+            <?php if (!empty($o['test'])): ?><span class="test-badge">тест</span><?php endif; ?>
+          </span>
+          <span><?= esc(fmtTime($o['createdAt'] ?? null)) ?><?= !empty($o['seller']) ? ' · продал: ' . esc($o['seller']) : '' ?></span>
         </div>
         <div class="order-customer"><?= esc($customer['name'] ?? '—') ?> · <?= esc($customer['phone'] ?? '—') ?><?php $pk = orderPersonKey($o); if ($pk !== null): ?> · <a href="?tab=users&u=<?= esc($pk) ?>">карточка покупателя</a><?php endif; ?></div>
-        <div class="order-address">Адрес: <?= esc($customer['address'] ?? '—') ?></div>
+        <?php if (!$isShop): ?><div class="order-address">Адрес: <?= esc($customer['address'] ?? '—') ?></div><?php endif; ?>
         <?php if (!empty($customer['comment'])): ?>
           <div class="order-comment">Комментарий: <?= esc($customer['comment']) ?></div>
         <?php endif; ?>
         <div class="order-items">
           <?php foreach ($items as $it): ?>
-            <div>
-              <?= esc($it['name'] ?? '—') ?><?= !empty($it['weightGrams']) ? ' · ' . esc($it['weightGrams']) . ' г' : '' ?>
-              × <?= (int) ($it['qty'] ?? 1) ?>
-              — <?= number_format((int) ($it['unitPrice'] ?? 0) * (int) ($it['qty'] ?? 1), 0, '', ' ') ?> ₽
+            <?php $pq = (int) ($it['preorderQty'] ?? 0); $q = (int) ($it['qty'] ?? 1); ?>
+            <div class="<?= $pq ? 'item-pre' : '' ?>">
+              <?= esc(orderItemLabel($it)) ?>
+              — <?= number_format((int) ($it['unitPrice'] ?? 0) * $q, 0, '', ' ') ?> ₽
+              <?php if ($pq): ?><span class="pre-tag"><?= $pq >= $q ? 'под заказ' : ($q - $pq) . ' есть, ' . $pq . ' под заказ' ?></span><?php endif; ?>
             </div>
           <?php endforeach; ?>
         </div>
@@ -690,7 +877,7 @@ header('Cache-Control: no-store');
         <?php if ($lastStock): ?>
           <div class="stock-note">
             <b><?= ($lastStock['action'] ?? '') === 'writeoff' ? 'Остаток списан' : 'Остаток возвращён' ?></b> <?= esc(fmtTime($lastStock['at'] ?? null)) ?>:
-            <?= esc(implode('; ', array_map(static fn ($m) => ($m['name'] ?? '') . ', ' . ($m['weightGrams'] ?? '?') . ' г: ' . ($m['before'] ?? '?') . ' → ' . ($m['after'] ?? '?'), (array) ($lastStock['moves'] ?? [])))) ?>
+            <?= esc(implode('; ', array_map(static fn ($m) => ($m['name'] ?? '') . ', ' . (!empty($m['weightGrams']) ? $m['weightGrams'] . ' г' : 'шт') . ': ' . ($m['before'] ?? '?') . ' → ' . ($m['after'] ?? '?'), (array) ($lastStock['moves'] ?? [])))) ?>
             <?php if (!empty($lastStock['unmatched'])): ?>
               <br><span class="warn">Не нашлась фасовка, остаток не тронут: <?= esc(implode(', ', (array) $lastStock['unmatched'])) ?></span>
             <?php endif; ?>
@@ -707,6 +894,11 @@ header('Cache-Control: no-store');
             <?php endforeach; ?>
           </select>
           <button class="btn" type="submit">Сохранить</button>
+        </form>
+        <form method="post" action="?tab=orders" class="del-form" onsubmit="return confirm('Удалить заказ №<?= esc($o['number'] ?? '') ?>? Списанный остаток вернётся.')">
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="order_id" value="<?= esc($o['id'] ?? '') ?>">
+          <button class="link-btn" type="submit">удалить заказ</button>
         </form>
       </div>
     <?php endforeach; ?>
@@ -740,7 +932,7 @@ header('Cache-Control: no-store');
 
     <div class="person-card">
       <div class="person-name"><?= esc(personTitle($person)) ?>
-        <span class="badge <?= $isUser ? '' : 'guest-visit' ?>"><?= $isUser ? 'Telegram' : 'гость' ?></span>
+        <span class="badge <?= $isUser ? '' : 'guest-visit' ?>"><?= esc(personKindLabel($person)) ?></span>
       </div>
       <div class="person-facts">
         <?php if ($isUser && !empty($person['username'])): ?>
@@ -832,7 +1024,7 @@ header('Cache-Control: no-store');
       <?php $isUser = ($p['kind'] ?? '') === 'user'; $oc = (int) ($p['ordersCount'] ?? 0); $cc = (int) ($p['chatsCount'] ?? 0); $vc = (int) ($p['viewsCount'] ?? 0); ?>
       <a class="conv-card" href="?tab=users&u=<?= esc($p['key'] ?? '') ?>">
         <div class="row1">
-          <span><?= $isUser ? 'Telegram' . (!empty($p['username']) ? ' · @' . esc($p['username']) : '') : 'гость' ?></span>
+          <span><?= $isUser ? 'Telegram' . (!empty($p['username']) ? ' · @' . esc($p['username']) : '') : esc(personKindLabel($p)) ?></span>
           <span>был <?= esc(fmtTime($p['lastSeen'] ?? null)) ?></span>
         </div>
         <div class="preview"><?= esc(personTitle($p)) ?><?= (!$isUser && is_array($p['contact'] ?? null) && !empty($p['contact']['phone'])) ? ' · ' . esc($p['contact']['phone']) : '' ?></div>
@@ -985,5 +1177,38 @@ header('Cache-Control: no-store');
 
 </div>
 <?php if ($tab === 'products') { echo productsScript(); } ?>
+<?php if ($tab === 'orders'): ?>
+<script>
+// Продажа в магазине: «+ ещё товар» и живой итог.
+(function () {
+  var form = document.querySelector('[data-sale-form]');
+  if (!form) return;
+  var rows = form.querySelector('[data-sale-rows]');
+  function total() {
+    var sum = 0;
+    rows.querySelectorAll('.sale-row').forEach(function (r) {
+      var sel = r.querySelector('[data-sale-item]');
+      var opt = sel.options[sel.selectedIndex];
+      if (!sel.value) return;
+      var own = r.querySelector('[data-sale-price]').value.replace(/\D/g, '');
+      var price = own !== '' ? Number(own) : Number(opt.getAttribute('data-price') || 0);
+      sum += price * Math.max(1, Number(r.querySelector('[data-sale-qty]').value) || 1);
+    });
+    form.querySelector('[data-sale-total]').textContent = sum.toLocaleString('ru-RU');
+  }
+  form.querySelector('[data-sale-add]').addEventListener('click', function () {
+    var row = rows.querySelector('.sale-row').cloneNode(true);
+    row.querySelector('select').value = '';
+    row.querySelector('[data-sale-qty]').value = 1;
+    row.querySelector('[data-sale-price]').value = '';
+    rows.appendChild(row);
+    total();
+  });
+  form.addEventListener('input', total);
+  form.addEventListener('change', total);
+  total();
+})();
+</script>
+<?php endif; ?>
 </body>
 </html>

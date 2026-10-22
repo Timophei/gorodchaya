@@ -54,7 +54,7 @@ const OUT_DIR = process.env.OUT_DIR || path.join(__dirname, '..', 'dist');
 // поднимайте это число КАЖДЫЙ раз, когда меняете common.js/style.css, и тогда же
 // поправьте ?v= в остальных .html (иначе браузеры продолжат отдавать старые
 // файлы из кэша — именно это и было причиной "меню не обновилось").
-const ASSET_VERSION = process.env.ASSET_VERSION || '19';
+const ASSET_VERSION = process.env.ASSET_VERSION || '20';
 
 const FONT_LINK =
   '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
@@ -175,7 +175,7 @@ function pageHtml(tea, allTeas) {
     CG.renderProductMarkup(tea, { qty: 1, tab: 'desc' }) +
     '\n</main>\n' +
     '<section class="wrap container-pad" style="padding-bottom:56px;' + (related.html ? '' : 'display:none;') + '">\n' +
-    '  <div class="serif" style="font-size:22px;font-weight:700;margin-bottom:18px;">С этим чаем часто берут</div>\n' +
+    '  <div class="serif" style="font-size:22px;font-weight:700;margin-bottom:18px;">' + (CG.isTeaware(tea) ? 'С этим часто берут' : 'С этим чаем часто берут') + '</div>\n' +
     '  <div class="grid-4" id="related-grid">' + related.html + '</div>\n' +
     '</section>\n' +
     '<div id="site-footer">' + CG.footerHtml() + '</div>\n' +

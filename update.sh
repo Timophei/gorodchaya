@@ -59,6 +59,7 @@ if [ -n "$PHP_VER" ] && [ -d "/etc/php/$PHP_VER/fpm/conf.d" ]; then
 fi
 
 step "Бэкенд магазина"
+bash "$HERE/snapshot.sh" before-deploy || echo "Снимок данных не сделан — продолжаем."
 cp "$BE/server.js" "$BE/server.js.bak-$STAMP"
 cp "$HERE"/backend/*.js "$HERE/backend/package.json" "$BE/"
 chown www-data:www-data "$BE"/*.js "$BE/package.json"

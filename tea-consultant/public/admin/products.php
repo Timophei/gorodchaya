@@ -22,6 +22,7 @@ const PRODUCT_CATEGORIES = [
     'yellow' => 'Жёлтый чай',
     'puer' => 'Пуэр',
     'herbal' => 'Травяной сбор',
+    'teaware' => 'Посуда',
 ];
 
 const PRODUCT_REGIONS = [
@@ -343,7 +344,7 @@ function productsRender(array $state): void
           <?php foreach ($prices as $p): ?>
             <?php $st = $p['stock'] ?? null; $cls = $st === null ? 'none' : ($st > 0 ? 'in' : 'out'); ?>
             <span class="stock-line">
-              <span class="w"><?= esc((string) ($p['weightGrams'] ?? '?')) ?> г</span>
+              <span class="w"><?= empty($p['weightGrams']) ? 'шт' : esc((string) $p['weightGrams']) . ' г' ?></span>
               <span class="pr"><?= number_format((int) ($p['price'] ?? 0), 0, '', ' ') ?> ₽</span>
               <span class="st <?= $cls ?>" title="<?= $st === null ? 'Остаток не ведётся — на сайте «Под заказ»' : ($st > 0 ? 'В наличии' : 'Под заказ') ?>"><?= $st === null ? '—' : esc((string) $st) . ' шт' ?></span>
             </span>
@@ -425,7 +426,7 @@ function productsRenderForm(array $state): void
         <div class="prices" data-prices>
           <?php foreach ($prices as $p): ?>
             <div class="price-row">
-              <input type="text" name="price_weight[]" inputmode="numeric" placeholder="граммы" value="<?= esc((string) ($p['weightGrams'] ?? '')) ?>"> г —
+              <input type="text" name="price_weight[]" inputmode="numeric" placeholder="граммы" title="Для посуды оставьте 0 — продаётся поштучно" value="<?= esc((string) ($p['weightGrams'] ?? '')) ?>"> г —
               <input type="text" name="price_amount[]" inputmode="numeric" placeholder="цена" value="<?= esc((string) ($p['price'] ?? '')) ?>"> ₽
               <span class="price-sep">остаток</span>
               <input type="text" name="price_stock[]" inputmode="numeric" placeholder="—" value="<?= esc(isset($p['stock']) && $p['stock'] !== null ? (string) $p['stock'] : '') ?>" class="stock-input"> шт
@@ -433,7 +434,7 @@ function productsRenderForm(array $state): void
           <?php endforeach; ?>
         </div>
         <button class="btn btn-ghost" type="button" data-add-price>+ фасовка</button>
-        <div class="hint">Пустые строки не сохраняются. Остаток — в пачках этой фасовки: больше нуля — на сайте «В наличии», ноль, минус или пусто — «Под заказ»; купить можно всегда. Списывается сам, когда заказ переводят в «Отправлен». Каждая фасовка — отдельный товар в Битриксе с «ID на сайте» вида номер-граммы.</div>
+        <div class="hint">Пустые строки не сохраняются. Остаток — в пачках этой фасовки: больше нуля — на сайте «В наличии», ноль, минус или пусто — «Под заказ»; купить можно всегда. Списывается сам, когда заказ переводят в «Отправлен». Каждая фасовка — отдельный товар в Битриксе с «ID на сайте» вида номер-граммы. Посуда: граммы 0, одна строка — цена и остаток в штуках.</div>
       </section>
 
       <section class="card-block">

@@ -89,7 +89,7 @@ function exportConsultantKb() {
     return;
   }
   const items = store.getAll()
-    .filter((t) => Number.isFinite(parseInt(t.externalId, 10)))
+    .filter((t) => Number.isFinite(parseInt(t.externalId, 10)) && t.category !== 'teaware') // посуда — не чай, мастеру не нужна
     .sort((a, b) => parseInt(a.externalId, 10) - parseInt(b.externalId, 10))
     .map(toConsultant);
   const tmp = `${CONSULTANT_KB}.tmp`;

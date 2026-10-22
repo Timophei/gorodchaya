@@ -56,7 +56,14 @@ const BY_CATEGORY = {
     teapot_or_press: 'Около 4–5 г на 500 мл. Промойте лист кипятком, залейте снова и настаивайте 3–5 минут.',
   } },
 };
-const CATEGORY_LABELS = { green: 'Зелёный чай', black: 'Чёрный чай', oolong: 'Улун', puer: 'Пуэр', white: 'Белый чай', yellow: 'Жёлтый чай', herbal: 'Травяной сбор' };
+const CATEGORY_LABELS = { green: 'Зелёный чай', black: 'Чёрный чай', oolong: 'Улун', puer: 'Пуэр', white: 'Белый чай', yellow: 'Жёлтый чай', herbal: 'Травяной сбор', teaware: 'Посуда' };
+
+// Перед загрузкой — снимок данных, чтобы откатить: bash /opt/gorodchaya/rollback.sh
+function snapshot() {
+  const script = require('path').join(__dirname, '..', 'snapshot.sh');
+  if (!fs.existsSync(script)) return;
+  require('child_process').execFileSync('bash', [script, 'before-import'], { stdio: 'inherit' });
+}
 
 async function api(method, path, body) {
   const res = await fetch(API + path, {
@@ -82,13 +89,14 @@ function withWeight(prices, row) {
 async function setPrice(tea, row, label) {
   const old = (tea.prices || []).find((p) => p.weightGrams === row.weightGrams);
   const was = old ? `${old.price} ₽, ост. ${old.stock ?? '—'}` : 'нет фасовки';
-  console.log(`  ${label} ${tea.name}, ${row.weightGrams} г: ${was} → ${row.price} ₽, ост. ${row.stock}`);
+  console.log(`  ${label} ${tea.name}, ${row.weightGrams ? `${row.weightGrams} г` : 'шт'}: ${was} → ${row.price} ₽, ост. ${row.stock}`);
   if (DRY) return;
   await api('POST', '/teas', { id: tea.id, name: tea.name, category: tea.category, prices: withWeight(tea.prices, row) });
 }
 
 (async () => {
   const data = JSON.parse(fs.readFileSync(FILE, 'utf8'));
+  if (!DRY) snapshot();
   let updated = 0; let created = 0; const missing = [];
 
   console.log('Уже были на сайте:');
@@ -104,7 +112,7 @@ async function setPrice(tea, row, label) {
     const tea = await api('GET', `/teas/${encodeURIComponent(row.id)}`);
     if (tea) { await setPrice(tea, row, '~'); updated += 1; continue; }
     const kind = BY_CATEGORY[row.category] || {};
-    console.log(`  + ${row.name}, ${row.weightGrams} г: ${row.price} ₽, ост. ${row.stock}`);
+    console.log(`  + ${row.name}, ${row.weightGrams ? `${row.weightGrams} г` : 'шт'}: ${row.price} ₽, ост. ${row.stock}`);
     created += 1;
     if (DRY) continue;
     await api('POST', '/teas', {
@@ -118,7 +126,7 @@ async function setPrice(tea, row, label) {
       description: row.description || null,
       waterTemperature: kind.water || null,
       brewing: kind.brewing || {},
-      contraindications: row.category === 'herbal' ? [] : ['содержит кофеин'],
+      contraindications: ['herbal', 'teaware'].includes(row.category) ? [] : ['содержит кофеин'],
       prices: [{ weightGrams: row.weightGrams, price: row.price, stock: row.stock }],
     });
   }

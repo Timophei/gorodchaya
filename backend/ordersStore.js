@@ -77,4 +77,11 @@ function patch(id, fields) {
   return existing;
 }
 
-module.exports = { create, getAll, getById, getByUserId, updateStatus, patch, ORDERS_PATH };
+function remove(id) {
+  if (!state.orders[id]) return false;
+  delete state.orders[id];
+  persist();
+  return true;
+}
+
+module.exports = { create, getAll, getById, getByUserId, updateStatus, patch, remove, ORDERS_PATH };

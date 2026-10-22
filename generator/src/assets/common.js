@@ -14,7 +14,7 @@
   var API_BASE = '/shop-api/api';
   var CART_KEY = 'chaygorod_cart_v1';
 
-  var CATEGORY_LABELS = { green: 'Зелёный чай', black: 'Чёрный чай', oolong: 'Улун', puer: 'Пуэр', white: 'Белый чай', yellow: 'Жёлтый чай', herbal: 'Травяной сбор' };
+  var CATEGORY_LABELS = { green: 'Зелёный чай', black: 'Чёрный чай', oolong: 'Улун', puer: 'Пуэр', white: 'Белый чай', yellow: 'Жёлтый чай', herbal: 'Травяной сбор', teaware: 'Посуда' };
   var REGION_LABELS = { china: 'Китай', japan: 'Япония', india: 'Индия', russia: 'Россия', thailand: 'Таиланд' };
   var CATEGORY_GRADIENTS = {
     green: 'linear-gradient(135deg,#7C9A5E,#A9C285)',
@@ -23,7 +23,8 @@
     puer: 'linear-gradient(135deg,#3A2A1C,#5A3E28)',
     white: 'linear-gradient(135deg,#EDE6D2,#D8CBA0)',
     yellow: 'linear-gradient(135deg,#E4C55E,#F0DFA0)',
-    herbal: 'linear-gradient(135deg,#B5432E,#8C3323)'
+    herbal: 'linear-gradient(135deg,#B5432E,#8C3323)',
+    teaware: 'linear-gradient(135deg,#8A8F86,#C4C7BD)'
   };
 
   function escapeHtml(str) {
@@ -55,6 +56,15 @@
 
   function regionLabel(tea) {
     return (tea && (tea.regionLabel || REGION_LABELS[tea.region])) || (tea && tea.region) || '';
+  }
+
+  // Посуда продаётся поштучно: у её цены weightGrams = 0, граммов и заварки нет.
+  function isTeaware(t) {
+    return !!t && t.category === 'teaware';
+  }
+
+  function unitLabel(w) {
+    return w ? w + ' г' : 'шт';
   }
 
   function fmtList(v) {
@@ -176,6 +186,8 @@
       var cheapest = tea.prices.reduce(function (a, b) { return b.price < a.price ? b : a; });
       weight = cheapest.weightGrams || null;
     }
+    // Цена — именно выбранной фасовки (раньше всегда шла минимальная).
+    var unitPrice = priceForWeight(tea, weight || 0);
     var id = tea.id + (weight ? ':' + weight : '');
     var items = readCart();
     var existing = items.find(function (it) { return it.lineId === id; });
@@ -191,7 +203,7 @@
         gradient: gradientFor(tea),
         imageUrl: tea.imageUrl || null,
         weight: weight || null,
-        unitPrice: tea.minPrice || 0,
+        unitPrice: unitPrice != null ? unitPrice : (tea.minPrice || 0),
         qty: Math.min(20, qty)
       });
     }
@@ -227,6 +239,7 @@
   var NAV_LINKS = [
     { href: 'index.html', label: 'Чат', key: 'chat' },
     { href: 'catalog.html', label: 'Каталог', key: 'catalog' },
+    { href: 'catalog.html?type=teaware', label: 'Посуда', key: 'teaware' },
     { href: 'guild.html', label: 'Гильдия', key: 'guild' },
     { href: 'about.html', label: 'О городе', key: 'about' }
   ];
@@ -389,7 +402,9 @@
 
   if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', function () {
-      mountChrome(document.body.getAttribute('data-nav'));
+      var nav = document.body.getAttribute('data-nav');
+      if (nav === 'catalog' && /[?&]type=teaware\b/.test(location.search)) nav = 'teaware';
+      mountChrome(nav);
       track();
     });
   }
@@ -408,7 +423,16 @@
   ];
   var BREW_LABELS = { gongfu_proliv: 'Гунфу-пролив', teapot_or_press: 'Чайник / френч-пресс', thermos: 'Термос' };
 
+  // Фасовка по граммам; у посуды и у товара с одной фасовкой — единственная.
+  function priceEntry(tea, w) {
+    var prices = tea && Array.isArray(tea.prices) ? tea.prices : [];
+    var found = prices.find(function (p) { return (p.weightGrams || 0) === (w || 0); });
+    if (!found && !w && prices.length === 1) found = prices[0];
+    return found || null;
+  }
+
   function priceForWeight(tea, w) {
+    if (!w && priceEntry(tea, w)) return priceEntry(tea, w).price;
     if (Array.isArray(tea.prices) && tea.prices.length) {
       // Поле у бэкенда называется weightGrams (см. TeaSchema в server.js) —
       // раньше тут стояло p.weight, которое всегда undefined, поэтому кнопки
@@ -420,7 +444,7 @@
   }
 
   function stockForWeight(tea, w) {
-    var p = Array.isArray(tea.prices) ? tea.prices.find(function (x) { return x.weightGrams === w; }) : null;
+    var p = priceEntry(tea, w);
     return p && typeof p.stock === 'number' ? p.stock : 0;
   }
 
@@ -432,6 +456,7 @@
   // в этом случае молча откатывалась на minPrice). Показываем пилюли только
   // для реально существующих фасовок этого чая, если они заданы.
   function weightTiersFor(tea) {
+    if (isTeaware(tea)) return [0];
     if (tea && Array.isArray(tea.prices) && tea.prices.length) {
       var ws = tea.prices
         .map(function (p) { return p.weightGrams; })
@@ -451,14 +476,19 @@
     var tab = state.tab || 'desc';
 
     var price = priceForWeight(tea, weight);
+    var ware = isTeaware(tea);
     var priceHtml = price != null
-      ? '<span style="font-size:30px;font-weight:700;">' + formatPrice(price) + ' ₽</span><span style="font-size:14px;color:#9AA192;"> / ' + weight + ' г</span>'
+      ? '<span style="font-size:30px;font-weight:700;">' + formatPrice(price) + ' ₽</span><span style="font-size:14px;color:#9AA192;"> / ' + unitLabel(weight) + '</span>'
       : '<span style="font-size:20px;font-weight:700;color:#9AA192;">цена уточняется</span>';
     // Наличие выбранной фасовки. Купить можно в любом случае.
-    var inStock = stockForWeight(tea, weight) > 0;
+    var stockNow = stockForWeight(tea, weight);
+    var inStock = stockNow > 0;
     priceHtml += '<div class="stock-badge ' + (inStock ? 'in' : 'order') + '">' + (inStock ? 'В наличии' : 'Под заказ') + '</div>';
+    var stockNote = !inStock
+      ? '<div class="stock-note-line">Сейчас нет на полке — можно заказать: привезём и сообщим срок, когда подтвердим заказ.</div>'
+      : (stockNow <= 2 ? '<div class="stock-note-line">Осталось ' + stockNow + ' шт — если возьмёте больше, остальное привезём под заказ.</div>' : '');
 
-    var weightHtml = weightTiers.map(function (w) {
+    var weightHtml = ware ? '' : weightTiers.map(function (w) {
       return '<div class="pill' + (w === weight ? ' on' : '') + '" data-weight="' + w + '">' + w + ' г</div>';
     }).join('');
 
@@ -466,7 +496,9 @@
       ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>Добавлено'
       : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"><path d="M6 8h12l-1 12H7L6 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>Добавить в корзину';
 
-    var tabsHtml = TAB_LABELS.map(function (t) {
+    var tabs = ware ? TAB_LABELS.slice(0, 1) : TAB_LABELS;
+    if (ware) tab = 'desc';
+    var tabsHtml = tabs.map(function (t) {
       return '<div class="tab' + (tab === t.key ? ' on' : '') + '" data-tab="' + t.key + '">' + t.label + '</div>';
     }).join('');
 
@@ -528,8 +560,8 @@
       '<div style="display:inline-block;background:#EFE9DC;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600;color:#5B6357;margin-bottom:14px;">' + escapeHtml(categoryLabel(tea)) + (regionLabel(tea) ? ' · ' + escapeHtml(regionLabel(tea)) : '') + '</div>' +
       '<h1 class="serif" style="font-size:38px;font-weight:700;line-height:1.1;margin:0;">' + escapeHtml(tea.name) + '</h1>' +
       '<div style="font-style:italic;color:#5B6357;font-size:15px;margin-top:12px;line-height:1.5;max-width:480px;">' + escapeHtml(tea.subtitle || '') + '</div>' +
-      '<div style="display:flex;align-items:baseline;gap:10px;margin-top:22px;">' + priceHtml + '</div>' +
-      '<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">' + weightHtml + '</div>' +
+      '<div style="display:flex;align-items:baseline;gap:10px;margin-top:22px;">' + priceHtml + '</div>' + stockNote +
+      (weightHtml ? '<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">' + weightHtml + '</div>' : '') +
       '<div style="display:flex;align-items:center;gap:16px;margin-top:24px;flex-wrap:wrap;">' +
       '<div style="display:flex;align-items:center;gap:6px;border:1px solid #E3D9C2;border-radius:999px;padding:4px 10px;">' +
       '<button class="qbtn" data-dec>−</button><span style="font-size:15px;font-weight:700;width:20px;text-align:center;display:inline-block;">' + qty + '</span><button class="qbtn" data-inc>+</button>' +
@@ -549,7 +581,8 @@
 
   function relatedCardHtml(t, teaHref) {
     var price = formatPrice(t.minPrice);
-    var priceHtml = price != null ? 'от <b>' + price + ' ₽</b>' : '<span class="card-noprice">цена уточняется</span>';
+    var many = Array.isArray(t.prices) && t.prices.length > 1;
+    var priceHtml = price != null ? (many ? 'от ' : '') + '<b>' + price + ' ₽</b>' : '<span class="card-noprice">цена уточняется</span>';
     return (
       '<a class="card" href="' + teaHref(t) + '" style="text-decoration:none;color:inherit;">' +
       '<div class="card-img" style="' + photoStyleFor(t) + '"></div>' +
@@ -572,7 +605,12 @@
 
   function relatedMarkup(related, current, teaHref) {
     teaHref = teaHref || defaultTeaHref;
-    var others = related.filter(function (t) { return t.id !== current.id; }).slice(0, 4);
+    // К чаю — чаи того же вида и одна вещь из посуды; к посуде — посуда и чай.
+    var rest = related.filter(function (t) { return t.id !== current.id; });
+    var same = rest.filter(function (t) { return t.category === current.category; });
+    var cross = rest.filter(function (t) { return isTeaware(t) !== isTeaware(current); });
+    var others = same.slice(0, 3).concat(cross.slice(0, 1));
+    rest.forEach(function (t) { if (others.length < 4 && others.indexOf(t) === -1) others.push(t); });
     if (!others.length) return { html: '', items: [] };
     return { html: others.map(function (t) { return relatedCardHtml(t, teaHref); }).join(''), items: others };
   }
@@ -650,6 +688,11 @@
     categoryLabel: categoryLabel,
     regionLabel: regionLabel,
     fmtList: fmtList,
+    isTeaware: isTeaware,
+    unitLabel: unitLabel,
+    priceEntry: priceEntry,
+    priceForWeight: priceForWeight,
+    stockForWeight: stockForWeight,
     apiGet: apiGet,
     apiPost: apiPost,
     authMe: authMe,

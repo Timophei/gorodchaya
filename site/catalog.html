@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=19">
+<link rel="stylesheet" href="assets/style.css?v=20">
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
     (function(m,e,t,r,i,k,a){
@@ -34,7 +34,7 @@
 
   <div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap;">
     <aside style="width:272px;flex-shrink:0;border:1px solid #E3D9C2;border-radius:18px;background:#fff;padding:24px;">
-      <div class="filter-title">Тип чая</div>
+      <div class="filter-title">Раздел</div>
       <div id="type-filters"></div>
 
       <div style="height:1px;background:#E3D9C2;margin:18px 0;"></div>
@@ -58,7 +58,7 @@
 </main>
 
 <div id="site-footer"></div>
-<script src="assets/common.js?v=19"></script>
+<script src="assets/common.js?v=20"></script>
 <script>
 (function () {
   var CG = window.ChayGorod;
@@ -66,7 +66,9 @@
 
   function cardHtml(t) {
     var price = CG.formatPrice(t.minPrice);
-    var priceHtml = price != null ? 'от <b>' + price + ' ₽</b>' : '<span class="card-noprice">цена уточняется</span>';
+    var many = Array.isArray(t.prices) && t.prices.length > 1;
+    var priceHtml = price != null ? (many ? 'от ' : '') + '<b>' + price + ' ₽</b>' : '<span class="card-noprice">цена уточняется</span>';
+    var anyStock = (t.prices || []).some(function (p) { return typeof p.stock === 'number' && p.stock > 0; });
     return (
       '<a class="card" href="' + CG.defaultTeaHref(t) + '" style="text-decoration:none;color:inherit;">' +
       '<div style="position:relative;">' +
@@ -75,7 +77,8 @@
       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="1.8"><path d="M12 20s-7-4.35-9.5-8.5C.7 8 2.7 4.5 6.2 4.5c2 0 3.4 1 4.8 2.7 1.4-1.7 2.8-2.7 4.8-2.7 3.5 0 5.5 3.5 3.7 7C19 15.65 12 20 12 20z"></path></svg>' +
       '</button></div>' +
       '<div class="card-name">' + CG.escapeHtml(t.name) + '</div>' +
-      '<div class="card-cat">' + CG.escapeHtml(CG.categoryLabel(t)) + '</div>' +
+      '<div class="card-cat">' + CG.escapeHtml(CG.categoryLabel(t)) +
+      (anyStock ? '' : ' · <span style="color:#8A6A12;font-weight:600;">под заказ</span>') + '</div>' +
       '<div class="card-bottom">' +
       '<span class="card-price">' + priceHtml + '</span>' +
       '<button class="cart-btn" data-add="' + CG.escapeHtml(t.id) + '" onclick="event.preventDefault()">' +
@@ -157,6 +160,9 @@
   ]).then(function (results) {
     var teas = results[0], categories = results[1], regions = results[2];
     state.teas = teas;
+    // catalog.html?type=teaware — сразу нужный раздел (ссылка «Посуда» в шапке).
+    var qType = new URLSearchParams(location.search).get('type');
+    if (qType && CG.CATEGORY_LABELS[qType]) state.type[qType] = true;
     categories.forEach(function (c) { state.categoryCounts[c.id] = c.count; });
     regions.forEach(function (r) { state.regionCounts[r.id] = r.count; });
     render();

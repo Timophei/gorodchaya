@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=19">
+<link rel="stylesheet" href="assets/style.css?v=20">
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
     (function(m,e,t,r,i,k,a){
@@ -49,6 +49,7 @@
 
       <div style="height:1px;background:#E3D9C2;margin:14px 0;"></div>
       <div class="row" style="font-size:17px;font-weight:700;"><span>Итого</span><span id="total-amount">0 ₽</span></div>
+      <div class="preorder-box" id="preorder-box" style="display:none;"></div>
 
       <button class="checkout" id="checkout-btn" style="margin-top:16px;">Оформить заказ</button>
       <div id="checkout-hint" style="font-size:11.5px;color:#9AA192;text-align:center;margin-top:10px;line-height:1.4;">Доставка 2–4 дня по России.<br>Бесплатно от 3 000 ₽.</div>
@@ -73,29 +74,48 @@
       <div id="checkout-success" style="display:none;text-align:center;padding:12px 0 4px;">
         <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Заказ №<span id="co-order-number"></span> принят!</div>
         <div style="font-size:13.5px;color:#5B6357;line-height:1.5;">Мы свяжемся с вами по указанному телефону, чтобы подтвердить детали.</div>
+        <div class="preorder-box" id="co-preorder" style="display:none;text-align:left;">Часть позиций — под заказ: мы их привезём и при звонке скажем срок.</div>
       </div>
     </div>
   </div>
 </main>
 
 <div id="site-footer"></div>
-<script src="assets/common.js?v=19"></script>
+<script src="assets/common.js?v=20"></script>
 <script>
 (function () {
   var CG = window.ChayGorod;
   var promo = { code: '', applied: false, error: false };
+  // Живой каталог — чтобы показать, что есть на полке, а что придётся привезти.
+  var teasById = null;
+  CG.apiGet('/teas').then(function (list) {
+    teasById = {};
+    list.forEach(function (t) { teasById[t.id] = t; });
+    render();
+  }).catch(function () {});
+
+  // Сколько из строки корзины под заказ (null — каталог ещё не загрузился).
+  function preorderQty(it) {
+    if (!teasById) return null;
+    var tea = teasById[it.teaId];
+    if (!tea) return null;
+    var stock = Math.max(0, CG.stockForWeight(tea, it.weight ? parseInt(it.weight, 10) : 0));
+    return Math.max(0, it.qty - stock);
+  }
 
   function itemHtml(it) {
     var lineTotal = CG.formatPrice(it.unitPrice * it.qty);
     var weightLabel = it.weight ? it.weight + ' г' : '';
     var href = CG.defaultTeaHref(it);
+    var pre = preorderQty(it);
+    var preTag = !pre ? '' : '<span class="preorder-tag"' + (weightLabel ? '' : ' style="margin-left:0;"') + '>' + (pre >= it.qty ? 'Под заказ' : (it.qty - pre) + ' в наличии, ' + pre + ' под заказ') + '</span>';
     return (
       '<div class="item">' +
       '<a href="' + href + '" style="display:block;width:88px;height:88px;border-radius:12px;background-size:cover;background-position:center;flex-shrink:0;' + CG.photoStyleFor(it) + '"></a>' +
       '<div style="flex:1;min-width:0;">' +
       '<a href="' + href + '" style="font-size:16px;font-weight:700;color:inherit;text-decoration:none;display:block;">' + CG.escapeHtml(it.name) + '</a>' +
       '<div class="muted" style="font-size:12.5px;margin-top:2px;">' + CG.escapeHtml(it.category) + '</div>' +
-      (weightLabel ? '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;border:1px solid #E3D9C2;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;">' + weightLabel + '</div>' : '') +
+      (weightLabel ? '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;border:1px solid #E3D9C2;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;">' + weightLabel + '</div>' : '') + preTag +
       '</div>' +
       '<div style="display:flex;align-items:center;gap:10px;border:1px solid #E3D9C2;border-radius:999px;padding:5px;flex-shrink:0;">' +
       '<button class="qbtn" data-dec="' + it.lineId + '">−</button>' +
@@ -142,6 +162,13 @@
     document.getElementById('discount-amount').textContent = '−' + CG.formatPrice(totals.discount) + ' ₽';
     document.getElementById('promo-error').style.display = promo.error ? 'block' : 'none';
     document.getElementById('total-amount').textContent = CG.formatPrice(totals.total) + ' ₽';
+
+    var preNames = items.filter(function (it) { return preorderQty(it) > 0; }).map(function (it) { return it.name; });
+    var box = document.getElementById('preorder-box');
+    box.style.display = preNames.length ? 'block' : 'none';
+    box.innerHTML = preNames.length
+      ? '<b>Под заказ:</b> ' + preNames.map(CG.escapeHtml).join(', ') + '. Оформить можно сейчас — привезём и при подтверждении скажем срок.'
+      : '';
   }
 
   document.getElementById('promo-input').addEventListener('input', function (e) {
@@ -219,6 +246,7 @@
       CG.cart.write([]);
       document.getElementById('checkout-form').style.display = 'none';
       document.getElementById('co-order-number').textContent = data.order.number;
+      document.getElementById('co-preorder').style.display = data.order.hasPreorder ? 'block' : 'none';
       document.getElementById('checkout-success').style.display = 'block';
       render();
     }).catch(function () {

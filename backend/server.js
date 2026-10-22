@@ -28,7 +28,8 @@ function visitorIdOf(req) {
   return visitorStore.isValidId(vid) ? vid : null;
 }
 
-const CATEGORIES = ['green', 'black', 'oolong', 'puer', 'white', 'yellow', 'herbal'];
+// teaware — посуда: продаётся поштучно, у цены weightGrams = 0.
+const CATEGORIES = ['green', 'black', 'oolong', 'puer', 'white', 'yellow', 'herbal', 'teaware'];
 const REGIONS = ['china', 'japan', 'india', 'russia', 'thailand'];
 
 // Write endpoints (POST/DELETE) require this key in an `x-api-key` header.
@@ -148,7 +149,8 @@ app.get('/api/regions', (_req, res) => {
 // (printed to the server log, or set via the API_KEY env var) can write.
 
 const PriceSchema = z.object({
-  weightGrams: z.coerce.number().int().positive().max(100000),
+  // 0 — поштучный товар (посуда).
+  weightGrams: z.coerce.number().int().nonnegative().max(100000),
   price: z.coerce.number().int().nonnegative().max(10000000),
   // Остаток этой фасовки в штуках (пачках). null — не ведётся. Может уйти
   // в минус: продаём и то, чего нет («под заказ»).
@@ -374,7 +376,7 @@ app.post('/api/auth/logout', (_req, res) => {
 const OrderItemSchema = z.object({
   teaId: z.string().max(100),
   name: z.string().trim().min(1).max(200),
-  weightGrams: z.coerce.number().int().positive().max(100000).nullable().optional(),
+  weightGrams: z.coerce.number().int().nonnegative().max(100000).nullable().optional(),
   qty: z.coerce.number().int().positive().max(100),
   unitPrice: z.coerce.number().int().nonnegative().max(10000000),
 });
@@ -396,6 +398,24 @@ const OrderSchema = z.object({
   customer: OrderCustomerSchema,
 });
 
+// Фасовка позиции заказа: по граммам, а у поштучного/однофасовочного товара — единственная.
+function priceEntryFor(tea, weightGrams) {
+  const prices = tea && Array.isArray(tea.prices) ? tea.prices : [];
+  return prices.find((p) => p.weightGrams === (weightGrams || 0))
+    || (!weightGrams && prices.length === 1 ? prices[0] : null);
+}
+
+// Сколько из позиции есть на складе прямо сейчас, а сколько — «под заказ».
+// Купить можно всегда; эта пометка нужна покупателю и тому, кто собирает заказ.
+function markAvailability(items) {
+  return items.map((it) => {
+    const entry = priceEntryFor(store.getById(it.teaId), it.weightGrams);
+    const stock = entry && Number.isFinite(entry.stock) ? Math.max(0, entry.stock) : 0;
+    const preorderQty = Math.max(0, it.qty - stock);
+    return { ...it, stockAtOrder: stock, preorderQty };
+  });
+}
+
 app.post('/api/orders', (req, res) => {
   const parsed = OrderSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -404,7 +424,11 @@ app.post('/api/orders', (req, res) => {
   const user = auth.currentUser(req);
   const visitorId = visitorIdOf(req);
   if (visitorId) visitorStore.touch(visitorId, { userId: user ? user.id : null, cid: readCookies(req).tea_cid });
-  const order = ordersStore.create({ ...parsed.data, userId: user ? user.id : null, visitorId });
+  const items = markAvailability(parsed.data.items);
+  const order = ordersStore.create({
+    ...parsed.data, items, source: 'site', hasPreorder: items.some((it) => it.preorderQty > 0),
+    userId: user ? user.id : null, visitorId,
+  });
   res.status(201).json({ order });
 });
 
@@ -438,8 +462,7 @@ function moveStock(order, direction) {
     const tea = store.getById(it.teaId);
     const prices = changed.get(it.teaId) || (tea && Array.isArray(tea.prices) ? tea.prices.map((p) => ({ ...p })) : null);
     if (!tea || !prices || !prices.length) { unmatched.push(it.name || it.teaId); continue; }
-    let entry = prices.find((p) => p.weightGrams === it.weightGrams);
-    if (!entry && !it.weightGrams && prices.length === 1) entry = prices[0];
+    const entry = priceEntryFor({ prices }, it.weightGrams);
     if (!entry) { unmatched.push(`${it.name}${it.weightGrams ? `, ${it.weightGrams} г` : ''}`); continue; }
     const before = Number.isFinite(entry.stock) ? entry.stock : 0;
     entry.stock = before + direction * (it.qty || 1);
@@ -474,6 +497,74 @@ app.post('/api/orders/:id/status', requireApiKey, (req, res) => {
   const updated = ordersStore.updateStatus(order.id, next);
   if (stock && stock.moves.length) catalog.onCatalogChanged(PORT);
   res.json({ order: updated, stock });
+});
+
+// --- продажа в магазине (офлайн) ---
+// Админка, вкладка «Заказы» → «Продажа в магазине». Названия и цены берутся
+// из каталога (цену можно переопределить — скидка на месте), заказ сразу
+// «Выполнен», остаток списывается тут же. Отмена вернёт остаток, как обычно.
+const OfflineSaleSchema = z.object({
+  items: z.array(z.object({
+    teaId: z.string().max(100),
+    weightGrams: z.coerce.number().int().nonnegative().max(100000).nullable().optional(),
+    qty: z.coerce.number().int().positive().max(1000),
+    unitPrice: z.coerce.number().int().nonnegative().max(10000000).nullable().optional(),
+  })).min(1).max(50),
+  customer: z.object({
+    name: z.string().trim().max(200).optional(),
+    phone: z.string().trim().max(40).optional(),
+    comment: z.string().trim().max(1000).optional(),
+  }).optional(),
+  payment: z.enum(['cash', 'card', 'transfer']).optional(),
+  seller: z.string().trim().max(100).optional(),
+  test: z.boolean().optional(),
+});
+
+app.post('/api/admin/orders/offline', requireApiKey, (req, res) => {
+  const parsed = OfflineSaleSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'validation_failed', details: parsed.error.issues });
+  const bad = [];
+  const raw = parsed.data.items.map((it) => {
+    const tea = store.getById(it.teaId);
+    const entry = priceEntryFor(tea, it.weightGrams);
+    if (!tea || !entry) { bad.push(it.teaId); return null; }
+    return {
+      teaId: tea.id, name: tea.name, weightGrams: entry.weightGrams || null, qty: it.qty,
+      unitPrice: it.unitPrice != null ? it.unitPrice : entry.price,
+    };
+  });
+  if (bad.length) return res.status(400).json({ error: 'unknown_items', details: bad });
+  const items = markAvailability(raw);
+  const subtotal = items.reduce((s, it) => s + it.unitPrice * it.qty, 0);
+  const c = parsed.data.customer || {};
+  const order = ordersStore.create({
+    items, subtotal, deliveryPrice: 0, discount: 0, promoCode: null, total: subtotal,
+    customer: { name: c.name || 'Покупатель в магазине', phone: c.phone || '', address: 'Самовывоз — продажа в магазине', comment: c.comment || undefined },
+    source: 'offline', payment: parsed.data.payment || null, seller: parsed.data.seller || null,
+    test: !!parsed.data.test, hasPreorder: items.some((it) => it.preorderQty > 0),
+    userId: null, visitorId: null,
+  });
+  const stock = moveStock(order, -1);
+  ordersStore.patch(order.id, {
+    stockWrittenOff: true,
+    stockLog: [{ at: new Date().toISOString(), action: 'writeoff', ...stock }],
+  });
+  const done = ordersStore.updateStatus(order.id, 'done');
+  if (stock.moves.length) catalog.onCatalogChanged(PORT);
+  res.status(201).json({ order: done, stock });
+});
+
+// Удаление заказа (тестового или ошибочного). Списанный остаток возвращается.
+app.delete('/api/orders/:id', requireApiKey, (req, res) => {
+  const order = ordersStore.getById(req.params.id);
+  if (!order) return res.status(404).json({ error: 'not_found' });
+  let stock = null;
+  if (order.stockWrittenOff) {
+    stock = moveStock(order, +1);
+    if (stock.moves.length) catalog.onCatalogChanged(PORT);
+  }
+  ordersStore.remove(order.id);
+  res.json({ removed: order.id, stock });
 });
 
 // --- посетители: метка браузера, история просмотров ---
@@ -529,9 +620,37 @@ function buildPeople() {
     byVisitor.set(v.id, key);
   }
 
+  // Заказы с сайта — к аккаунту или браузеру; по ним же запоминаем телефоны.
+  const phoneKey = new Map(); // цифры телефона -> ключ человека
+  const digits = (ph) => String(ph || '').replace(/\D/g, '').replace(/^8(?=\d{10}$)/, '7');
+  const offline = [];
   for (const o of ordersStore.getAll()) {
     const key = (o.userId && userKeyById.get(o.userId)) || (o.visitorId && byVisitor.get(o.visitorId));
-    if (key) people.get(key).orders.push(o);
+    if (!key) { offline.push(o); continue; }
+    people.get(key).orders.push(o);
+    const d = digits(o.customer && o.customer.phone);
+    if (d.length >= 10 && !phoneKey.has(d)) phoneKey.set(d, key);
+  }
+  // Продажи в магазине — по телефону: к тому, кто уже заказывал с этим
+  // телефоном на сайте, или отдельной карточкой «Покупатель магазина».
+  for (const o of offline) {
+    const d = digits(o.customer && o.customer.phone);
+    if (d.length < 10) continue; // без телефона — в базу покупателей не попадает
+    let key = phoneKey.get(d);
+    if (!key) {
+      key = `p_${d}`;
+      phoneKey.set(d, key);
+      people.set(key, {
+        key, kind: o.source === 'offline' ? 'shop' : 'guest', userId: null, name: (o.customer && o.customer.name) || `+${d}`,
+        username: null, telegramId: null, photoUrl: null,
+        firstSeen: o.createdAt, lastSeen: o.createdAt,
+        visitorIds: [], cids: [], views: [], orders: [],
+      });
+    }
+    const p = people.get(key);
+    p.orders.push(o);
+    if (o.createdAt < p.firstSeen) p.firstSeen = o.createdAt;
+    if (o.createdAt > p.lastSeen) p.lastSeen = o.createdAt;
   }
 
   for (const p of people.values()) {
