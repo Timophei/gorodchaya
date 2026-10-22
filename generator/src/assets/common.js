@@ -503,7 +503,7 @@
     }).join('');
 
     var descBlock = tab === 'desc'
-      ? '<div style="font-size:14.5px;color:#3A4436;line-height:1.6;max-width:820px;margin-top:20px;">' + escapeHtml(tea.description || tea.subtitle || 'Описание уточняется.') + '</div>'
+      ? '<div style="font-size:14.5px;color:#3A4436;line-height:1.6;max-width:820px;margin-top:20px;white-space:pre-line;">' + escapeHtml(tea.description || tea.subtitle || 'Описание уточняется.') + '</div>'
       : '';
 
     var specRows = [

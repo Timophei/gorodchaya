@@ -69,6 +69,13 @@ function requireApiKey(req, res, next) {
   next();
 }
 
+// Служебные поля — только тем, у кого есть API-ключ (админка, скрипты).
+function publicTea(tea, req) {
+  if (!tea || req.get('x-api-key') === API_KEY) return tea;
+  const { reviewNotes, ...rest } = tea;
+  return rest;
+}
+
 function withMinPrice(tea) {
   if (!tea) return tea;
   const prices = tea.prices || [];
@@ -116,13 +123,13 @@ app.get('/api/teas', (req, res) => {
     return (a.name || '').localeCompare(b.name || '', 'ru');
   });
 
-  res.json(teas.map(withMinPrice));
+  res.json(teas.map((t) => publicTea(withMinPrice(t), req)));
 });
 
 app.get('/api/teas/:id', (req, res) => {
   const tea = store.getById(req.params.id);
   if (!tea) return res.status(404).json({ error: 'not_found' });
-  res.json(withMinPrice(tea));
+  res.json(publicTea(withMinPrice(tea), req));
 });
 
 app.get('/api/categories', (_req, res) => {
@@ -172,6 +179,9 @@ const TeaSchema = z.object({
   regionLabel: z.string().max(200).nullable().optional(),
   description: z.string().max(5000).nullable().optional(),
   shortDescription: z.string().max(500).nullable().optional(),
+  // Что сверить по этикетке/у поставщика. Только для админки: из публичных
+  // ответов вырезается (см. publicTea).
+  reviewNotes: z.array(z.string().max(500)).max(20).optional(),
   taste: z.array(z.string().max(100)).max(30).optional(),
   tasteNote: z.string().max(1000).nullable().optional(),
   situations: z.array(z.string().max(150)).max(30).optional(),

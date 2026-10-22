@@ -131,6 +131,8 @@ function productsPayloadFromPost(array $p): array
         'region' => $region !== '' ? $region : null,
         'regionLabel' => trim((string) ($p['regionLabel'] ?? '')) ?: null,
         'description' => trim((string) ($p['description'] ?? '')) ?: null,
+        'shortDescription' => trim((string) ($p['shortDescription'] ?? '')) ?: null,
+        'reviewNotes' => array_slice(productsLines((string) ($p['reviewNotes'] ?? '')), 0, 20),
         'taste' => productsLines((string) ($p['taste'] ?? '')),
         'tasteNote' => trim((string) ($p['tasteNote'] ?? '')) ?: null,
         'situations' => productsLines((string) ($p['situations'] ?? '')),
@@ -333,6 +335,7 @@ function productsRender(array $state): void
         <span class="prod-main">
           <span class="prod-name">№<?= esc($t['externalId'] ?? '—') ?> · <?= esc($t['name'] ?? '—') ?>
             <?php if (!empty($t['featured'])): ?><span class="badge">на главной</span><?php endif; ?>
+            <?php if (!empty($t['reviewNotes'])): ?><span class="badge review-badge" title="<?= esc(implode(' ', (array) $t['reviewNotes'])) ?>">сверить</span><?php endif; ?>
           </span>
           <span class="prod-meta">
             /tea/<?= esc($t['slug'] ?? '—') ?>
@@ -439,7 +442,12 @@ function productsRenderForm(array $state): void
 
       <section class="card-block">
         <h3>Описание и вкус</h3>
+        <?php if (!empty($t['reviewNotes'])): ?>
+          <div class="review-box"><b>Сверить по этикетке/у поставщика:</b><ul><?php foreach ((array) $t['reviewNotes'] as $n): ?><li><?= esc($n) ?></li><?php endforeach; ?></ul></div>
+        <?php endif; ?>
+        <label class="f">Коротко <span class="muted">— одна фраза: для поисковиков и превью ссылок</span><textarea name="shortDescription" rows="2" maxlength="500"><?= esc($t['shortDescription'] ?? '') ?></textarea></label>
         <label class="f">Описание<textarea name="description" rows="6" maxlength="5000"><?= esc($t['description'] ?? '') ?></textarea></label>
+        <label class="f">Что сверить <span class="muted">— видно только в админке, по строке; проверили — сотрите</span><textarea name="reviewNotes" rows="3" maxlength="4000"><?= esc(implode("\n", (array) ($t['reviewNotes'] ?? []))) ?></textarea></label>
         <div class="f-row">
           <label class="f">Вкус и аромат <span class="muted">— по строке</span><textarea name="taste" rows="5"><?= esc($join($t['taste'] ?? [])) ?></textarea></label>
           <label class="f">Когда пить <span class="muted">— по строке</span><textarea name="situations" rows="5"><?= esc($join($t['situations'] ?? [])) ?></textarea></label>
@@ -579,6 +587,9 @@ function productsCss(): string
   .f-check { flex-direction: row; align-items: center; font-weight: 400; gap: 8px; }
   .price-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13.5px; }
   .price-row input { max-width: 120px; }
+  .review-badge { background: #fdf1cf !important; color: #8a6a12 !important; }
+  .review-box { background: #fff8e3; border: 1px solid #f0dca0; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-size: 13px; line-height: 1.5; }
+  .review-box ul { margin: 4px 0 0; padding-left: 18px; }
   .hint { font-size: 12px; color: var(--tea-muted); line-height: 1.5; margin: 4px 0 8px; }
   .slug-input { display: flex; align-items: center; border: 1px solid var(--tea-border); border-radius: 8px; background: #fff; overflow: hidden; }
   .slug-input span { padding: 8px 0 8px 10px; color: var(--tea-muted); font-weight: 400; font-size: 13px; white-space: nowrap; }

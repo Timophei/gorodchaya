@@ -54,7 +54,7 @@ const OUT_DIR = process.env.OUT_DIR || path.join(__dirname, '..', 'dist');
 // поднимайте это число КАЖДЫЙ раз, когда меняете common.js/style.css, и тогда же
 // поправьте ?v= в остальных .html (иначе браузеры продолжат отдавать старые
 // файлы из кэша — именно это и было причиной "меню не обновилось").
-const ASSET_VERSION = process.env.ASSET_VERSION || '20';
+const ASSET_VERSION = process.env.ASSET_VERSION || '21';
 
 const FONT_LINK =
   '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
@@ -101,7 +101,7 @@ function stripTags(s) {
 }
 
 function metaDescriptionFor(tea) {
-  const base = stripTags(tea.description) || stripTags(tea.subtitle) || (CG.categoryLabel(tea) + ' в каталоге «Чайного города».');
+  const base = stripTags(tea.shortDescription) || stripTags(tea.description) || stripTags(tea.subtitle) || (CG.categoryLabel(tea) + ' в каталоге «Чайного города».');
   if (base.length <= 155) return base;
   const cut = base.slice(0, 155);
   return cut.slice(0, cut.lastIndexOf(' ')) + '…';

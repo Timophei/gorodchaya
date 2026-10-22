@@ -1,0 +1,4567 @@
+{
+  "schema_version": "1.0",
+  "language": "ru",
+  "generated_at": "2026-10-22",
+  "title": "Чайный город — черновик описаний ассортимента",
+  "status": "draft_for_editorial_review",
+  "counts": {
+    "total": 61,
+    "tea": 48,
+    "teaware": 13
+  },
+  "import_instructions": {
+    "mode": "update_content_after_matching",
+    "match_on": [
+      "source.name_original",
+      "inventory_reference.package_original"
+    ],
+    "record_key_notice": "record_key создан для этого файла; это НЕ артикул и НЕ ID товара в вашей базе. При неоднозначном совпадении остановить обновление этой позиции.",
+    "content_fields": [
+      "name",
+      "category",
+      "short_description",
+      "description",
+      "brewing",
+      "care",
+      "storage",
+      "condition_note"
+    ],
+    "do_not_overwrite_existing": [
+      "prices",
+      "stock",
+      "existing_product_id",
+      "images"
+    ],
+    "null_policy": "null означает неизвестно; не стирать им существующее значение и не додумывать факт.",
+    "publication_policy": "Все тексты — черновики. review и sources — служебные поля, не выводить в публичном описании. Сначала проверить отмеченные характеристики.",
+    "numbers_policy": "inventory_reference — копия исходника для сопоставления; не команда обновления цен или остатков.",
+    "variant_policy": "Не объединять разные номера, фасовки и позиции с похожими названиями.",
+    "source_policy": "Источник может описывать категорию или похожий товар. Он не доказывает производителя, урожай и состав конкретной партии. Не переносить сертификаты, лечебные обещания и рекламные оценки.",
+    "naming_policy": "Нормализованное name — предложение редактора; name_original сохранено без изменений."
+  },
+  "research_note": "Интернет-поиск выполнен 22.10.2026. Часть страниц старше трёх месяцев, у большинства дата публикации не указана. Это справка о типах и возможных аналогах, а не подтверждение текущей партии. Вкусовые описания являются черновыми ориентирами.",
+  "sources": [
+    {
+      "id": "yin",
+      "title": "Люй Инь Сы — KORSHOP",
+      "url": "https://korshop.ru/catalog/napitki_chay_kofe_zhenshen/chay/zelenyy_chay_1/zelenyy_chay_lyuy_in_sy_serebryanye_niti_kitay_50_g/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "green",
+      "title": "Зелёные чаи — TeaCorner",
+      "url": "https://teacorner.ru/collection/zelenyy-chay",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "longjing",
+      "title": "Зелёные чаи: Лун Цзин и заваривание",
+      "url": "https://chinateablog.com/chinese-tea/green-tea/guide/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "tgy",
+      "title": "Tieguanyin — стили и заваривание",
+      "url": "https://www.teaplain.com/tea/tieguanyin/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "white",
+      "title": "Белые чаи — различия сырья и заваривание",
+      "url": "https://masternix.ru/public/zavarivanie-kitayskogo-belogo-chaya.htm",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "kesane",
+      "title": "Kesane — GreenGold, производитель",
+      "url": "https://www.greengold.com.ge/product.php?lang=en&slug=kesane",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "oolong",
+      "title": "Улуны — Горьков Чай",
+      "url": "https://gorkovchay.ru/ulun/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "sheng",
+      "title": "Как читать обёртку пуэра — ТуЧай",
+      "url": "https://tuchay.chayniy-put.ru/blog/kak-chitat-obertku-puera/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "shu",
+      "title": "Шу пуэр — пример категории и заваривания, Цзинлун",
+      "url": "https://teapav.ru/product/puer-shu-tsi-tszy-bin-puer-cha-357g/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "hongyun",
+      "title": "TAETEA Hong Yun Yuan Cha 2024 357g",
+      "url": "https://dragonteahouse.biz/taetea-brand-hong-yun-yuan-cha-pu-erh-tea-cake-2024-357g-ripe/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "jinglong",
+      "title": "Цзинлун, Пуэр Ча 357 г",
+      "url": "https://teapav.ru/product/puer-shu-tsi-tszy-bin-puer-cha-357g/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "red",
+      "title": "Красный чай: сорта и заваривание",
+      "url": "https://gorkovchay.ru/blog/gidy-po-sortam/krasnyy-chay-polnoe-rukovodstvo-sorta-zavarivanie-polza/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "guangxi",
+      "title": "Красные чаи: Гуанси Хун Ча — Tea Culture Club",
+      "url": "https://teaclub.ge/category/krasny_chay/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "hongbilo",
+      "title": "Названия Хун Би Ло — Чайнотека",
+      "url": "https://chainoteka.ru/project",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "v93",
+      "title": "Dayi V93: заваривание и формат",
+      "url": "https://teasenz.eu/es/products/v93",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "moon",
+      "title": "Юэ Гуан Бай — WAYSTEA",
+      "url": "https://waystea.ru/product/yue-guan-baj/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "samadoyo",
+      "title": "Посуда SamaDoyo — каталог FUHAO",
+      "url": "https://www.fuhao.ru/attribute/brand/samadoyo/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "thermos",
+      "title": "Термосы Samadoyo 400 мл — варианты моделей",
+      "url": "https://sama-doyo.ru/termosy",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "ware",
+      "title": "Назначение чайной посуды — Чайная Стихия",
+      "url": "https://teaelement.ru/blog/posuda-dlya-kitajskogo-chaya-chto-vybrat-i-zachem",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "chahe",
+      "title": "Чахэ и чайные аксессуары — Чайная Гавань",
+      "url": "https://gachami.ru/posuda/aksessuary/aksesuary/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "mango",
+      "title": "Дикий манго, грейд A — TEASIDE",
+      "url": "https://tea-side.com/ru/wild-best-green-tea-a/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "four",
+      "title": "Сы Цзи Чунь и другие улуны — TEASIDE",
+      "url": "https://tea-side.com/ru/buy-organic-loose-leaf-oolong-tea-online/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "gabaassam",
+      "title": "Габа Ассам — ChaoChay",
+      "url": "https://www.chaochay.ru/products/gaba_assam",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "gaba",
+      "title": "Габа Сы Цзи Чунь — ChaoChay",
+      "url": "https://www.chaochay.ru/products/gaba_si_tzy_chum_tai",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    },
+    {
+      "id": "red6",
+      "title": "Красный чай со старых деревьев №6 — TEASIDE",
+      "url": "https://tea-side.com/ru/red-tea-from-old-trees/",
+      "checked_at": "2026-10-22",
+      "publication_date": null,
+      "freshness_note": "Дата публикации не установлена; страница может быть старше трёх месяцев.",
+      "scope": "Категория или вероятный аналог; сверять с review товара."
+    }
+  ],
+  "products": [
+    {
+      "record_key": "chao-20261021-r002",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 2,
+        "name_original": "Люй Инь Сы (Зеленые серебрянные нити) зеленый"
+      },
+      "name": "Люй Инь Сы — Зелёные серебряные нити",
+      "product_type": "tea",
+      "category": "Зелёный чай",
+      "short_description": "Зелёный чай для тех, кто любит свежий, мягкий настой без тяжёлой терпкости.",
+      "description": "Зелёный чай для тех, кто любит свежий, мягкий настой без тяжёлой терпкости. Для этого типа чая характерны тонкие растительные и цветочные оттенки. Начните с немного остывшей воды, чтобы сохранить деликатный вкус.",
+      "inventory_reference": {
+        "retail_price_rub": 850.0,
+        "package_original": "50г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 75,
+          "max": 85
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 90,
+            "max": 150
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 15,
+            "max": 25
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "yin",
+          "url": "https://korshop.ru/catalog/napitki_chay_kofe_zhenshen/chay/zelenyy_chay_1/zelenyy_chay_lyuy_in_sy_serebryanye_niti_kitay_50_g/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Уточнить регион и урожай."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r003",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 3,
+        "name_original": "Бай Лун Чжу(Белые жемчужины дракона) зеленый"
+      },
+      "name": "Бай Лун Чжу — Белые жемчужины дракона",
+      "product_type": "tea",
+      "category": "Зелёный чай",
+      "short_description": "Зелёный чай с образным названием «Белые жемчужины дракона». Удобный вариант для знакомства с китайской чайной коллекцией.",
+      "description": "Зелёный чай с образным названием «Белые жемчужины дракона». Удобный вариант для знакомства с китайской чайной коллекцией. В исходном списке он отнесён к зелёным чаям. Для первой пробы используйте мягкое заваривание, а точный аромат оцените по раскрытому листу.",
+      "inventory_reference": {
+        "retail_price_rub": 1000.0,
+        "package_original": "50г",
+        "quantity_original": 10,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 75,
+          "max": 85
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 90,
+            "max": 150
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 15,
+            "max": 25
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "green",
+          "url": "https://teacorner.ru/collection/zelenyy-chay"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Название встречается у разных чаёв. Проверить тип, форму листа и наличие жасмина; не подменять Люй Лун Чжу или Моли Лун Чжу."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r004",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 4,
+        "name_original": "Лун Цзин (Колодец дракона) зеленый"
+      },
+      "name": "Лун Цзин — Колодец дракона",
+      "product_type": "tea",
+      "category": "Зелёный чай",
+      "short_description": "Зелёный чай с мягким растительным вкусом и характерными ореховыми оттенками.",
+      "description": "Зелёный чай с мягким растительным вкусом и характерными ореховыми оттенками. Лун Цзин обычно узнают по плоскому листу и тёплому аромату, напоминающему каштан. Хорош для спокойной чашки без добавок: так легче заметить его естественную сладость.",
+      "inventory_reference": {
+        "retail_price_rub": 750.0,
+        "package_original": "50г",
+        "quantity_original": 10,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 75,
+          "max": 85
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 90,
+            "max": 150
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 15,
+            "max": 25
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "longjing",
+          "url": "https://chinateablog.com/chinese-tea/green-tea/guide/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Не заявлять Си Ху, конкретный регион или ранний сбор без упаковки."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r005",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 5,
+        "name_original": "Те Гуанинь №150 (Железная Бодхисаттва Гуанинь)"
+      },
+      "name": "Те Гуань Инь №150",
+      "product_type": "tea",
+      "category": "Светлый улун",
+      "short_description": "Улун для любителей цветочного аромата и мягкого, объёмного вкуса.",
+      "description": "Улун для любителей цветочного аромата и мягкого, объёмного вкуса. Те Гуань Инь интересно пить короткими проливами: лист постепенно раскрывается, а аромат меняется от чашки к чашке. Номер 150 сохранён как обозначение позиции.",
+      "inventory_reference": {
+        "retail_price_rub": 950.0,
+        "package_original": "50г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 85,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 15,
+            "max": 25
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "tgy",
+          "url": "https://www.teaplain.com/tea/tieguanyin/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Номер не является доказанной универсальной градацией качества; уточнить обжарку и отличие от №70."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r006",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 6,
+        "name_original": "Те Гуанинь №70 (Железная Бодхисаттва Гуанинь)"
+      },
+      "name": "Те Гуань Инь №70",
+      "product_type": "tea",
+      "category": "Светлый улун",
+      "short_description": "Цветочный улун для повседневного чаепития и первых опытов с проливами.",
+      "description": "Цветочный улун для повседневного чаепития и первых опытов с проливами. Заваривайте небольшую порцию несколько раз, полностью сливая настой. Так проще подобрать крепость и познакомиться с характером Те Гуань Инь.",
+      "inventory_reference": {
+        "retail_price_rub": 450.0,
+        "package_original": "50г",
+        "quantity_original": 22,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 85,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 15,
+            "max": 25
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "tgy",
+          "url": "https://www.teaplain.com/tea/tieguanyin/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Уточнить обжарку и отличие от №150; не приписывать вкусовое превосходство по цене."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r007",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 7,
+        "name_original": "Бай Му Дань №70 (Белый пион)"
+      },
+      "name": "Бай Му Дань №70 — Белый пион",
+      "product_type": "tea",
+      "category": "Белый чай",
+      "short_description": "Белый чай с деликатным характером и мягкими цветочно-травяными оттенками.",
+      "description": "Белый чай с деликатным характером и мягкими цветочно-травяными оттенками. В традиционном Бай Му Дане сочетаются почки и листья. Он подходит для неторопливого знакомства с белым чаем и хорошо раскрывается без сахара.",
+      "inventory_reference": {
+        "retail_price_rub": 550.0,
+        "package_original": "50г",
+        "quantity_original": 12,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 85,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 240
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 150,
+          "first_infusion_seconds": {
+            "min": 20,
+            "max": 30
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "white",
+          "url": "https://masternix.ru/public/zavarivanie-kitayskogo-belogo-chaya.htm"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Уточнить урожай, регион и значение №70."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r008",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 8,
+        "name_original": "Кесане (грузинский улун)"
+      },
+      "name": "Кесане — грузинский улун",
+      "product_type": "tea",
+      "category": "Светлый улун",
+      "short_description": "Грузинский улун с фруктовыми, медовыми и лёгкими древесными оттенками.",
+      "description": "Грузинский улун с фруктовыми, медовыми и лёгкими древесными оттенками. Кесане показывает непривычную сторону грузинского чая. Его можно пить из обычного чайника или пробовать проливами, подбирая насыщенность под свой вкус.",
+      "inventory_reference": {
+        "retail_price_rub": 700.0,
+        "package_original": "50г",
+        "quantity_original": 3,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 85,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 15,
+            "max": 25
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "kesane",
+          "url": "https://www.greengold.com.ge/product.php?lang=en&slug=kesane"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Название найдено у GreenGold и продавцов; производитель именно этой партии не подтверждён."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r009",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 9,
+        "name_original": "Фэн Хуан Дань Цун (одиночные кусты с гор Феникса)"
+      },
+      "name": "Фэн Хуан Дань Цун",
+      "product_type": "tea",
+      "category": "Тёмный улун",
+      "short_description": "Ароматный улун для тех, кто любит выразительные цветочные и фруктовые оттенки.",
+      "description": "Ароматный улун для тех, кто любит выразительные цветочные и фруктовые оттенки. Даньцуны — большая группа чаёв с разными ароматическими профилями. Начните с коротких проливов: долгая выдержка может сделать настой слишком терпким.",
+      "inventory_reference": {
+        "retail_price_rub": 1100.0,
+        "package_original": "25г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 25,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 90,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "oolong",
+          "url": "https://gorkovchay.ru/ulun/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Уточнить разновидность аромата, регион и обжарку; не приписывать Ми Лань Сян без подтверждения."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r010",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 10,
+        "name_original": "Да Хун Пао Нун Сянь №100 (Большой красный халат. Сильно запеченый)"
+      },
+      "name": "Да Хун Пао Нун Сян №100 — сильная обжарка",
+      "product_type": "tea",
+      "category": "Тёмный улун",
+      "short_description": "Да Хун Пао сильной обжарки с тёплым, насыщенным характером.",
+      "description": "Да Хун Пао сильной обжарки с тёплым, насыщенным характером. Для такого стиля характерны оттенки печёного хлеба, орехов и древесины. Хороший выбор, когда хочется плотного чая к неспешной беседе.",
+      "inventory_reference": {
+        "retail_price_rub": 500.0,
+        "package_original": "50г",
+        "quantity_original": 19,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 90,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "oolong",
+          "url": "https://gorkovchay.ru/ulun/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Степень обжарки взята из файла; вкусовые оттенки типовые. Значение №100 уточнить."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r011",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 11,
+        "name_original": "Да Хун Пао Чин Сянь №140 (Большой красный халат. Слабой обжарки)"
+      },
+      "name": "Да Хун Пао Цин Сян №140 — слабая обжарка",
+      "product_type": "tea",
+      "category": "Тёмный улун",
+      "short_description": "Более лёгкий по обжарке Да Хун Пао для знакомства с ароматной стороной уишаньских улунов.",
+      "description": "Более лёгкий по обжарке Да Хун Пао для знакомства с ароматной стороной уишаньских улунов. Щадящий прогрев обычно оставляет больше места цветочным и фруктовым оттенкам. Интересно сравнить его с сильно обжаренным вариантом из коллекции.",
+      "inventory_reference": {
+        "retail_price_rub": 800.0,
+        "package_original": "50г",
+        "quantity_original": 20,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 90,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "oolong",
+          "url": "https://gorkovchay.ru/ulun/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "«Чин Сянь» нормализовано в «Цин Сян»; сверить этикетку и значение №140."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r012",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 12,
+        "name_original": "Пуэр Шэн \"Сэнчжун, Лао Бань Чжан\", ци цзы бин 357гр (упаковка повреждена)"
+      },
+      "name": "Шэн пуэр «Сэнчжун, Лао Бань Чжан», 357 г",
+      "product_type": "tea",
+      "category": "Шэн пуэр",
+      "short_description": "Прессованный шэн пуэр в формате большого блина для заваривания проливами.",
+      "description": "Прессованный шэн пуэр в формате большого блина для заваривания проливами. Шэн раскрывается постепенно: от более терпких первых чашек к мягкому послевкусию. У этой позиции повреждена упаковка — это особенность конкретного товара.",
+      "inventory_reference": {
+        "retail_price_rub": 3600.0,
+        "package_original": "357г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 357,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": "Повреждена упаковка.",
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 60,
+            "max": 120
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 5,
+            "max": 15
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "sheng",
+          "url": "https://tuchay.chayniy-put.ru/blog/kak-chitat-obertku-puera/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Проверить фабрику, год и надпись Лао Бань Чжан; название не подтверждает происхождение сырья. Состояние чая осмотреть.",
+          "Сохранить примечание о состоянии в видимой карточке товара."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r013",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 13,
+        "name_original": "Шу Пуэр Да И \"Хун Юнь Юань Ча\"2024 357 Гр (вскрытая упаковка)"
+      },
+      "name": "Шу пуэр Да И «Хун Юнь Юань Ча», 2024, 357 г",
+      "product_type": "tea",
+      "category": "Шу пуэр",
+      "short_description": "Шу пуэр Да И с плотным тёмным настоем и мягким характером.",
+      "description": "Шу пуэр Да И с плотным тёмным настоем и мягким характером. В линейке Хун Юнь Юань Ча встречается выпуск 2024 года весом 357 г. Этот чай удобно готовить небольшими проливами или настаивать в чайнике. Упаковка вскрыта.",
+      "inventory_reference": {
+        "retail_price_rub": 3000.0,
+        "package_original": "357г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 357,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": 2024,
+      "ingredients": null,
+      "images": [],
+      "condition_note": "Упаковка вскрыта.",
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 6,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "hongyun",
+          "url": "https://dragonteahouse.biz/taetea-brand-hong-yun-yuan-cha-pu-erh-tea-cake-2024-357g-ripe/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Сверить маркировку и оставшийся фактический вес вскрытого блина; 357 г — вес из файла.",
+          "Сохранить примечание о состоянии в видимой карточке товара."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r014",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 14,
+        "name_original": "Чай прессованный черный Пуэр Шу \"Цзинлун, Пуэр Ча\"ци цзы бин, 357 гр"
+      },
+      "name": "Шу пуэр «Цзинлун, Пуэр Ча», 357 г",
+      "product_type": "tea",
+      "category": "Шу пуэр",
+      "short_description": "Прессованный шу пуэр фабрики Цзинлун для плотного повседневного чаепития.",
+      "description": "Прессованный шу пуэр фабрики Цзинлун для плотного повседневного чаепития. От блина удобно отделять небольшие порции для гайвани или чайника. Начните с недолгого настаивания и увеличивайте время, если хочется более густого вкуса.",
+      "inventory_reference": {
+        "retail_price_rub": 3000.0,
+        "package_original": "357г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 357,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 6,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "jinglong",
+          "url": "https://teapav.ru/product/puer-shu-tsi-tszy-bin-puer-cha-357g/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Название и формат найдены; год и партия не указаны."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r015",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 15,
+        "name_original": "Чай красный \"Дянь Хун Цзинь Чжэнь\"(Золотые Иглы), коллекционный №200"
+      },
+      "name": "Дянь Хун Цзинь Чжэнь №200 — Золотые иглы",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Красный чай в стиле «Золотые иглы» с мягкой сладостью и тёплыми медовыми оттенками.",
+      "description": "Красный чай в стиле «Золотые иглы» с мягкой сладостью и тёплыми медовыми оттенками. Название связано с вытянутым почечным сырьём. Такой чай интересно пить без добавок, обращая внимание на аромат и мягкость настоя.",
+      "inventory_reference": {
+        "retail_price_rub": 950.0,
+        "package_original": "50г",
+        "quantity_original": 5,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "red",
+          "url": "https://gorkovchay.ru/blog/gidy-po-sortam/krasnyy-chay-polnoe-rukovodstvo-sorta-zavarivanie-polza/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Почечный состав и грейд сверить по партии; «коллекционный» и №200 — обозначения поставщика."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r016",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 16,
+        "name_original": "Чай красный \"Гуанси Хун Ча\"высокосортный"
+      },
+      "name": "Гуанси Хун Ча",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Красный чай из Гуанси для привычного чаепития с новым характером.",
+      "description": "Красный чай из Гуанси для привычного чаепития с новым характером. Хун Ча означает красный чай в китайской классификации. Попробуйте его в обычном чайнике, а затем короткими проливами, чтобы сравнить насыщенность и аромат.",
+      "inventory_reference": {
+        "retail_price_rub": 450.0,
+        "package_original": "50г",
+        "quantity_original": 6,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "guangxi",
+          "url": "https://teaclub.ge/category/krasny_chay/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "«Высокосортный» не подтверждено независимой оценкой; вкус конкретной партии неизвестен."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r017",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 17,
+        "name_original": "Чай красный \"Шайхун\""
+      },
+      "name": "Шайхун",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Красный чай солнечной сушки для любителей фруктовых и мягких медовых оттенков.",
+      "description": "Красный чай солнечной сушки для любителей фруктовых и мягких медовых оттенков. Особенность стиля Шайхун — завершающая сушка на солнце. Такой чай приятно пить самостоятельно, постепенно подбирая крепость и время настаивания.",
+      "inventory_reference": {
+        "retail_price_rub": 450.0,
+        "package_original": "50г",
+        "quantity_original": 8,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "red",
+          "url": "https://gorkovchay.ru/blog/gidy-po-sortam/krasnyy-chay-polnoe-rukovodstvo-sorta-zavarivanie-polza/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Уточнить регион, год и подтверждение технологии у поставщика."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r018",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 18,
+        "name_original": "Чай красный \"Хун Би Ло, Фуцзянь\"высокосортный"
+      },
+      "name": "Хун Би Ло, Фуцзянь",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Красный чай из Фуцзяни для насыщенной чашки и знакомства с китайскими красными чаями.",
+      "description": "Красный чай из Фуцзяни для насыщенной чашки и знакомства с китайскими красными чаями. Название Хун Би Ло используют для чаёв со скрученным листом. Заваривайте без долгой выдержки, чтобы сохранить мягкость и не усилить терпкость.",
+      "inventory_reference": {
+        "retail_price_rub": 450.0,
+        "package_original": "50г",
+        "quantity_original": 9,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "hongbilo",
+          "url": "https://chainoteka.ru/project"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Уточнить форму листа и вкусовой профиль; не заменять юньнаньским Дянь Хун Би Ло."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r019",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 19,
+        "name_original": "Чай улун \"Уи Жоу Гуй\"коллекционный №240"
+      },
+      "name": "Уи Жоу Гуй №240",
+      "product_type": "tea",
+      "category": "Тёмный улун",
+      "short_description": "Уишаньский улун с пряным характером и тёплыми оттенками обжарки.",
+      "description": "Уишаньский улун с пряным характером и тёплыми оттенками обжарки. Название Жоу Гуй связано с коричным ароматическим направлением, а не с добавлением корицы. Чай особенно интересно раскрывается в небольшом чайнике или гайвани.",
+      "inventory_reference": {
+        "retail_price_rub": 1200.0,
+        "package_original": "50г",
+        "quantity_original": 2,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 90,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "oolong",
+          "url": "https://gorkovchay.ru/ulun/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Конкретная партия не дегустировалась; степень обжарки и №240 уточнить."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r020",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 20,
+        "name_original": "Чай красный \"Чжень Шань Сяо Чжун\"(Лапсанг Сушонг) классический"
+      },
+      "name": "Чжэн Шань Сяо Чжун — Лапсанг Сушонг",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Красный чай с выразительным характером для тех, кто хочет выйти за пределы привычного чёрного чая.",
+      "description": "Красный чай с выразительным характером для тех, кто хочет выйти за пределы привычного чёрного чая. Сяо Чжун бывает как копчёным, так и без выраженного дымного аромата. Для первой чашки достаточно обычного чайника и недолгого настаивания.",
+      "inventory_reference": {
+        "retail_price_rub": 550.0,
+        "package_original": "50г",
+        "quantity_original": 3,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "red",
+          "url": "https://gorkovchay.ru/blog/gidy-po-sortam/krasnyy-chay-polnoe-rukovodstvo-sorta-zavarivanie-polza/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Обязательно уточнить, копчёная ли эта партия. Не обещать сосновый дым по одному названию."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r021",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 21,
+        "name_original": "Чай красный \"Дянь Хун\"классический"
+      },
+      "name": "Дянь Хун классический",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Красный чай с тёплыми хлебными и медовыми оттенками для ежедневной чашки.",
+      "description": "Красный чай с тёплыми хлебными и медовыми оттенками для ежедневной чашки. Дянь Хун легко вписывается в привычное чаепитие: его можно заваривать в чайнике и подавать к выпечке. Проливы помогут подробнее познакомиться с ароматом.",
+      "inventory_reference": {
+        "retail_price_rub": 800.0,
+        "package_original": "100г",
+        "quantity_original": 5,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 100,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "red",
+          "url": "https://gorkovchay.ru/blog/gidy-po-sortam/krasnyy-chay-polnoe-rukovodstvo-sorta-zavarivanie-polza/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Типовой профиль сорта; регион и партия не подтверждены."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r022",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 22,
+        "name_original": "Чай красный \"Сэнчжун, Чаньнин, 3 сорт\""
+      },
+      "name": "Красный чай «Сэнчжун, Чаньнин», 3 сорт",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Красный чай для повседневного заваривания в чайнике или кружке с фильтром.",
+      "description": "Красный чай для повседневного заваривания в чайнике или кружке с фильтром. Позиция сохранена под названием из прайс-листа, включая указание третьего сорта. Крепость удобно регулировать временем настаивания.",
+      "inventory_reference": {
+        "retail_price_rub": 950.0,
+        "package_original": "100г",
+        "quantity_original": 4,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 100,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "red",
+          "url": "https://gorkovchay.ru/blog/gidy-po-sortam/krasnyy-chay-polnoe-rukovodstvo-sorta-zavarivanie-polza/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Точное совпадение не найдено. Нужны фото этикетки, фабрика и правильное написание Чаньнин."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r023",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 23,
+        "name_original": "Шу пуэр Да И v 93"
+      },
+      "name": "Шу пуэр Да И V93",
+      "product_type": "tea",
+      "category": "Шу пуэр",
+      "short_description": "Классический шу пуэр Да И в фасовке 100 г с мягким, насыщенным настоем.",
+      "description": "Классический шу пуэр Да И в фасовке 100 г с мягким, насыщенным настоем. V93 известен в формате точа. Подходит для знакомства с фабричными шу пуэрами и хорошо раскрывается в небольших последовательных завариваниях.",
+      "inventory_reference": {
+        "retail_price_rub": 900.0,
+        "package_original": "100г",
+        "quantity_original": 4,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 100,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 6,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "v93",
+          "url": "https://teasenz.eu/es/products/v93"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Год и партия не указаны; форму конкретного товара подтвердить по упаковке."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r024",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 24,
+        "name_original": "Шу пуэр Байджан Цин Я"
+      },
+      "name": "Шу пуэр «Байджан Цин Я»",
+      "product_type": "tea",
+      "category": "Шу пуэр",
+      "short_description": "Шу пуэр в фасовке 357 г для любителей тёмного, плотного чайного настоя.",
+      "description": "Шу пуэр в фасовке 357 г для любителей тёмного, плотного чайного настоя. Для первого знакомства используйте небольшую навеску и короткие проливы. Это поможет подобрать насыщенность, не делая чай чрезмерно густым.",
+      "inventory_reference": {
+        "retail_price_rub": 2500.0,
+        "package_original": "357г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 357,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 6,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "shu",
+          "url": "https://teapav.ru/product/puer-shu-tsi-tszy-bin-puer-cha-357g/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Точное совпадение не найдено. Проверить «Байджан Цин Я» по этикетке; не подменять Баньчжан Цзинь Я."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r025",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 25,
+        "name_original": "Шу пуэр Байджан Золото"
+      },
+      "name": "Шу пуэр «Байджан Золото»",
+      "product_type": "tea",
+      "category": "Шу пуэр",
+      "short_description": "Шу пуэр в большой фасовке для неспешного чаепития дома или в компании.",
+      "description": "Шу пуэр в большой фасовке для неспешного чаепития дома или в компании. Тёмные пуэры удобно заваривать несколько раз, каждый раз полностью сливая настой. Название «Золото» сохранено как имя товара.",
+      "inventory_reference": {
+        "retail_price_rub": 2500.0,
+        "package_original": "357г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 357,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 6,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "shu",
+          "url": "https://teapav.ru/product/puer-shu-tsi-tszy-bin-puer-cha-357g/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Точная марка неизвестна. «Золото» не подтверждает почечное сырьё или особый грейд."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r026",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 26,
+        "name_original": "Шен пуэр Дерево Иу"
+      },
+      "name": "Шэн пуэр «Дерево Иу»",
+      "product_type": "tea",
+      "category": "Шэн пуэр",
+      "short_description": "Шэн пуэр в фасовке 357 г для знакомства с меняющимся вкусом проливов.",
+      "description": "Шэн пуэр в фасовке 357 г для знакомства с меняющимся вкусом проливов. Заваривайте понемногу и следите, как меняются терпкость и послевкусие. Такой формат подойдёт тем, кто любит возвращаться к одному чаю и сравнивать впечатления.",
+      "inventory_reference": {
+        "retail_price_rub": 3000.0,
+        "package_original": "357г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 357,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 60,
+            "max": 120
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 5,
+            "max": 15
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "sheng",
+          "url": "https://tuchay.chayniy-put.ru/blog/kak-chitat-obertku-puera/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Иу присутствует в названии, происхождение и возраст деревьев не подтверждены."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r027",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 27,
+        "name_original": "Шен пуэр Сильный снег"
+      },
+      "name": "Шэн пуэр «Сильный снег»",
+      "product_type": "tea",
+      "category": "Шэн пуэр",
+      "short_description": "Шэн пуэр с образным названием «Сильный снег» в фасовке 357 г.",
+      "description": "Шэн пуэр с образным названием «Сильный снег» в фасовке 357 г. Для него предлагается мягкий старт: короткое настаивание и полный слив. Затем можно постепенно увеличить время и найти подходящую крепость.",
+      "inventory_reference": {
+        "retail_price_rub": 3000.0,
+        "package_original": "357г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 357,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 60,
+            "max": 120
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 5,
+            "max": 15
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "sheng",
+          "url": "https://tuchay.chayniy-put.ru/blog/kak-chitat-obertku-puera/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Точная идентификация отсутствует; не переводить название в Дасюэшань без этикетки."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r028",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 28,
+        "name_original": "Шен пуэр Ранняя Весна Чженьшань"
+      },
+      "name": "Шэн пуэр «Ранняя весна Чжэньшань»",
+      "product_type": "tea",
+      "category": "Шэн пуэр",
+      "short_description": "Шэн пуэр для последовательных завариваний и внимательного знакомства со вкусом.",
+      "description": "Шэн пуэр для последовательных завариваний и внимательного знакомства со вкусом. Название отсылает к весенней теме, но характер конкретного чая лучше оценивать в чашке. Начните с короткого пролива и увеличивайте время постепенно.",
+      "inventory_reference": {
+        "retail_price_rub": 3000.0,
+        "package_original": "357г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 357,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 60,
+            "max": 120
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 5,
+            "max": 15
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "sheng",
+          "url": "https://tuchay.chayniy-put.ru/blog/kak-chitat-obertku-puera/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Ранний сбор, регион и год не подтверждены; проверить написание Чжэньшань."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r029",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 29,
+        "name_original": "Шен пуэр с жасмином Моли Цин бин Менхай"
+      },
+      "name": "Шэн пуэр с жасмином «Моли Цин Бин», Мэнхай",
+      "product_type": "tea",
+      "category": "Шэн пуэр",
+      "short_description": "Шэн пуэр с жасминовым направлением аромата в фасовке 100 г.",
+      "description": "Шэн пуэр с жасминовым направлением аромата в фасовке 100 г. Сочетание шэна и жасмина подойдёт любителям цветочных чаёв. Не передерживайте первые заваривания, чтобы чайная терпкость не перекрыла аромат.",
+      "inventory_reference": {
+        "retail_price_rub": 500.0,
+        "package_original": "100г",
+        "quantity_original": 2,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 100,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 60,
+            "max": 120
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 5,
+            "max": 15
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "sheng",
+          "url": "https://tuchay.chayniy-put.ru/blog/kak-chitat-obertku-puera/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Жасмин указан в файле; способ ароматизации, состав и фабрика неизвестны."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r030",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 30,
+        "name_original": "Красный Дяньхун Менхай"
+      },
+      "name": "Красный чай Дянь Хун, Мэнхай",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Дянь Хун в фасовке 100 г для насыщенной повседневной чашки.",
+      "description": "Дянь Хун в фасовке 100 г для насыщенной повседневной чашки. Красные чаи этого семейства ценят за тёплый характер и естественные сладковатые оттенки. Подойдёт и обычный чайник, и небольшая гайвань.",
+      "inventory_reference": {
+        "retail_price_rub": 500.0,
+        "package_original": "100г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 100,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "red",
+          "url": "https://gorkovchay.ru/blog/gidy-po-sortam/krasnyy-chay-polnoe-rukovodstvo-sorta-zavarivanie-polza/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Мэнхай указан в названии; фабрика, форма выпуска и вкусовой профиль партии неизвестны."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r031",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 31,
+        "name_original": "Шен пуэр Желиая печать"
+      },
+      "name": "Шэн пуэр «Желиая печать»",
+      "product_type": "tea",
+      "category": "Шэн пуэр",
+      "short_description": "Шэн пуэр в фасовке 100 г для знакомства с проливным завариванием.",
+      "description": "Шэн пуэр в фасовке 100 г для знакомства с проливным завариванием. Небольшая упаковка позволяет попробовать чай и подобрать удобную навеску. Используйте короткие первые проливы, а затем ориентируйтесь на вкус.",
+      "inventory_reference": {
+        "retail_price_rub": 500.0,
+        "package_original": "100г",
+        "quantity_original": 2,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 100,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 60,
+            "max": 120
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 5,
+            "max": 15
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "sheng",
+          "url": "https://tuchay.chayniy-put.ru/blog/kak-chitat-obertku-puera/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Возможно, опечатка «Жёлтая печать». Не исправлять автоматически: это название встречается и у шу пуэров. Нужна этикетка."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r032",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 32,
+        "name_original": "Шен пуэр Набань Цзя"
+      },
+      "name": "Шэн пуэр «Набань Цзя»",
+      "product_type": "tea",
+      "category": "Шэн пуэр",
+      "short_description": "Шэн пуэр в фасовке 100 г для постепенного знакомства с его характером.",
+      "description": "Шэн пуэр в фасовке 100 г для постепенного знакомства с его характером. Заваривайте небольшими порциями, полностью сливая настой между проливами. Так легче заметить изменения аромата и избежать излишней терпкости.",
+      "inventory_reference": {
+        "retail_price_rub": 500.0,
+        "package_original": "100г",
+        "quantity_original": 2,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 100,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 60,
+            "max": 120
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 5,
+            "max": 15
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "sheng",
+          "url": "https://tuchay.chayniy-put.ru/blog/kak-chitat-obertku-puera/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Точное совпадение не найдено; нужны фабрика, год и фото названия."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r033",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 33,
+        "name_original": "Шоу Мэй"
+      },
+      "name": "Шоу Мэй",
+      "product_type": "tea",
+      "category": "Белый чай",
+      "short_description": "Белый чай с мягким, округлым характером и травяными оттенками.",
+      "description": "Белый чай с мягким, округлым характером и травяными оттенками. В Шоу Мэе используют более зрелый лист, поэтому он часто даёт более насыщенную чашку, чем нежные почечные белые чаи. Удобен для заваривания в обычном чайнике.",
+      "inventory_reference": {
+        "retail_price_rub": 500.0,
+        "package_original": "100г",
+        "quantity_original": 2,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 100,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 85,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 240
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 150,
+          "first_infusion_seconds": {
+            "min": 20,
+            "max": 30
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "white",
+          "url": "https://masternix.ru/public/zavarivanie-kitayskogo-belogo-chaya.htm"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Выдержка не указана; не обещать вкус сухофруктов выдержанного чая."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r034",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 34,
+        "name_original": "Шу пуэр с асмантусом Юньнань"
+      },
+      "name": "Шу пуэр с османтусом, Юньнань",
+      "product_type": "tea",
+      "category": "Шу пуэр",
+      "short_description": "Порция шу пуэра 7 г с цветочным направлением османтуса.",
+      "description": "Порция шу пуэра 7 г с цветочным направлением османтуса. Такой формат удобно взять с собой или использовать для одного знакомства с чаем. Заваривайте порцию в чайнике либо разделите её, если нужен лёгкий настой.",
+      "inventory_reference": {
+        "retail_price_rub": 50.0,
+        "package_original": "7г",
+        "quantity_original": 44,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 7,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 6,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "shu",
+          "url": "https://teapav.ru/product/puer-shu-tsi-tszy-bin-puer-cha-357g/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "«Асмантус» исправлено на «османтус». Точный состав и способ ароматизации уточнить."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r035",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 35,
+        "name_original": "Шу пуэр с мандарином Чен Пу Юньнань"
+      },
+      "name": "Шу пуэр с мандарином «Чен Пу», Юньнань",
+      "product_type": "tea",
+      "category": "Шу пуэр",
+      "short_description": "Порционный шу пуэр с мандариновым направлением аромата.",
+      "description": "Порционный шу пуэр с мандариновым направлением аромата. Тёмный чай и цитрусовый акцент создают понятное сочетание для любителей ароматных напитков. Упаковка 7 г удобна для небольшой чайной сессии.",
+      "inventory_reference": {
+        "retail_price_rub": 50.0,
+        "package_original": "7г",
+        "quantity_original": 27,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 7,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 6,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "shu",
+          "url": "https://teapav.ru/product/puer-shu-tsi-tszy-bin-puer-cha-357g/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Не подтверждены наличие цедры, её возраст и форма выпуска; не называть сяо цин гань автоматически."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r036",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 36,
+        "name_original": "Шу пуэр с рисом Юньнань"
+      },
+      "name": "Шу пуэр с рисовым ароматом, Юньнань",
+      "product_type": "tea",
+      "category": "Шу пуэр",
+      "short_description": "Порционный шу пуэр для тех, кому нравится аромат тёплого риса.",
+      "description": "Порционный шу пуэр для тех, кому нравится аромат тёплого риса. Рисовый профиль делает знакомство с тёмным пуэром необычным. Начните с умеренной крепости, чтобы различить чайную основу и ароматический акцент.",
+      "inventory_reference": {
+        "retail_price_rub": 50.0,
+        "package_original": "7г",
+        "quantity_original": 46,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 7,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 6,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "shu",
+          "url": "https://teapav.ru/product/puer-shu-tsi-tszy-bin-puer-cha-357g/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "В файле «с рисом». Это может быть рисовая трава или ароматизация, а не рис; состав неизвестен."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r037",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 37,
+        "name_original": "Шу пуэр Юньнань"
+      },
+      "name": "Шу пуэр, Юньнань, 7 г",
+      "product_type": "tea",
+      "category": "Шу пуэр",
+      "short_description": "Небольшая порция шу пуэра для одной чайной сессии.",
+      "description": "Небольшая порция шу пуэра для одной чайной сессии. Формат 7 г удобно взять на работу или в поездку. Можно заварить всю порцию проливами либо использовать часть для обычной кружки.",
+      "inventory_reference": {
+        "retail_price_rub": 50.0,
+        "package_original": "7г",
+        "quantity_original": 38,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 7,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 95,
+          "max": 100
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 6,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "shu",
+          "url": "https://teapav.ru/product/puer-shu-tsi-tszy-bin-puer-cha-357g/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Фабрика, год и форма порции не указаны."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r038",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 38,
+        "name_original": "Красный Мандарин Юньнань"
+      },
+      "name": "Красный чай «Мандарин», Юньнань",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Порционный красный чай с мандариновым названием для ароматного чаепития.",
+      "description": "Порционный красный чай с мандариновым названием для ароматного чаепития. Упаковка 7 г подойдёт для знакомства с позицией без покупки большого объёма. Первую чашку лучше сделать некрепкой, а затем подобрать время под свой вкус.",
+      "inventory_reference": {
+        "retail_price_rub": 50.0,
+        "package_original": "7г",
+        "quantity_original": 37,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 7,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "red",
+          "url": "https://gorkovchay.ru/blog/gidy-po-sortam/krasnyy-chay-polnoe-rukovodstvo-sorta-zavarivanie-polza/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Неясно: чай с цедрой, в мандарине или торговое название. Состав и аромат не утверждать до проверки."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r039",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 39,
+        "name_original": "Бай Мудань Юньнань"
+      },
+      "name": "Бай Му Дань, Юньнань, 7 г",
+      "product_type": "tea",
+      "category": "Белый чай",
+      "short_description": "Порционный белый чай для лёгкой, неторопливой чашки.",
+      "description": "Порционный белый чай для лёгкой, неторопливой чашки. В исходном списке указан Юньнань — это сохраняется в карточке. Небольшую порцию удобно пробовать в гайвани, постепенно увеличивая время заваривания.",
+      "inventory_reference": {
+        "retail_price_rub": 50.0,
+        "package_original": "7г",
+        "quantity_original": 41,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 7,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 85,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 240
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 150,
+          "first_infusion_seconds": {
+            "min": 20,
+            "max": 30
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "white",
+          "url": "https://masternix.ru/public/zavarivanie-kitayskogo-belogo-chaya.htm"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Не подменять фуцзяньским Бай Му Данем; состав сырья и форма порции неизвестны."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r040",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 40,
+        "name_original": "Юэ Гуан Бай Юньнань"
+      },
+      "name": "Юэ Гуан Бай, Юньнань, 7 г",
+      "product_type": "tea",
+      "category": "Белый чай",
+      "short_description": "Белый чай с мягким характером и типичными медово-фруктовыми оттенками.",
+      "description": "Белый чай с мягким характером и типичными медово-фруктовыми оттенками. Юэ Гуан Бай известен как «Белый лунный свет». Порционный формат удобен для первого знакомства с этим юньнаньским стилем.",
+      "inventory_reference": {
+        "retail_price_rub": 50.0,
+        "package_original": "7г",
+        "quantity_original": 45,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 7,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 85,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 240
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 150,
+          "first_infusion_seconds": {
+            "min": 20,
+            "max": 30
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "moon",
+          "url": "https://waystea.ru/product/yue-guan-baj/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Типовой профиль сорта; урожай, фабрика и форма порции не подтверждены."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r041",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 41,
+        "name_original": "Шен солнце Менхая Юньнань"
+      },
+      "name": "Шэн пуэр «Солнце Мэнхая», Юньнань",
+      "product_type": "tea",
+      "category": "Шэн пуэр",
+      "short_description": "Порция шэн пуэра 7 г для небольшой чайной сессии.",
+      "description": "Порция шэн пуэра 7 г для небольшой чайной сессии. Начните с коротких проливов и постепенно наращивайте время. Это позволит подобрать крепость и познакомиться с характером чая без большой упаковки.",
+      "inventory_reference": {
+        "retail_price_rub": 50.0,
+        "package_original": "7г",
+        "quantity_original": 43,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 7,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 60,
+            "max": 120
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 5,
+            "max": 15
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "sheng",
+          "url": "https://tuchay.chayniy-put.ru/blog/kak-chitat-obertku-puera/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Точное совпадение не найдено; фабрика и возраст неизвестны."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r042",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 42,
+        "name_original": "Шен Северный остров Юньнань"
+      },
+      "name": "Шэн пуэр «Северный остров», Юньнань",
+      "product_type": "tea",
+      "category": "Шэн пуэр",
+      "short_description": "Порционный шэн пуэр для заваривания дома, на работе или в поездке.",
+      "description": "Порционный шэн пуэр для заваривания дома, на работе или в поездке. Формат 7 г позволяет подготовить навеску заранее. Чай удобно пить несколькими короткими проливами, наблюдая за изменением вкуса.",
+      "inventory_reference": {
+        "retail_price_rub": 50.0,
+        "package_original": "7г",
+        "quantity_original": 34,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 7,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 60,
+            "max": 120
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 5,
+            "max": 15
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "sheng",
+          "url": "https://tuchay.chayniy-put.ru/blog/kak-chitat-obertku-puera/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Название не является подтверждением Биндао или другого места происхождения."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r043",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 43,
+        "name_original": "Дянь Хун с Розой Юньнань"
+      },
+      "name": "Дянь Хун с розой, Юньнань",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Порционный красный чай с розовым цветочным акцентом.",
+      "description": "Порционный красный чай с розовым цветочным акцентом. Такое сочетание подойдёт тем, кому нравится соединять насыщенную чайную основу и цветочный аромат. Небольшая фасовка удобна для пробы.",
+      "inventory_reference": {
+        "retail_price_rub": 50.0,
+        "package_original": "7г",
+        "quantity_original": 32,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 7,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "red",
+          "url": "https://gorkovchay.ru/blog/gidy-po-sortam/krasnyy-chay-polnoe-rukovodstvo-sorta-zavarivanie-polza/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Роза заявлена в названии; лепестки, ароматизатор и полный состав проверить."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r045",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 45,
+        "name_original": "Типод Самодао 800мл"
+      },
+      "name": "Типод Samadoyo, 800 мл",
+      "product_type": "teaware",
+      "category": "Чайники и типоды",
+      "short_description": "Заварочный чайник для удобного контроля крепости и быстрого отделения настоя от листьев.",
+      "description": "Заварочный чайник для удобного контроля крепости и быстрого отделения настоя от листьев. Типод позволяет заваривать чай в отдельной камере и сливать готовый настой в основную ёмкость. Подходит для последовательных завариваний дома или на работе.",
+      "inventory_reference": {
+        "retail_price_rub": 3500.0,
+        "package_original": null,
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": 800,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Уход сверить с инструкцией конкретной модели. После использования очистить и просушить; избегать ударов и резких перепадов температуры. Совместимость с посудомоечной машиной и СВЧ не подтверждена.",
+      "sources": [
+        {
+          "source_id": "samadoyo",
+          "url": "https://www.fuhao.ru/attribute/brand/samadoyo/"
+        },
+        {
+          "source_id": "ware",
+          "url": "https://teaelement.ru/blog/posuda-dlya-kitajskogo-chaya-chto-vybrat-i-zachem"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Проверить написание бренда, модель, материал и механизм. 800 мл — заявленный объём, не объём заварочной камеры."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r046",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 46,
+        "name_original": "Типод Самодао 500мл"
+      },
+      "name": "Типод Samadoyo, 500 мл",
+      "product_type": "teaware",
+      "category": "Чайники и типоды",
+      "short_description": "Компактный заварочный чайник для коротких проливов и повседневного чаепития.",
+      "description": "Компактный заварочный чайник для коротких проливов и повседневного чаепития. Листья остаются в заварочной камере, а настой можно слить отдельно. Такой способ помогает вовремя остановить заваривание и повторить его с новой водой.",
+      "inventory_reference": {
+        "retail_price_rub": 3000.0,
+        "package_original": null,
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": 500,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Уход сверить с инструкцией конкретной модели. После использования очистить и просушить; избегать ударов и резких перепадов температуры. Совместимость с посудомоечной машиной и СВЧ не подтверждена.",
+      "sources": [
+        {
+          "source_id": "samadoyo",
+          "url": "https://www.fuhao.ru/attribute/brand/samadoyo/"
+        },
+        {
+          "source_id": "ware",
+          "url": "https://teaelement.ru/blog/posuda-dlya-kitajskogo-chaya-chto-vybrat-i-zachem"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Проверить бренд, модель, материал и механизм. Объём камеры не равен 500 мл."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r047",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 47,
+        "name_original": "Термос Самодао 400 мл"
+      },
+      "name": "Термос Samadoyo, 400 мл",
+      "product_type": "teaware",
+      "category": "Термосы",
+      "short_description": "Термос объёмом 400 мл для любимого чая в дороге и на работе.",
+      "description": "Термос объёмом 400 мл для любимого чая в дороге и на работе. Небольшой формат удобен для личной порции напитка. Если чай заварен отдельно, удалите листья перед переливанием, чтобы настой не продолжал крепнуть.",
+      "inventory_reference": {
+        "retail_price_rub": 3000.0,
+        "package_original": null,
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": 400,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Уход сверить с инструкцией конкретной модели. После использования очистить и просушить; избегать ударов и резких перепадов температуры. Совместимость с посудомоечной машиной и СВЧ не подтверждена.",
+      "sources": [
+        {
+          "source_id": "thermos",
+          "url": "https://sama-doyo.ru/termosy"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Уточнить модель, материал, фильтр, герметичность и время удержания температуры. Не приписывать магнитный фильтр без проверки."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r048",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 48,
+        "name_original": "Полотенца"
+      },
+      "name": "Чайное полотенце",
+      "product_type": "teaware",
+      "category": "Чайные аксессуары",
+      "short_description": "Полотенце для аккуратного чайного стола и небольших повседневных проливов.",
+      "description": "Полотенце для аккуратного чайного стола и небольших повседневных проливов. Пригодится, чтобы промокнуть капли рядом с посудой и поддерживать порядок во время чаепития. Удобный аксессуар к чайнику, гайвани или чабани.",
+      "inventory_reference": {
+        "retail_price_rub": 500.0,
+        "package_original": null,
+        "quantity_original": 3,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Стирать и сушить по маркировке ткани; состав и режим стирки нужно уточнить.",
+      "sources": [
+        {
+          "source_id": "ware",
+          "url": "https://teaelement.ru/blog/posuda-dlya-kitajskogo-chaya-chto-vybrat-i-zachem"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Размер, состав ткани, цвет и допустимая стирка неизвестны."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r049",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 49,
+        "name_original": "Чабань средняя"
+      },
+      "name": "Чабань средняя",
+      "product_type": "teaware",
+      "category": "Чабани",
+      "short_description": "Чайная доска для размещения посуды и организации чаепития проливами.",
+      "description": "Чайная доска для размещения посуды и организации чаепития проливами. Чабань помогает собрать всё необходимое в одном месте. Средний вариант стоит выбирать после сравнения размеров с вашим чайником и пиалами.",
+      "inventory_reference": {
+        "retail_price_rub": 2500.0,
+        "package_original": null,
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Уход сверить с инструкцией конкретной модели. После использования очистить и просушить; избегать ударов и резких перепадов температуры. Совместимость с посудомоечной машиной и СВЧ не подтверждена.",
+      "sources": [
+        {
+          "source_id": "ware",
+          "url": "https://teaelement.ru/blog/posuda-dlya-kitajskogo-chaya-chto-vybrat-i-zachem"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Габариты, материал, поддон и слив неизвестны; не обещать вместимость по числу человек."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r050",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 50,
+        "name_original": "Чабань малая"
+      },
+      "name": "Чабань малая",
+      "product_type": "teaware",
+      "category": "Чабани",
+      "short_description": "Небольшая чайная доска для компактного чайного места.",
+      "description": "Небольшая чайная доска для компактного чайного места. Подойдёт для аккуратной расстановки основных предметов во время чаепития. Перед покупкой стоит сопоставить реальные размеры доски с вашей посудой.",
+      "inventory_reference": {
+        "retail_price_rub": 2000.0,
+        "package_original": null,
+        "quantity_original": 2,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Уход сверить с инструкцией конкретной модели. После использования очистить и просушить; избегать ударов и резких перепадов температуры. Совместимость с посудомоечной машиной и СВЧ не подтверждена.",
+      "sources": [
+        {
+          "source_id": "ware",
+          "url": "https://teaelement.ru/blog/posuda-dlya-kitajskogo-chaya-chto-vybrat-i-zachem"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Габариты, материал и конструкцию слива уточнить."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r051",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 51,
+        "name_original": "Чахай керамика"
+      },
+      "name": "Чахай керамический",
+      "product_type": "teaware",
+      "category": "Чахаи",
+      "short_description": "Керамический сливник для ровного вкуса чая в каждой пиале.",
+      "description": "Керамический сливник для ровного вкуса чая в каждой пиале. Сначала перелейте готовый настой из чайника или гайвани в чахай, затем разлейте гостям. Так разные части одного пролива смешаются перед подачей.",
+      "inventory_reference": {
+        "retail_price_rub": 1500.0,
+        "package_original": null,
+        "quantity_original": 3,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": null,
+      "material": "керамика",
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Уход сверить с инструкцией конкретной модели. После использования очистить и просушить; избегать ударов и резких перепадов температуры. Совместимость с посудомоечной машиной и СВЧ не подтверждена.",
+      "sources": [
+        {
+          "source_id": "ware",
+          "url": "https://teaelement.ru/blog/posuda-dlya-kitajskogo-chaya-chto-vybrat-i-zachem"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Объём, глазурь, цвет и пригодность для посудомоечной машины неизвестны."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r052",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 52,
+        "name_original": "Чайник Исин"
+      },
+      "name": "Чайник «Исин»",
+      "product_type": "teaware",
+      "category": "Чайники и типоды",
+      "short_description": "Чайник для небольших последовательных завариваний и внимательного знакомства с чаем.",
+      "description": "Чайник для небольших последовательных завариваний и внимательного знакомства с чаем. Перед началом прогрейте посуду, а между проливами полностью сливайте настой. Выбор чая и способ ухода зависят от материала конкретного чайника.",
+      "inventory_reference": {
+        "retail_price_rub": 5500.0,
+        "package_original": null,
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Уход сверить с инструкцией конкретной модели. После использования очистить и просушить; избегать ударов и резких перепадов температуры. Совместимость с посудомоечной машиной и СВЧ не подтверждена.",
+      "sources": [
+        {
+          "source_id": "ware",
+          "url": "https://teaelement.ru/blog/posuda-dlya-kitajskogo-chaya-chto-vybrat-i-zachem"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Название «Исин» не доказывает происхождение глины. Уточнить материал, глазурь, объём, мастера и подлинность."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r053",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 53,
+        "name_original": "Пиалы фарфор рисунок"
+      },
+      "name": "Фарфоровая пиала с рисунком",
+      "product_type": "teaware",
+      "category": "Пиалы",
+      "short_description": "Пиала для небольших порций чая и знакомства с каждым проливом.",
+      "description": "Пиала для небольших порций чая и знакомства с каждым проливом. Фарфор подходит для аккуратной чайной сервировки. Небольшие порции позволяют сравнивать аромат и вкус по мере заваривания.",
+      "inventory_reference": {
+        "retail_price_rub": 500.0,
+        "package_original": null,
+        "quantity_original": 6,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": null,
+      "material": "фарфор",
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Уход сверить с инструкцией конкретной модели. После использования очистить и просушить; избегать ударов и резких перепадов температуры. Совместимость с посудомоечной машиной и СВЧ не подтверждена.",
+      "sources": [
+        {
+          "source_id": "ware",
+          "url": "https://teaelement.ru/blog/posuda-dlya-kitajskogo-chaya-chto-vybrat-i-zachem"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Объём, рисунок, размер и совместимость с СВЧ/посудомойкой неизвестны."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r054",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 54,
+        "name_original": "Набор гайвань мал и пиалы"
+      },
+      "name": "Набор: малая гайвань и пиалы",
+      "product_type": "teaware",
+      "category": "Наборы посуды",
+      "short_description": "Набор для знакомства с завариванием в гайвани и подачей чая небольшими порциями.",
+      "description": "Набор для знакомства с завариванием в гайвани и подачей чая небольшими порциями. Гайвань помогает контролировать время настаивания, а пиалы нужны для готового чая. Это основа для неспешного чаепития проливами.",
+      "inventory_reference": {
+        "retail_price_rub": 2000.0,
+        "package_original": null,
+        "quantity_original": 2,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Уход сверить с инструкцией конкретной модели. После использования очистить и просушить; избегать ударов и резких перепадов температуры. Совместимость с посудомоечной машиной и СВЧ не подтверждена.",
+      "sources": [
+        {
+          "source_id": "ware",
+          "url": "https://teaelement.ru/blog/posuda-dlya-kitajskogo-chaya-chto-vybrat-i-zachem"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Число пиал, материал, объёмы и состав набора неизвестны."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r055",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 55,
+        "name_original": "Чахэ дерево"
+      },
+      "name": "Чахэ деревянное",
+      "product_type": "teaware",
+      "category": "Чахэ",
+      "short_description": "Деревянное чахэ для знакомства с сухим листом перед завариванием.",
+      "description": "Деревянное чахэ для знакомства с сухим листом перед завариванием. В чахэ удобно рассмотреть чай, оценить его аромат и пересыпать навеску в заварочную посуду. Используйте его сухим и храните вдали от сильных запахов.",
+      "inventory_reference": {
+        "retail_price_rub": 500.0,
+        "package_original": null,
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": null,
+      "material": "дерево",
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Удалять сухие чаинки мягкой салфеткой. Не замачивать; способ влажной очистки зависит от покрытия.",
+      "sources": [
+        {
+          "source_id": "chahe",
+          "url": "https://gachami.ru/posuda/aksessuary/aksesuary/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Порода дерева, покрытие, размеры и возможность мытья неизвестны."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r056",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 56,
+        "name_original": "Чахэ керамика"
+      },
+      "name": "Чахэ керамическое",
+      "product_type": "teaware",
+      "category": "Чахэ",
+      "short_description": "Керамическая ёмкость для знакомства с чаем перед первым проливом.",
+      "description": "Керамическая ёмкость для знакомства с чаем перед первым проливом. Насыпьте сухой лист, рассмотрите его и оцените аромат. Затем аккуратно пересыпьте чай в гайвань или чайник.",
+      "inventory_reference": {
+        "retail_price_rub": 500.0,
+        "package_original": null,
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": null,
+      "material": "керамика",
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Уход сверить с инструкцией конкретной модели. После использования очистить и просушить; избегать ударов и резких перепадов температуры. Совместимость с посудомоечной машиной и СВЧ не подтверждена.",
+      "sources": [
+        {
+          "source_id": "chahe",
+          "url": "https://gachami.ru/posuda/aksessuary/aksesuary/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Размер, глазурь, цвет и правила мытья уточнить."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r057",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 57,
+        "name_original": "Чахэ весы"
+      },
+      "name": "Чахэ-весы",
+      "product_type": "teaware",
+      "category": "Чайные весы",
+      "short_description": "Аксессуар для отмеривания чайной навески перед завариванием.",
+      "description": "Аксессуар для отмеривания чайной навески перед завариванием. Точная порция помогает повторять понравившуюся крепость и сравнивать разные чаи при одинаковых условиях. Используйте на ровной сухой поверхности.",
+      "inventory_reference": {
+        "retail_price_rub": 1500.0,
+        "package_original": null,
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": null,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": null,
+      "care": "Хранить сухим, не погружать в воду. Перед использованием проверить питание, обнуление и допустимую нагрузку по инструкции.",
+      "sources": [
+        {
+          "source_id": "chahe",
+          "url": "https://gachami.ru/posuda/aksessuary/aksesuary/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Проверить, действительно ли весы встроены. Неизвестны точность, предел взвешивания, питание и материал."
+        ],
+        "description_basis": "Назначение категории и параметры из таблицы; точная модель не установлена."
+      }
+    },
+    {
+      "record_key": "chao-20261021-r058",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 58,
+        "name_original": "Дикий манго зеленый"
+      },
+      "name": "Дикий манго — зелёный чай",
+      "product_type": "tea",
+      "category": "Зелёный чай",
+      "short_description": "Зелёный чай с необычным фруктовым направлением аромата.",
+      "description": "Зелёный чай с необычным фруктовым направлением аромата. В продаже встречается тайский чай с таким названием и естественными нотами манго и ягод. Это интересный вариант для знакомства с зелёными чаями за пределами привычного травяного профиля.",
+      "inventory_reference": {
+        "retail_price_rub": 1400.0,
+        "package_original": "50г",
+        "quantity_original": 2,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 75,
+          "max": 85
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 90,
+            "max": 150
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 15,
+            "max": 25
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "mango",
+          "url": "https://tea-side.com/ru/wild-best-green-tea-a/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Вероятное совпадение с TEASIDE; подтвердить поставщика, грейд и отсутствие добавок. Не добавлять манго в состав автоматически."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r059",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 59,
+        "name_original": "Дянь Хун стрые деревья"
+      },
+      "name": "Дянь Хун — старые деревья",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Красный чай для тех, кто любит насыщенную чашку и подробное знакомство с ароматом.",
+      "description": "Красный чай для тех, кто любит насыщенную чашку и подробное знакомство с ароматом. Позиция заявлена как Дянь Хун со старых деревьев. Её можно пробовать и в обычном чайнике, и проливами, сравнивая плотность и послевкусие.",
+      "inventory_reference": {
+        "retail_price_rub": 1350.0,
+        "package_original": "50г",
+        "quantity_original": 2,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "red",
+          "url": "https://gorkovchay.ru/blog/gidy-po-sortam/krasnyy-chay-polnoe-rukovodstvo-sorta-zavarivanie-polza/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "«Стрые» исправлено на «старые». Возраст деревьев, страна и урожай не подтверждены: похожий товар есть и из Таиланда."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r060",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 60,
+        "name_original": "Улун Си Дзи Чунь 4 сезона"
+      },
+      "name": "Улун Сы Цзи Чунь — Четыре сезона",
+      "product_type": "tea",
+      "category": "Светлый улун",
+      "short_description": "Светлый улун с цветочным направлением аромата и мягким характером.",
+      "description": "Светлый улун с цветочным направлением аромата и мягким характером. Сы Цзи Чунь известен как «Весна четырёх сезонов». Хорош для знакомства с лёгкими улунами: заварите небольшую порцию и попробуйте несколько последовательных чашек.",
+      "inventory_reference": {
+        "retail_price_rub": 3400.0,
+        "package_original": "100г",
+        "quantity_original": 1,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 100,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 85,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 15,
+            "max": 25
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "four",
+          "url": "https://tea-side.com/ru/buy-organic-loose-leaf-oolong-tea-online/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Культивар не доказывает происхождение с Тайваня; страну и обжарку уточнить."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r061",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 61,
+        "name_original": "Габа красный Ассам"
+      },
+      "name": "Габа красный Ассам",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Красный чай с ГАБА-обработкой для знакомства с необычной стороной чайной коллекции.",
+      "description": "Красный чай с ГАБА-обработкой для знакомства с необычной стороной чайной коллекции. ГАБА обозначает особенность обработки чайного сырья. Этот чай стоит пробовать ради вкуса, подбирая насыщенность короткими завариваниями.",
+      "inventory_reference": {
+        "retail_price_rub": 1300.0,
+        "package_original": "50г",
+        "quantity_original": 3,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "gabaassam",
+          "url": "https://www.chaochay.ru/products/gaba_assam"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Ассам может обозначать разновидность сырья, а не Индию. Найден похожий тайский чай, но партия не установлена. Не обещать лечебный или успокаивающий эффект."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r062",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 62,
+        "name_original": "Габа Си Дзи Чунь"
+      },
+      "name": "Габа Сы Цзи Чунь",
+      "product_type": "tea",
+      "category": "Светлый улун",
+      "short_description": "Чай из сырья Сы Цзи Чунь с ГАБА-обработкой и цветочно-фруктовым направлением.",
+      "description": "Чай из сырья Сы Цзи Чунь с ГАБА-обработкой и цветочно-фруктовым направлением. Интересен для сравнения с обычным улуном «Четыре сезона». Заваривайте небольшими порциями и оцените, как обработка меняет знакомый ароматический профиль.",
+      "inventory_reference": {
+        "retail_price_rub": 1300.0,
+        "package_original": "50г",
+        "quantity_original": 3,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 50,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 85,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 5,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 15,
+            "max": 25
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "gaba",
+          "url": "https://www.chaochay.ru/products/gaba_si_tzy_chum_tai"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Найден тайский аналог; страну и степень окисления конкретной партии уточнить. Не обещать сон или отсутствие кофеина."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    },
+    {
+      "record_key": "chao-20261021-r063",
+      "existing_product_id": null,
+      "source": {
+        "file": "Чао Розница 21102026.xls",
+        "sheet": "Лист1",
+        "row": 63,
+        "name_original": "Красный 6"
+      },
+      "name": "Красный №6",
+      "product_type": "tea",
+      "category": "Красный чай",
+      "short_description": "Небольшая порция красного чая для знакомства с номерной позицией коллекции.",
+      "description": "Небольшая порция красного чая для знакомства с номерной позицией коллекции. Фасовки 10 г хватит, чтобы попробовать чай разными способами и подобрать приятную крепость. Начните с обычного настаивания, затем сравните с короткими проливами.",
+      "inventory_reference": {
+        "retail_price_rub": 250.0,
+        "package_original": "10г",
+        "quantity_original": 2,
+        "quantity_interpretation": "Количество единиц указанной фасовки; интерпретацию проверить перед обновлением склада",
+        "snapshot_date": "2026-10-21"
+      },
+      "net_weight_g": 10,
+      "volume_ml": null,
+      "material": null,
+      "manufacturer": null,
+      "country": null,
+      "region": null,
+      "harvest_year": null,
+      "production_year": null,
+      "ingredients": null,
+      "images": [],
+      "condition_note": null,
+      "brewing": {
+        "basis": "Стартовый редакторский рецепт для категории, а не инструкция изготовителя; отрегулировать по вкусу.",
+        "water_temperature_c": {
+          "min": 90,
+          "max": 95
+        },
+        "infusion": {
+          "tea_g": 3,
+          "water_ml": 250,
+          "time_seconds": {
+            "min": 120,
+            "max": 180
+          }
+        },
+        "gongfu": {
+          "tea_g": 4,
+          "water_ml": 120,
+          "first_infusion_seconds": {
+            "min": 10,
+            "max": 20
+          },
+          "next_infusions": "После каждого пролива полностью слить настой. По мере ослабления вкуса добавлять по 5–10 секунд."
+        },
+        "thermos": "Для предсказуемой крепости заварить отдельно, удалить листья и перелить готовый настой в чистый термос.",
+        "portion_note": "Фасовка не равна обязательной навеске. Для 7 г можно увеличить объём воды или использовать часть порции."
+      },
+      "care": null,
+      "sources": [
+        {
+          "source_id": "red6",
+          "url": "https://tea-side.com/ru/red-tea-from-old-trees/"
+        }
+      ],
+      "review": {
+        "status": "draft",
+        "needs_review": true,
+        "notes": [
+          "Возможен TEASIDE «Красный чай со старых деревьев №6», но совпадение не подтверждено. Страну, возраст сырья и урожай не переносить из аналога."
+        ],
+        "description_basis": "Редакторский черновик по названию и общим сведениям о категории; конкретная партия не дегустировалась."
+      },
+      "storage": "Хранить сухим, вдали от солнца, влаги и сильных запахов. Условия и срок годности сверить с упаковкой изготовителя.",
+      "caffeine": "Содержит кофеин; количество для данной партии не измерено."
+    }
+  ]
+}
