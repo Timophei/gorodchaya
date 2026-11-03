@@ -499,6 +499,7 @@ function personTitle(array $p): string
 
 function personKindLabel(array $p): string
 {
+    if (($p['kind'] ?? '') === 'user' && ($p['provider'] ?? '') === 'email') { return 'почта'; }
     return ['user' => 'Telegram', 'shop' => 'покупатель магазина'][$p['kind'] ?? ''] ?? 'гость';
 }
 
@@ -540,6 +541,9 @@ function orderPersonKey(array $o): ?string
 {
     if (is_string($o['userId'] ?? null) && preg_match('/^tg:(\d+)$/', $o['userId'], $m)) {
         return 'u_' . $m[1];
+    }
+    if (is_string($o['userId'] ?? null) && preg_match('/^em:([0-9a-f]+)$/', $o['userId'], $m)) {
+        return 'u_e' . $m[1];
     }
     if (is_string($o['visitorId'] ?? null) && $o['visitorId'] !== '') {
         return 'v_' . $o['visitorId'];
@@ -938,6 +942,7 @@ header('Cache-Control: no-store');
         <?php if ($isUser && !empty($person['username'])): ?>
           <div>Telegram: <a href="https://t.me/<?= esc($person['username']) ?>" target="_blank" rel="noopener">@<?= esc($person['username']) ?></a></div>
         <?php endif; ?>
+        <?php if ($isUser && !empty($person['email'])): ?><div>Почта: <a href="mailto:<?= esc($person['email']) ?>"><?= esc($person['email']) ?></a> <span class="muted">(не подтверждена)</span></div><?php endif; ?>
         <?php if ($isUser && !empty($person['telegramId'])): ?><div>Telegram ID: <?= esc($person['telegramId']) ?></div><?php endif; ?>
         <?php if ($contact !== null): ?>
           <div>Из заказа: <?= esc($contact['name'] ?? '—') ?><?= !empty($contact['phone']) ? ' · ' . esc($contact['phone']) : '' ?></div>
@@ -1024,7 +1029,7 @@ header('Cache-Control: no-store');
       <?php $isUser = ($p['kind'] ?? '') === 'user'; $oc = (int) ($p['ordersCount'] ?? 0); $cc = (int) ($p['chatsCount'] ?? 0); $vc = (int) ($p['viewsCount'] ?? 0); ?>
       <a class="conv-card" href="?tab=users&u=<?= esc($p['key'] ?? '') ?>">
         <div class="row1">
-          <span><?= $isUser ? 'Telegram' . (!empty($p['username']) ? ' · @' . esc($p['username']) : '') : esc(personKindLabel($p)) ?></span>
+          <span><?= $isUser ? (!empty($p['email']) ? 'Почта · ' . esc($p['email']) : 'Telegram' . (!empty($p['username']) ? ' · @' . esc($p['username']) : '')) : esc(personKindLabel($p)) ?></span>
           <span>был <?= esc(fmtTime($p['lastSeen'] ?? null)) ?></span>
         </div>
         <div class="preview"><?= esc(personTitle($p)) ?><?= (!$isUser && is_array($p['contact'] ?? null) && !empty($p['contact']['phone'])) ? ' · ' . esc($p['contact']['phone']) : '' ?></div>

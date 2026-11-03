@@ -1,6 +1,7 @@
 // Хранилище пользователей — тот же паттерн, что и store.js (JSON-файл,
 // атомарная перезапись через tmp+rename). Отдельный файл, чтобы не мешать
 // со схемой чаёв.
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
@@ -56,8 +57,72 @@ function upsertTelegramUser(tgUser) {
   return merged;
 }
 
+function getById(id) {
+  return (id && state.users[id]) || null;
+}
+
+// --- аккаунты по почте (пока без подтверждения адреса) ---
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+function getByEmail(email) {
+  const e = normalizeEmail(email);
+  if (!e) return null;
+  return Object.values(state.users).find((u) => u.provider === 'email' && u.email === e) || null;
+}
+
+// Пароль храним только как scrypt-хеш с солью: "scrypt$<соль>$<хеш>".
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(String(password), salt, 64).toString('hex');
+  return `scrypt$${salt}$${hash}`;
+}
+
+function checkPassword(user, password) {
+  if (!user || !user.passwordHash) return false;
+  const [kind, salt, hash] = String(user.passwordHash).split('$');
+  if (kind !== 'scrypt' || !salt || !hash) return false;
+  const a = Buffer.from(hash, 'hex');
+  const b = crypto.scryptSync(String(password), salt, 64);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+// null, если такая почта уже зарегистрирована.
+function createEmailUser({ email, password, name }) {
+  const e = normalizeEmail(email);
+  if (getByEmail(e)) return null;
+  const id = `em:${crypto.randomBytes(8).toString('hex')}`;
+  const now = new Date().toISOString();
+  const user = {
+    id,
+    provider: 'email',
+    email: e,
+    emailVerified: false,
+    passwordHash: hashPassword(password),
+    firstName: String(name || '').trim(),
+    lastName: '',
+    username: null,
+    photoUrl: null,
+    createdAt: now,
+    lastLoginAt: now,
+  };
+  state.users[id] = user;
+  persist();
+  return user;
+}
+
+function touchLogin(user) {
+  user.lastLoginAt = new Date().toISOString();
+  persist();
+  return user;
+}
+
 function getAll() {
   return Object.values(state.users);
 }
 
-module.exports = { getByTelegramId, upsertTelegramUser, getAll, USERS_PATH };
+module.exports = {
+  getByTelegramId, upsertTelegramUser, getById, getByEmail, createEmailUser, checkPassword, touchLogin,
+  normalizeEmail, getAll, USERS_PATH,
+};

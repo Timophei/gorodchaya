@@ -1,5 +1,5 @@
-// Авторизация через Telegram Login Widget — без пароля, без своей формы
-// регистрации. Проверка подлинности данных от Telegram и сессия через
+// Авторизация: через Telegram Login Widget либо по почте и паролю
+// (почта пока без подтверждения, см. /api/auth/register в server.js). Проверка подлинности данных от Telegram и сессия через
 // подписанную cookie (HMAC), без базы сессий — все данные сессии лежат
 // в самой cookie, сервер только проверяет подпись.
 //
@@ -99,13 +99,14 @@ function parseCookies(header) {
 function currentUser(req) {
   const cookies = parseCookies(req.headers.cookie);
   const payload = verifySessionToken(cookies[SESSION_COOKIE]);
-  if (!payload || !payload.tid) return null;
-  return userStore.getByTelegramId(payload.tid);
+  if (!payload) return null;
+  // uid есть у всех сессий (и Telegram, и почта); tid — запасной путь для старых cookie.
+  return userStore.getById(payload.uid) || (payload.tid ? userStore.getByTelegramId(payload.tid) : null);
 }
 
 function setSessionCookie(res, user) {
   const exp = Date.now() + SESSION_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
-  const token = signSession({ uid: user.id, tid: user.telegramId, exp });
+  const token = signSession({ uid: user.id, tid: user.telegramId || null, exp });
   const maxAge = SESSION_MAX_AGE_DAYS * 24 * 60 * 60;
   res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${token}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Lax`);
 }
@@ -116,7 +117,10 @@ function clearSessionCookie(res) {
 
 function publicUser(u) {
   if (!u) return null;
-  return { firstName: u.firstName, lastName: u.lastName, username: u.username, photoUrl: u.photoUrl };
+  return {
+    firstName: u.firstName, lastName: u.lastName, username: u.username, photoUrl: u.photoUrl,
+    provider: u.provider || 'telegram', email: u.email || null,
+  };
 }
 
 module.exports = {

@@ -8,6 +8,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css?v=21">
+<style>
+  .auth-tabs { display:flex; gap:4px; background:#F4EFE3; border-radius:10px; padding:4px; margin-bottom:18px; }
+  .auth-tab { flex:1; border:0; background:transparent; padding:9px 0; border-radius:8px; font:inherit; font-size:14px; font-weight:600; color:#5B6357; cursor:pointer; }
+  .auth-tab.on { background:#fff; color:#22392B; box-shadow:0 1px 3px rgba(34,57,43,.12); }
+  .auth-form { display:flex; flex-direction:column; gap:12px; text-align:left; }
+  .auth-field { display:flex; flex-direction:column; gap:5px; font-size:13px; color:#5B6357; }
+  .auth-field input { font:inherit; font-size:15px; color:#1E2A22; padding:11px 12px; border:1px solid #E3D9C2; border-radius:10px; background:#FDFBF6; }
+  .auth-field input:focus { outline:none; border-color:#2F5B3E; box-shadow:0 0 0 3px rgba(47,91,62,.15); }
+  .auth-hint { font-size:12px; color:#8A8F84; margin-top:-6px; }
+  .auth-error { font-size:13px; color:#B5432E; background:#FBEDE8; border-radius:8px; padding:9px 12px; }
+  .auth-submit { width:100%; justify-content:center; padding:12px 0; border:0; border-radius:10px; background:#2F5B3E; color:#fff; font:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+  .auth-submit[disabled] { opacity:.6; cursor:default; }
+  .auth-divider { display:flex; align-items:center; gap:12px; margin:20px 0 16px; color:#8A8F84; font-size:12.5px; }
+  .auth-divider::before, .auth-divider::after { content:""; flex:1; height:1px; background:#E3D9C2; }
+</style>
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
     (function(m,e,t,r,i,k,a){
@@ -31,14 +46,40 @@
 
   <div id="auth-loading" class="state-msg loading">Проверяем вход…</div>
 
-  <!-- Не вошли: живой виджет входа через Telegram. Скрипт лежит прямо в
-       разметке (а не собирается через innerHTML), иначе браузер его не
-       выполнит — так у Telegram-виджетов принято работать. -->
-  <div id="auth-logged-out" style="display:none;max-width:440px;margin:40px auto;text-align:center;border:1px solid #E3D9C2;border-radius:18px;background:#fff;padding:40px 32px;">
+  <!-- Не вошли: вход по почте и паролю или через Telegram. Скрипт виджета
+       Telegram лежит прямо в разметке (а не собирается через innerHTML),
+       иначе браузер его не выполнит. -->
+  <div id="auth-logged-out" style="display:none;max-width:440px;margin:40px auto;text-align:center;border:1px solid #E3D9C2;border-radius:18px;background:#fff;padding:36px 32px;">
     <div class="serif" style="font-size:22px;font-weight:700;margin-bottom:10px;">Личный кабинет</div>
-    <div style="font-size:14px;color:#5B6357;margin-bottom:24px;line-height:1.5;">
-      Войдите через Telegram — без пароля и регистрации. Так вы сможете видеть историю заказов и не терять переписку с мастером.
+    <div style="font-size:14px;color:#5B6357;margin-bottom:20px;line-height:1.5;">
+      Войдите, чтобы видеть историю заказов и не терять переписку с мастером.
     </div>
+
+    <div class="auth-tabs" role="tablist">
+      <button type="button" class="auth-tab on" data-mode="login" role="tab">Вход</button>
+      <button type="button" class="auth-tab" data-mode="register" role="tab">Регистрация</button>
+    </div>
+
+    <form id="email-auth-form" class="auth-form" novalidate>
+      <label class="auth-field" data-only="register" style="display:none;">
+        <span>Как к вам обращаться</span>
+        <input type="text" name="name" autocomplete="name" maxlength="100">
+      </label>
+      <label class="auth-field">
+        <span>Почта</span>
+        <input type="email" name="email" autocomplete="email" required maxlength="200">
+      </label>
+      <label class="auth-field">
+        <span>Пароль</span>
+        <input type="password" name="password" autocomplete="current-password" required maxlength="200">
+      </label>
+      <div class="auth-hint" data-only="register" style="display:none;">Не короче 6 символов.</div>
+      <div id="auth-error" class="auth-error" role="alert" style="display:none;"></div>
+      <button type="submit" class="btn-primary auth-submit" id="auth-submit">Войти</button>
+    </form>
+
+    <div class="auth-divider"><span>или</span></div>
+
     <div style="display:flex;justify-content:center;">
       <!--
         Бот: @TeaGorodBot. Если виджет вдруг перестанет подключаться —
@@ -52,8 +93,7 @@
         data-onauth="onTelegramAuth(user)"
         data-request-access="write"></script>
     </div>
-    <div class="legal-note" style="margin-top:18px;">Входя через Telegram, вы даёте <a href="consent.html">согласие на обработку персональных данных</a> (имя, ник и фото из Telegram) и принимаете <a href="privacy.html">политику конфиденциальности</a>.</div>
-    <div class="muted" style="font-size:12px;margin-top:10px;">Если кнопка не появилась — бот ещё не настроен на сервере.</div>
+    <div class="legal-note" style="margin-top:18px;">Входя на сайт, вы даёте <a href="consent.html">согласие на обработку персональных данных</a> (имя и почта либо имя, ник и фото из Telegram) и принимаете <a href="privacy.html">политику конфиденциальности</a>.</div>
   </div>
 
   <div id="auth-logged-in" style="display:none;">
@@ -104,6 +144,52 @@ function onTelegramAuth(user) {
   });
 }
 
+// Вход и регистрация по почте (пока без подтверждения адреса).
+(function () {
+  var form = document.getElementById('email-auth-form');
+  if (!form) return;
+  var mode = 'login';
+  var errEl = document.getElementById('auth-error');
+  var submitBtn = document.getElementById('auth-submit');
+  var ERRORS = {
+    invalid_credentials: 'Неверная почта или пароль.',
+    email_taken: 'Эта почта уже зарегистрирована — попробуйте войти.',
+    too_many_attempts: 'Слишком много попыток. Подождите 15 минут.',
+    invalid_payload: 'Проверьте, что всё заполнено правильно.'
+  };
+  function showError(text) { errEl.textContent = text; errEl.style.display = text ? '' : 'none'; }
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll('.auth-tab').forEach(function (t) { t.classList.toggle('on', t.dataset.mode === m); });
+    form.querySelectorAll('[data-only="register"]').forEach(function (el) { el.style.display = m === 'register' ? '' : 'none'; });
+    form.password.autocomplete = m === 'register' ? 'new-password' : 'current-password';
+    submitBtn.textContent = m === 'register' ? 'Зарегистрироваться' : 'Войти';
+    showError('');
+  }
+  document.querySelectorAll('.auth-tab').forEach(function (t) {
+    t.addEventListener('click', function () { setMode(t.dataset.mode); });
+  });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = form.email.value.trim();
+    var password = form.password.value;
+    var name = form.name.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Введите почту в виде name@example.ru.');
+    if (mode === 'register' && !name) return showError('Напишите, как к вам обращаться.');
+    if (mode === 'register' && password.length < 6) return showError('Пароль — не короче 6 символов.');
+    if (!password) return showError('Введите пароль.');
+    showError('');
+    submitBtn.disabled = true;
+    var body = mode === 'register' ? { email: email, password: password, name: name } : { email: email, password: password };
+    window.ChayGorod.apiPost('/auth/' + (mode === 'register' ? 'register' : 'login'), body)
+      .then(function () { location.reload(); })
+      .catch(function (err) {
+        submitBtn.disabled = false;
+        showError(ERRORS[err && err.message] || 'Не удалось войти. Попробуйте ещё раз.');
+      });
+  });
+})();
+
 var ORDER_STATUS_LABELS = { new: 'Новый', processing: 'В работе', done: 'Выполнен', cancelled: 'Отменён' };
 
 function orderCardHtml(CG, o) {
@@ -134,7 +220,7 @@ function orderCardHtml(CG, o) {
       document.getElementById('auth-logged-in').style.display = '';
       var fullName = (user.firstName + ' ' + (user.lastName || '')).trim();
       document.getElementById('profile-name').textContent = fullName || 'Гость';
-      document.getElementById('profile-username').textContent = user.username ? '@' + user.username : '';
+      document.getElementById('profile-username').textContent = user.username ? '@' + user.username : (user.email || '');
       if (user.photoUrl) {
         var img = document.getElementById('profile-avatar');
         img.src = user.photoUrl;

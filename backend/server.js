@@ -365,6 +365,58 @@ app.post('/api/auth/telegram', (req, res) => {
   res.json({ user: auth.publicUser(user) });
 });
 
+// --- вход по почте и паролю ---
+// Пока без подтверждения адреса: зарегистрировался — сразу вошёл.
+// Простой ограничитель попыток по IP, чтобы пароли не перебирали.
+const authAttempts = new Map(); // ip -> { n, resetAt }
+function tooManyAuthAttempts(req) {
+  const ip = req.get('x-real-ip') || req.ip || 'unknown';
+  const now = Date.now();
+  let rec = authAttempts.get(ip);
+  if (!rec || now > rec.resetAt) { rec = { n: 0, resetAt: now + 15 * 60 * 1000 }; authAttempts.set(ip, rec); }
+  rec.n += 1;
+  if (authAttempts.size > 5000) for (const [k, v] of authAttempts) if (now > v.resetAt) authAttempts.delete(k);
+  return rec.n > 20;
+}
+
+const EmailSchema = z.string().trim().max(200).email();
+const RegisterSchema = z.object({
+  email: EmailSchema,
+  password: z.string().min(6).max(200),
+  name: z.string().trim().min(1).max(100),
+});
+const LoginSchema = z.object({
+  email: EmailSchema,
+  password: z.string().min(1).max(200),
+});
+
+function finishLogin(req, res, user) {
+  auth.setSessionCookie(res, user);
+  const vid = visitorIdOf(req);
+  if (vid) visitorStore.touch(vid, { userId: user.id, cid: readCookies(req).tea_cid });
+  res.json({ user: auth.publicUser(user) });
+}
+
+app.post('/api/auth/register', (req, res) => {
+  if (tooManyAuthAttempts(req)) return res.status(429).json({ error: 'too_many_attempts' });
+  const parsed = RegisterSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'invalid_payload', details: parsed.error.issues });
+  const user = userStore.createEmailUser(parsed.data);
+  if (!user) return res.status(409).json({ error: 'email_taken' });
+  finishLogin(req, res, user);
+});
+
+app.post('/api/auth/login', (req, res) => {
+  if (tooManyAuthAttempts(req)) return res.status(429).json({ error: 'too_many_attempts' });
+  const parsed = LoginSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'invalid_payload' });
+  const user = userStore.getByEmail(parsed.data.email);
+  if (!user || !userStore.checkPassword(user, parsed.data.password)) {
+    return res.status(401).json({ error: 'invalid_credentials' });
+  }
+  finishLogin(req, res, userStore.touchLogin(user));
+});
+
 app.get('/api/auth/me', (req, res) => {
   const user = auth.currentUser(req);
   if (!user) return res.status(401).json({ error: 'not_authenticated' });
@@ -600,10 +652,12 @@ function buildPeople() {
   const byVisitor = new Map(); // visitorId -> ключ человека
 
   for (const u of userStore.getAll()) {
-    people.set(`u_${u.telegramId}`, {
-      key: `u_${u.telegramId}`, kind: 'user', userId: u.id,
-      name: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.username || `Telegram ${u.telegramId}`,
-      username: u.username || null, telegramId: u.telegramId, photoUrl: u.photoUrl || null,
+    // Telegram: u_<telegramId>; почта: u_e<hex> (из id вида em:<hex>).
+    const key = u.provider === 'email' ? `u_e${String(u.id).slice(3)}` : `u_${u.telegramId}`;
+    people.set(key, {
+      key, kind: 'user', userId: u.id, provider: u.provider || 'telegram', email: u.email || null,
+      name: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.username || u.email || `Telegram ${u.telegramId}`,
+      username: u.username || null, telegramId: u.telegramId || null, photoUrl: u.photoUrl || null,
       firstSeen: u.createdAt, lastSeen: u.lastLoginAt,
       visitorIds: [], cids: [], views: [], orders: [],
     });
@@ -675,6 +729,7 @@ function buildPeople() {
 function personSummary(p) {
   return {
     key: p.key, kind: p.kind, name: p.name, username: p.username, telegramId: p.telegramId,
+    provider: p.provider || null, email: p.email || null,
     photoUrl: p.photoUrl, contact: p.contact, firstSeen: p.firstSeen, lastSeen: p.lastSeen,
     ordersCount: p.orders.length, viewsCount: p.views.length, chatsCount: p.cids.length,
     ordersTotal: p.orders.reduce((s, o) => s + (o.status === 'cancelled' ? 0 : (o.total || 0)), 0),
