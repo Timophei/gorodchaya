@@ -10,6 +10,7 @@ const visitorStore = require('./visitorStore');
 const catalog = require('./catalogSync');
 const settings = require('./settingsStore');
 const notify = require('./notify');
+const blocks = require('./blocksStore');
 
 // Cookie посетителя: cg_vid — метка браузера (ставит assets/common.js),
 // tea_cid — id диалога с мастером (ставит чат на главной).
@@ -941,6 +942,124 @@ app.get('/api/address/suggest', async (req, res) => {
     console.error('DaData:', e.message);
     res.json({ suggestions: [] }); // корзина просто даёт ввести адрес руками
   }
+});
+
+// --- настройка блоков сайта (админка → «Блоки») ---
+// Витрина берёт конфиг одним запросом; админка меняет по блоку, каждая правка
+// уходит в историю (откат — /rollback/<версия>).
+app.get('/api/site-config', (_req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.json(blocks.get());
+});
+
+// Чаи первой витрины — по выбранному источнику. Выключенная категория — пусто
+// (витрина тогда скрывается).
+app.get('/api/site-config/showcase', (req, res) => {
+  const sc = blocks.get().showcase;
+  const sorted = store.getAll().slice().sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || (a.name || '').localeCompare(b.name || '', 'ru'));
+  let teas = [];
+  let category = null;
+  if (sc.source === 'featured') teas = sorted.filter((t) => t.featured);
+  else if (sc.source === 'category') {
+    const c = sc.categoryId && store.getCategory(sc.categoryId);
+    if (c && c.active) { category = { id: c.id, name: c.name }; teas = sorted.filter((t) => store.teaCategories(t).includes(c.id)); }
+  } else teas = sc.teaIds.map((id) => store.getById(id)).filter(Boolean);
+  res.set('Cache-Control', 'no-cache');
+  res.json({ category, teas: teas.slice(0, sc.limit).map((t) => publicTea(withMinPrice(t), req)) });
+});
+
+app.get('/api/admin/site-config', requireApiKey, (_req, res) => {
+  res.json({ current: blocks.get(), history: blocks.history(), names: blocks.BLOCK_NAMES });
+});
+
+const Txt = (max) => z.string().trim().max(max);
+const UrlOrEmpty = z.string().trim().max(500).refine((v) => v === '' || /^https?:\/\//i.test(v), 'ссылка должна начинаться с http:// или https://');
+const BlockSchemas = {
+  header: z.object({
+    logoUrl: z.union([z.null(), z.string().max(300).regex(/^assets\/[A-Za-z0-9/_.-]+$/, 'логотип загружается кнопкой')]),
+    quote: Txt(120),
+    showQuote: z.boolean(),
+    menu: z.array(z.object({ key: z.string().max(30), label: Txt(40).min(1), enabled: z.boolean() })).max(20),
+  }),
+  chat: z.object({
+    enabled: z.boolean(),
+    greeting: Txt(500).min(1),
+    chips: z.array(z.object({ label: Txt(40).min(1), text: Txt(300) })).max(8),
+    catalogButton: z.boolean(),
+    catalogButtonLabel: Txt(40).min(1),
+  }),
+  showcase: z.object({
+    enabled: z.boolean(),
+    title: Txt(80).min(1),
+    description: Txt(300),
+    source: z.enum(['featured', 'category', 'manual']),
+    categoryId: z.string().max(60).nullable(),
+    teaIds: z.array(z.string().max(100)).max(24),
+    limit: z.coerce.number().int().min(1).max(12),
+    showAllCard: z.boolean(),
+  }),
+  guild: z.object({ enabled: z.boolean() }),
+  footer: z.object({
+    enabled: z.boolean(),
+    nav: z.array(z.object({ key: z.string().max(30), title: Txt(40).min(1), sub: Txt(60), enabled: z.boolean() })).max(10),
+    contacts: z.object({ address: Txt(200), phone: Txt(40), email: Txt(120), hours: Txt(120), mapUrl: UrlOrEmpty }),
+    socials: z.object({ telegram: Txt(200), vk: Txt(200), whatsapp: Txt(200) }),
+    requisites: Txt(300),
+    copyright: Txt(200),
+  }),
+};
+
+// Пункты меню и подвала — только известные (адреса не меняются, только
+// подпись, порядок и видимость): так в ссылку не подсунуть javascript:.
+function keepKnown(list, defaultsList) {
+  const byKey = new Map(defaultsList.map((d) => [d.key, d]));
+  const seen = new Set();
+  const out = [];
+  for (const it of list) {
+    const d = byKey.get(it.key);
+    if (!d || seen.has(it.key)) continue;
+    seen.add(it.key);
+    out.push({ ...d, ...it, href: d.href });
+  }
+  for (const d of defaultsList) if (!seen.has(d.key)) out.push({ ...d, enabled: false });
+  return out;
+}
+
+app.post('/api/admin/site-config/rollback/:id', requireApiKey, (req, res) => {
+  const cfg = blocks.rollback(req.params.id);
+  if (!cfg) return res.status(404).json({ error: 'not_found' });
+  res.json({ current: cfg, history: blocks.history() });
+});
+
+app.post('/api/admin/site-config/logo', requireApiKey,
+  express.raw({ type: Object.keys(IMAGE_TYPES), limit: '5mb' }),
+  (req, res) => {
+    const ext = Buffer.isBuffer(req.body) ? sniffImage(req.body) : null;
+    if (!ext) return res.status(400).json({ error: 'not_an_image' });
+    const rel = saveUpload('uploads', `logo-${Date.now().toString(36)}.${ext}`, req.body);
+    if (!rel) return res.status(500).json({ error: 'write_failed' });
+    const cfg = blocks.updateBlock('header', { ...blocks.get().header, logoUrl: rel });
+    res.json({ current: cfg, history: blocks.history() });
+  });
+
+app.post('/api/admin/site-config/:block', requireApiKey, (req, res) => {
+  const schema = BlockSchemas[req.params.block];
+  if (!schema) return res.status(404).json({ error: 'unknown_block' });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'validation_failed', details: parsed.error.issues });
+  const v = parsed.data;
+  const d = blocks.defaults();
+  if (req.params.block === 'header') v.menu = keepKnown(v.menu, d.header.menu);
+  if (req.params.block === 'footer') v.nav = keepKnown(v.nav, d.footer.nav);
+  if (req.params.block === 'showcase') {
+    if (v.source === 'category') {
+      const c = v.categoryId && store.getCategory(v.categoryId);
+      if (!c || !c.active) return res.status(400).json({ error: 'validation_failed', details: [{ path: ['categoryId'], message: 'Выберите активную категорию' }] });
+    }
+    v.teaIds = v.teaIds.filter((id) => store.getById(id));
+  }
+  const cfg = blocks.updateBlock(req.params.block, v);
+  res.json({ current: cfg, history: blocks.history() });
 });
 
 // --- админка: пользователи (см. tea-consultant/public/admin/index.php, вкладка «Пользователи») ---

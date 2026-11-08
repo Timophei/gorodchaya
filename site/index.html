@@ -20,7 +20,7 @@
 <meta name="twitter:image" content="https://gorodchaya.ru/assets/og-share.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=21">
+<link rel="stylesheet" href="assets/style.css?v=22">
 
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
@@ -63,9 +63,9 @@
             <div class="pill" data-reply>Для спокойствия</div>
             <div class="pill" data-reply>В дорогу</div>
           </div>
-          <a class="btn-primary" href="catalog.html">
+          <a class="btn-primary" href="catalog.html" id="chat-catalog-btn">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"><path d="M6 8h12l-1 12H7L6 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>
-            Сразу в каталог
+            <span id="chat-catalog-label">Сразу в каталог</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
           </a>
         </div>
@@ -79,11 +79,11 @@
   <section id="about" class="wrap container-pad" style="padding-top:52px;padding-bottom:60px;">
     <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px;flex-wrap:wrap;gap:12px;">
       <div>
-        <div class="serif section-title">Популярные чаи</div>
-        <div style="font-size:14.5px;color:#5B6357;margin-top:6px;">Проверенные вкусы для любого настроения.</div>
-        <a href="catalog.html" style="display:inline-block;margin-top:10px;font-size:14px;font-weight:700;border-bottom:1px solid #22392B;">Перейти в каталог →</a>
+        <div class="serif section-title" id="showcase-title">Популярные чаи</div>
+        <div style="font-size:14.5px;color:#5B6357;margin-top:6px;" id="showcase-desc">Проверенные вкусы для любого настроения.</div>
+        <a href="catalog.html" data-showcase-link style="display:inline-block;margin-top:10px;font-size:14px;font-weight:700;border-bottom:1px solid #22392B;">Перейти в каталог →</a>
       </div>
-      <a href="catalog.html" style="font-size:14px;font-weight:600;color:#3A4436;">Смотреть все →</a>
+      <a href="catalog.html" data-showcase-link style="font-size:14px;font-weight:600;color:#3A4436;">Смотреть все →</a>
     </div>
 
     <div id="home-products">
@@ -113,7 +113,7 @@
 </main>
 
 <div id="site-footer"></div>
-<script src="assets/common.js?v=21"></script>
+<script src="assets/common.js?v=22"></script>
 <script>
 (function () {
   var CG = window.ChayGorod;
@@ -466,19 +466,72 @@
     sendToMaster(text);
   });
 
-  document.querySelectorAll('[data-reply]').forEach(function (el) {
-    el.addEventListener('click', function () {
-      document.querySelectorAll('[data-reply]').forEach(function (p) { p.classList.remove('on'); });
-      el.classList.add('on');
-      sendToMaster(el.textContent.trim());
+  // --- настройки блоков (админка → «Блоки»): чат, витрина, гильдия ---
+  // Сначала — последний сохранённый конфиг (без мигания), потом свежий.
+  function wireQuickReplies() {
+    document.querySelectorAll('[data-reply]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        document.querySelectorAll('[data-reply]').forEach(function (p) { p.classList.remove('on'); });
+        el.classList.add('on');
+        sendToMaster(el.getAttribute('data-text') || el.textContent.trim());
+      });
     });
+  }
+
+  function applyBlocks(cfg) {
+    if (!cfg) return;
+    var chat = cfg.chat || {};
+    document.getElementById('chat').style.display = chat.enabled === false ? 'none' : '';
+    if (Array.isArray(chat.chips)) {
+      document.getElementById('chat-quick-replies').innerHTML = chat.chips.map(function (c) {
+        return '<div class="pill" data-reply data-text="' + CG.escapeHtml(c.text || c.label) + '">' + CG.escapeHtml(c.label) + '</div>';
+      }).join('');
+      wireQuickReplies();
+    }
+    document.getElementById('chat-catalog-btn').style.display = chat.catalogButton === false ? 'none' : '';
+    if (chat.catalogButtonLabel) document.getElementById('chat-catalog-label').textContent = chat.catalogButtonLabel;
+    var sc = cfg.showcase || {};
+    if (sc.title) document.getElementById('showcase-title').textContent = sc.title;
+    var desc = document.getElementById('showcase-desc');
+    desc.textContent = sc.description || '';
+    desc.style.display = sc.description ? '' : 'none';
+    document.getElementById('guild').style.display = cfg.guild && cfg.guild.enabled === false ? 'none' : '';
+  }
+
+  var startCfg = CG.cachedSiteConfig();
+  if (startCfg) applyBlocks(startCfg); else wireQuickReplies();
+  var cfgReady = CG.loadSiteConfig().then(function (cfg) {
+    if (cfg && JSON.stringify(cfg) !== JSON.stringify(startCfg)) applyBlocks(cfg);
+    return cfg || startCfg;
   });
 
-  // Та же фраза, что у старого движка (js/chat.js: WELCOME_TEXT) — печатается посимвольно.
-  appendBubble('master', 'Привет, какой чай тебя интересует?', { typewriter: true });
+  // Приветствие мастера — из настроек (печатается посимвольно).
+  cfgReady.then(function (cfg) {
+    var greet = cfg && cfg.chat && cfg.chat.greeting;
+    if (!cfg || !cfg.chat || cfg.chat.enabled !== false) appendBubble('master', greet || 'Привет, какой чай тебя интересует?', { typewriter: true });
+  });
 
-  CG.apiGet('/teas?featured=1').then(function (teas) {
-    var top4 = teas.slice(0, 4);
+  // Первая витрина: «популярные», категория или выбранные вручную — решает бэкенд.
+  var showcaseSection = document.getElementById('about');
+  cfgReady.then(function (cfg) {
+    var sc = (cfg && cfg.showcase) || {};
+    if (sc.enabled === false) { showcaseSection.style.display = 'none'; return null; }
+    return CG.apiGet('/site-config/showcase').then(function (r) { return { sc: sc, data: r }; });
+  }).then(function (res) {
+    if (!res) return;
+    var teas = (res.data && res.data.teas) || [];
+    if (!teas.length) { showcaseSection.style.display = 'none'; return; }
+    showcaseSection.style.display = '';
+    var cat = res.data.category;
+    var moreHref = cat ? 'catalog/' + encodeURIComponent(cat.id) : 'catalog.html';
+    document.querySelectorAll('[data-showcase-link]').forEach(function (a) { a.setAttribute('href', moreHref); });
+    renderShowcase(teas, res.sc.showAllCard !== false, moreHref);
+  }).catch(function () {
+    document.getElementById('home-products').innerHTML = '<div class="state-msg error">Не удалось загрузить каталог. Попробуйте обновить страницу.</div>';
+  });
+
+  function renderShowcase(teas, showAllCard, moreHref) {
+    var top4 = teas;
     var byId = {};
     top4.forEach(function (t) { byId[t.id] = t; });
     var mount = document.getElementById('home-products');
@@ -488,18 +541,16 @@
     // у неё свой preventDefault/stopPropagation).
     mount.innerHTML = top4.map(function (t) {
       return '<a href="' + CG.defaultTeaHref(t) + '" style="display:block;text-decoration:none;color:inherit;">' + miniCardHtml(t) + '</a>';
-    }).join('') +
-      '<a class="cta-tile" href="catalog.html" style="text-decoration:none;color:inherit;">' +
+    }).join('') + (!showAllCard ? '' :
+      '<a class="cta-tile" href="' + moreHref + '" style="text-decoration:none;color:inherit;">' +
       '<div style="width:44px;height:44px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;">' +
       '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="1.7"><path d="M12 3c4 3 6 6 6 9.5A6 6 0 0 1 6 12.5C6 9 8 6 12 3z"></path></svg></div>' +
       '<div style="font-size:16px;font-weight:700;">Весь каталог</div>' +
       '<div style="font-size:12.5px;color:#5B6357;line-height:1.4;">Больше сортов, редкие чаи и новые находки.</div>' +
       '<div style="width:34px;height:34px;border-radius:999px;border:1px solid #22392B;display:flex;align-items:center;justify-content:center;margin-top:4px;">' +
-      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="2.1"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></div></a>';
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="2.1"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></div></a>');
     wireAddButtons(mount, byId);
-  }).catch(function () {
-    document.getElementById('home-products').innerHTML = '<div class="state-msg error">Не удалось загрузить каталог. Попробуйте обновить страницу.</div>';
-  });
+  }
 })();
 </script>
 </body>

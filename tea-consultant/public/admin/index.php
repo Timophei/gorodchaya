@@ -133,10 +133,11 @@ function fetchOrders(): array
 require __DIR__ . '/products.php';
 require __DIR__ . '/settings.php';
 require __DIR__ . '/categories.php';
+require __DIR__ . '/blocks.php';
 
 // ---------- Параметры запроса ----------
 
-$tab = in_array($_GET['tab'] ?? '', ['orders', 'users', 'products', 'categories', 'settings'], true) ? $_GET['tab'] : 'dialogs';
+$tab = in_array($_GET['tab'] ?? '', ['orders', 'users', 'products', 'categories', 'blocks', 'settings'], true) ? $_GET['tab'] : 'dialogs';
 // Карточка одного пользователя: ?tab=users&u=<ключ> (u_<telegramId> или v_<метка браузера>).
 $userKey = ($tab === 'users' && isset($_GET['u']) && is_string($_GET['u']) && preg_match('/^[uvp]_[A-Za-z0-9_-]{1,80}$/', $_GET['u'])) ? $_GET['u'] : null;
 
@@ -558,6 +559,7 @@ function orderPersonKey(array $o): ?string
 $productsState = $tab === 'products' ? productsHandle() : null;
 $settingsState = $tab === 'settings' ? settingsHandle() : null;
 $categoriesState = $tab === 'categories' ? categoriesHandle() : null;
+$blocksState = $tab === 'blocks' ? blocksHandle() : null;
 
 // ---------- Рендер ----------
 
@@ -763,6 +765,8 @@ header('Cache-Control: no-store');
           <div class="sub"><?= $productsState['tea'] !== null ? 'Карточка чая' : ($productsState['isNew'] ? 'Новый чай' : 'Чаёв: ' . count($productsState['list'])) ?></div>
         <?php elseif ($tab === 'categories'): ?>
           <div class="sub"><?= $categoriesState['cat'] !== null ? 'Категория' : ($categoriesState['isNew'] ? 'Новая категория' : 'Категорий: ' . count($categoriesState['list'])) ?></div>
+        <?php elseif ($tab === 'blocks'): ?>
+          <div class="sub"><?= $blocksState['block'] !== null ? 'Блок: ' . esc($blocksState['names'][$blocksState['block']] ?? '') : 'Блоки сайта и история изменений' ?></div>
         <?php elseif ($tab === 'settings'): ?>
           <div class="sub">Доставка, уведомления, подсказки адреса</div>
         <?php elseif ($tab === 'users'): ?>
@@ -779,6 +783,7 @@ header('Cache-Control: no-store');
       <a class="tab <?= $tab === 'users' ? 'active' : '' ?>" href="?tab=users">Пользователи</a>
       <a class="tab <?= $tab === 'products' ? 'active' : '' ?>" href="?tab=products">Продукты</a>
       <a class="tab <?= $tab === 'categories' ? 'active' : '' ?>" href="?tab=categories">Категории</a>
+      <a class="tab <?= $tab === 'blocks' ? 'active' : '' ?>" href="?tab=blocks">Настройка блоков</a>
       <a class="tab <?= $tab === 'settings' ? 'active' : '' ?>" href="?tab=settings">Настройки</a>
     </div>
   </div>
@@ -934,6 +939,11 @@ header('Cache-Control: no-store');
 
   <?= settingsCss() ?><?= categoriesCss() ?>
   <?php categoriesRender($categoriesState); ?>
+
+<?php elseif ($tab === 'blocks'): ?>
+
+  <?= settingsCss() ?><?= categoriesCss() ?><?= blocksCss() ?>
+  <?php blocksRender($blocksState); ?>
 
 <?php elseif ($tab === 'settings'): ?>
 

@@ -58,7 +58,10 @@ async function startServer(extraEnv = {}) {
   };
   return {
     base, api, dir, data, port, log: () => log,
-    stop: () => new Promise((resolve) => { proc.once('exit', resolve); proc.kill(); }),
+    stop: () => new Promise((resolve) => {
+      if (proc.exitCode !== null || proc.signalCode !== null) return resolve();
+      proc.once('exit', resolve); proc.kill();
+    }),
   };
 }
 

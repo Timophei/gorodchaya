@@ -244,25 +244,55 @@
     { href: 'about.html', label: 'О городе', key: 'about' }
   ];
 
+  // ---------- настройки блоков (админка → «Блоки») ----------
+  // Конфиг приходит с бэкенда; последний полученный лежит в localStorage, чтобы
+  // шапка сразу рисовалась в нужном виде без мигания. Нет конфига — умолчания
+  // (как было до настроек): NAV_LINKS, фирменный логотип, все пункты подвала.
+  var SITE_CFG_KEY = 'cg_site_cfg_v1';
+  var siteCfgPromise = null;
+  function cachedSiteConfig() {
+    try { var raw = localStorage.getItem(SITE_CFG_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+  }
+  function loadSiteConfig() {
+    if (!siteCfgPromise) {
+      siteCfgPromise = apiGet('/site-config').then(function (cfg) {
+        try { localStorage.setItem(SITE_CFG_KEY, JSON.stringify(cfg)); } catch (e) {}
+        return cfg;
+      }).catch(function () { return cachedSiteConfig(); });
+    }
+    return siteCfgPromise;
+  }
+  function menuLinks(cfg) {
+    if (!cfg || !cfg.header || !Array.isArray(cfg.header.menu)) return NAV_LINKS;
+    return cfg.header.menu.filter(function (m) { return m.enabled; }).map(function (m) {
+      return { href: m.href, label: m.label, key: m.key };
+    });
+  }
+
   var HAMBURGER_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#20291F" stroke-width="1.9" stroke-linecap="round"><line x1="3" y1="7" x2="21" y2="7"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="17" x2="21" y2="17"></line></svg>';
   var CLOSE_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#20291F" stroke-width="1.9" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg>';
 
-  function headerHtml(active) {
-    var navHtml = NAV_LINKS.map(function (l) {
+  function headerHtml(active, cfg) {
+    var links = menuLinks(cfg);
+    var hdr = (cfg && cfg.header) || {};
+    var logoSrc = hdr.logoUrl ? escapeHtml(hdr.logoUrl) : 'assets/logo-full.png';
+    var quote = hdr.quote !== undefined ? hdr.quote : 'Хороший чай\nсобирает хороших людей';
+    var showQuote = hdr.showQuote !== false && quote;
+    var navHtml = links.map(function (l) {
       var cls = l.key === active ? ' class="active"' : '';
-      return '<a href="' + l.href + '"' + cls + '>' + l.label + '</a>';
+      return '<a href="' + escapeHtml(l.href) + '"' + cls + '>' + escapeHtml(l.label) + '</a>';
     }).join('\n      ');
     // На телефоне весь .header-actions (поиск/вход/корзина) и .main-nav
     // прячутся — вместо них один хамбургер, а все пункты (навигация +
     // поиск/вход/корзина) уходят в выезжающее мобильное меню.
-    var mobileNavHtml = NAV_LINKS.map(function (l) {
+    var mobileNavHtml = links.map(function (l) {
       var cls = 'mobile-menu-item' + (l.key === active ? ' active' : '');
-      return '<a class="' + cls + '" href="' + l.href + '">' + l.label + '</a>';
+      return '<a class="' + cls + '" href="' + escapeHtml(l.href) + '">' + escapeHtml(l.label) + '</a>';
     }).join('');
     return (
       '<div class="site-header"><div class="site-header-inner wrap">' +
       '<a class="brand" href="index.html">' +
-      '<img class="brand-logo" src="assets/logo-full.png" alt="Чайный город — авторский магазин">' +
+      '<img class="brand-logo" src="' + logoSrc + '" alt="Чайный город — авторский магазин">' +
       '</a>' +
       '<nav class="main-nav">\n      ' + navHtml + '\n      </nav>' +
       '<div class="header-actions">' +
@@ -276,8 +306,8 @@
       '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#20291F" stroke-width="1.8" stroke-linecap="round"><path d="M6 8h12l-1 12H7L6 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>' +
       '<span class="cart-badge" data-cart-badge></span>' +
       '<span class="icon-label">Корзина</span></a>' +
-      '<div class="header-divider"></div>' +
-      '<div class="header-quote serif">Хороший чай<br>собирает хороших людей<div class="header-quote-rule"></div></div>' +
+      (showQuote ? '<div class="header-divider"></div>' +
+      '<div class="header-quote serif">' + escapeHtml(quote).replace(/\n/g, '<br>') + '<div class="header-quote-rule"></div></div>' : '') +
       '<div class="avatar-dot"></div>' +
       '</div>' +
       '<button class="hamburger-btn" type="button" aria-label="Открыть меню" aria-expanded="false" data-menu-toggle>' + HAMBURGER_SVG + '</button>' +
@@ -296,26 +326,64 @@
     );
   }
 
-  function footerHtml() {
+  var FOOT_ICONS = {
+    chat: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="1.9"><path d="M21 11.5a8.4 8.4 0 0 1-8.4 8.4c-1.3 0-2.5-.28-3.6-.8L3 20l1-5.2A8.4 8.4 0 1 1 21 11.5z"></path></svg>',
+    catalog: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="1.9"><path d="M4 8h16l-1.5 12h-13L4 8z"></path><path d="M8 8V6a4 4 0 0 1 8 0v2"></path></svg>',
+    guild: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="1.9"><circle cx="8.5" cy="8" r="2.6"></circle><circle cx="15.5" cy="8" r="2.6"></circle><path d="M2.5 19c.8-3 3-4.8 6-4.8s5.2 1.8 6 4.8M12.5 19c.7-2.6 2.6-4.2 5.2-4.2s4.5 1.6 5.2 4.2"></path></svg>',
+    about: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="1.9"><path d="M4 11.5 12 5l8 6.5"></path><path d="M6 10.5V20h12v-9.5"></path><path d="M10 20v-6h4v6"></path></svg>'
+  };
+  var FOOT_DEFAULT = [
+    { key: 'chat', title: 'Чат с мастером', sub: 'Задайте вопрос', href: 'index.html', enabled: true },
+    { key: 'catalog', title: 'Каталог', sub: 'Тысячи чаёв', href: 'catalog.html', enabled: true },
+    { key: 'guild', title: 'Гильдия', sub: 'Люди и традиции', href: 'guild.html', enabled: true },
+    { key: 'about', title: 'О городе', sub: 'Наш путь и ценности', href: 'about.html', enabled: true }
+  ];
+
+  // Соцсети: можно вписать и ссылку, и просто @имя / номер.
+  function socialHref(kind, v) {
+    v = String(v || '').trim();
+    if (!v) return '';
+    if (/^https?:\/\//i.test(v)) return v;
+    if (kind === 'telegram') return 'https://t.me/' + v.replace(/^@/, '');
+    if (kind === 'vk') return 'https://vk.com/' + v.replace(/^@/, '');
+    if (kind === 'whatsapp') return 'https://wa.me/' + v.replace(/\D/g, '');
+    return '';
+  }
+
+  function footerHtml(cfg) {
+    var ft = (cfg && cfg.footer) || {};
+    if (ft.enabled === false) return '';
+    var nav = (Array.isArray(ft.nav) ? ft.nav : FOOT_DEFAULT).filter(function (n) { return n.enabled; });
+    var items = nav.map(function (n) {
+      var icon = FOOT_ICONS[n.key] || '';
+      if (n.key === 'chat') {
+        return '<a class="foot-chat" href="' + escapeHtml(n.href) + '" style="text-decoration:none;">' +
+          '<div class="foot-chat-icon">' + icon + '</div>' +
+          '<div><div class="foot-title">' + escapeHtml(n.title) + '</div><div class="foot-sub">' + escapeHtml(n.sub) + '</div></div></a>';
+      }
+      return '<a class="foot-item" href="' + escapeHtml(n.href) + '" style="text-decoration:none;">' +
+        '<div class="foot-item-icon">' + icon + '</div>' +
+        '<div><div class="foot-item-title">' + escapeHtml(n.title) + '</div><div class="foot-item-sub">' + escapeHtml(n.sub) + '</div></div></a>';
+    }).join('');
+
+    var c = ft.contacts || {};
+    var bits = [];
+    if (c.address) bits.push(c.mapUrl && /^https?:\/\//i.test(c.mapUrl)
+      ? '<a href="' + escapeHtml(c.mapUrl) + '" target="_blank" rel="noopener">' + escapeHtml(c.address) + '</a>' : escapeHtml(c.address));
+    if (c.hours) bits.push(escapeHtml(c.hours));
+    if (c.phone) bits.push('<a href="tel:' + escapeHtml(c.phone.replace(/[^\d+]/g, '')) + '">' + escapeHtml(c.phone) + '</a>');
+    if (c.email) bits.push('<a href="mailto:' + escapeHtml(c.email) + '">' + escapeHtml(c.email) + '</a>');
+    var so = ft.socials || {};
+    var socials = [['telegram', 'Telegram'], ['vk', 'ВКонтакте'], ['whatsapp', 'WhatsApp']].map(function (x) {
+      var href = socialHref(x[0], so[x[0]]);
+      return href ? '<a href="' + escapeHtml(href) + '" target="_blank" rel="noopener">' + x[1] + '</a>' : '';
+    }).filter(Boolean);
+    var contacts = bits.length || socials.length
+      ? '<div class="foot-contacts wrap">' + bits.concat(socials).join('<span class="fc-sep">·</span>') + '</div>' : '';
+
     return (
-      '<div class="site-footer"><div class="site-footer-inner wrap">' +
-      '<div class="foot-chat">' +
-      '<div class="foot-chat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="1.9"><path d="M21 11.5a8.4 8.4 0 0 1-8.4 8.4c-1.3 0-2.5-.28-3.6-.8L3 20l1-5.2A8.4 8.4 0 1 1 21 11.5z"></path></svg></div>' +
-      '<div><div class="foot-title">Чат с мастером</div><div class="foot-sub">Задайте вопрос</div></div>' +
-      '</div>' +
-      '<a class="foot-item" href="catalog.html" style="text-decoration:none;">' +
-      '<div class="foot-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="1.9"><path d="M4 8h16l-1.5 12h-13L4 8z"></path><path d="M8 8V6a4 4 0 0 1 8 0v2"></path></svg></div>' +
-      '<div><div class="foot-item-title">Каталог</div><div class="foot-item-sub">Тысячи чаёв</div></div>' +
-      '</a>' +
-      '<a class="foot-item" href="guild.html" style="text-decoration:none;">' +
-      '<div class="foot-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="1.9"><circle cx="8.5" cy="8" r="2.6"></circle><circle cx="15.5" cy="8" r="2.6"></circle><path d="M2.5 19c.8-3 3-4.8 6-4.8s5.2 1.8 6 4.8M12.5 19c.7-2.6 2.6-4.2 5.2-4.2s4.5 1.6 5.2 4.2"></path></svg></div>' +
-      '<div><div class="foot-item-title">Гильдия</div><div class="foot-item-sub">Люди и традиции</div></div>' +
-      '</a>' +
-      '<a class="foot-item" href="about.html" style="text-decoration:none;">' +
-      '<div class="foot-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22392B" stroke-width="1.9"><path d="M4 11.5 12 5l8 6.5"></path><path d="M6 10.5V20h12v-9.5"></path><path d="M10 20v-6h4v6"></path></svg></div>' +
-      '<div><div class="foot-item-title">О городе</div><div class="foot-item-sub">Наш путь и ценности</div></div>' +
-      '</a>' +
-      '</div></div>'
+      (items ? '<div class="site-footer"><div class="site-footer-inner wrap">' + items + '</div></div>' : '') +
+      contacts
     );
   }
 
@@ -324,10 +392,13 @@
   // подвала; сами документы лежат в privacy.html и consent.html.
   var OPERATOR_NAME = '{{OPERATOR}}';
 
-  function legalHtml() {
+  // Строка с документами — всегда, даже при выключенном подвале: её требует закон.
+  function legalHtml(cfg) {
+    var ft = (cfg && cfg.footer) || {};
     return (
       '<div class="legal-line"><div class="wrap">' +
-      escapeHtml(OPERATOR_NAME) + ' · ' +
+      (ft.copyright ? escapeHtml(ft.copyright) + ' · ' : '') +
+      escapeHtml(OPERATOR_NAME) + (ft.requisites ? ', ' + escapeHtml(ft.requisites) : '') + ' · ' +
       '<a href="privacy.html">Политика конфиденциальности</a> · ' +
       '<a href="consent.html">Согласие на обработку персональных данных</a>' +
       '</div></div>'
@@ -352,12 +423,21 @@
 
   function mountChrome(active) {
     if (typeof document === 'undefined') return;
+    var cached = cachedSiteConfig();
+    renderChrome(active, cached);
+    mountCookieNotice();
+    // Свежий конфиг: если отличается от сохранённого — перерисовываем.
+    loadSiteConfig().then(function (cfg) {
+      if (cfg && JSON.stringify(cfg) !== JSON.stringify(cached)) renderChrome(active, cfg);
+    });
+  }
+
+  function renderChrome(active, cfg) {
     var h = document.getElementById('site-header');
     var f = document.getElementById('site-footer');
-    if (h) h.innerHTML = headerHtml(active);
-    if (f) f.innerHTML = footerHtml() + legalHtml();
+    if (h) h.innerHTML = headerHtml(active, cfg);
+    if (f) f.innerHTML = footerHtml(cfg) + legalHtml(cfg);
     updateCartBadges();
-    mountCookieNotice();
 
     // Подставляем имя вместо "Войти" в шапке, если пользователь уже вошёл
     // через Telegram — сразу в обеих версиях (десктопной и в мобильном меню).
@@ -394,9 +474,15 @@
         if (menu.classList.contains('open')) closeMenu(); else openMenu();
       });
       backdrop.addEventListener('click', closeMenu);
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeMenu();
-      });
+      if (!document.__cgEscBound) {
+        document.__cgEscBound = true;
+        document.addEventListener('keydown', function (e) {
+          if (e.key !== 'Escape') return;
+          var m = document.querySelector('[data-mobile-menu].open');
+          var tg = document.querySelector('[data-menu-toggle]');
+          if (m && tg) tg.click();
+        });
+      }
     }
   }
 
@@ -702,6 +788,8 @@
     headerHtml: headerHtml,
     footerHtml: footerHtml,
     mountChrome: mountChrome,
+    loadSiteConfig: loadSiteConfig,
+    cachedSiteConfig: cachedSiteConfig,
     renderProductMarkup: renderProductMarkup,
     relatedMarkup: relatedMarkup,
     relatedCardHtml: relatedCardHtml,
