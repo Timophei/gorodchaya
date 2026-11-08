@@ -131,10 +131,11 @@ function fetchOrders(): array
 }
 
 require __DIR__ . '/products.php';
+require __DIR__ . '/settings.php';
 
 // ---------- Параметры запроса ----------
 
-$tab = in_array($_GET['tab'] ?? '', ['orders', 'users', 'products'], true) ? $_GET['tab'] : 'dialogs';
+$tab = in_array($_GET['tab'] ?? '', ['orders', 'users', 'products', 'settings'], true) ? $_GET['tab'] : 'dialogs';
 // Карточка одного пользователя: ?tab=users&u=<ключ> (u_<telegramId> или v_<метка браузера>).
 $userKey = ($tab === 'users' && isset($_GET['u']) && is_string($_GET['u']) && preg_match('/^[uvp]_[A-Za-z0-9_-]{1,80}$/', $_GET['u'])) ? $_GET['u'] : null;
 
@@ -554,6 +555,7 @@ function orderPersonKey(array $o): ?string
 // ---------- Продукты: обработка до вывода (там бывают редиректы и JSON) ----------
 
 $productsState = $tab === 'products' ? productsHandle() : null;
+$settingsState = $tab === 'settings' ? settingsHandle() : null;
 
 // ---------- Рендер ----------
 
@@ -605,7 +607,7 @@ header('Cache-Control: no-store');
   .back-link { display: inline-block; margin-bottom: 16px; font-size: 13.5px; text-decoration: none; color: var(--tea-muted); }
   .back-link:hover { color: var(--tea-green-dark); }
 
-  .tabs { display: flex; gap: 8px; margin-top: 14px; }
+  .tabs { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
   .tab {
     padding: 6px 16px; border-radius: 999px; border: 1px solid var(--tea-border);
     text-decoration: none; color: var(--tea-muted); font-size: 13.5px; font-weight: 600;
@@ -694,6 +696,8 @@ header('Cache-Control: no-store');
   .order-card .order-number { font-weight: 700; color: var(--tea-green-dark); }
   .order-card .order-customer { font-size: 14.5px; font-weight: 600; margin-bottom: 2px; }
   .order-card .order-address { font-size: 13.5px; color: var(--tea-text); margin-bottom: 6px; }
+  .dm-badge { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: #e8eef0; color: #2f4a57; margin-right: 4px; }
+  .dm-badge.pickup { background: #eef3e6; color: var(--tea-green-dark); }
   .order-card .order-comment { font-size: 13px; color: var(--tea-muted); font-style: italic; margin-bottom: 6px; }
   .order-card .order-items { font-size: 13.5px; color: var(--tea-text); margin: 8px 0; padding: 8px 0; border-top: 1px dashed var(--tea-border); border-bottom: 1px dashed var(--tea-border); }
   .order-card .order-items div { padding: 2px 0; }
@@ -755,6 +759,8 @@ header('Cache-Control: no-store');
           </div>
         <?php elseif ($tab === 'products'): ?>
           <div class="sub"><?= $productsState['tea'] !== null ? 'Карточка чая' : ($productsState['isNew'] ? 'Новый чай' : 'Чаёв: ' . count($productsState['list'])) ?></div>
+        <?php elseif ($tab === 'settings'): ?>
+          <div class="sub">Доставка, уведомления, подсказки адреса</div>
         <?php elseif ($tab === 'users'): ?>
           <div class="sub"><?= $userKey !== null ? 'Карточка пользователя' : 'Пользователей: ' . count($people) ?></div>
         <?php else: ?>
@@ -768,6 +774,7 @@ header('Cache-Control: no-store');
       <a class="tab <?= $tab === 'orders' ? 'active' : '' ?>" href="?tab=orders">Заказы</a>
       <a class="tab <?= $tab === 'users' ? 'active' : '' ?>" href="?tab=users">Пользователи</a>
       <a class="tab <?= $tab === 'products' ? 'active' : '' ?>" href="?tab=products">Продукты</a>
+      <a class="tab <?= $tab === 'settings' ? 'active' : '' ?>" href="?tab=settings">Настройки</a>
     </div>
   </div>
 </header>
@@ -851,7 +858,7 @@ header('Cache-Control: no-store');
         $items = is_array($o['items'] ?? null) ? $o['items'] : [];
       ?>
       <?php $isShop = ($o['source'] ?? '') === 'offline'; $preItems = array_filter($items, static fn ($it) => (int) ($it['preorderQty'] ?? 0) > 0); ?>
-      <div class="order-card<?= $preItems ? ' has-preorder' : '' ?><?= !empty($o['test']) ? ' is-test' : '' ?>">
+      <div class="order-card<?= $preItems ? ' has-preorder' : '' ?><?= !empty($o['test']) ? ' is-test' : '' ?>" id="order-<?= esc($o['id'] ?? '') ?>">
         <div class="row1">
           <span>
             <span class="order-number">Заказ №<?= esc($o['number'] ?? '—') ?></span>
@@ -862,7 +869,13 @@ header('Cache-Control: no-store');
           <span><?= esc(fmtTime($o['createdAt'] ?? null)) ?><?= !empty($o['seller']) ? ' · продал: ' . esc($o['seller']) : '' ?></span>
         </div>
         <div class="order-customer"><?= esc($customer['name'] ?? '—') ?> · <?= esc($customer['phone'] ?? '—') ?><?php $pk = orderPersonKey($o); if ($pk !== null): ?> · <a href="?tab=users&u=<?= esc($pk) ?>">карточка покупателя</a><?php endif; ?></div>
-        <?php if (!$isShop): ?><div class="order-address">Адрес: <?= esc($customer['address'] ?? '—') ?></div><?php endif; ?>
+        <?php if (!$isShop): ?>
+          <?php $dm = (string) ($o['deliveryMethod'] ?? ''); ?>
+          <div class="order-address">
+            <?php if ($dm === 'pickup'): ?><span class="dm-badge pickup">самовывоз</span> <?= esc($customer['address'] ?? '') ?>
+            <?php else: ?><span class="dm-badge"><?= $dm === 'russia' ? 'по России' : 'по городу' ?></span> <?= esc($customer['address'] ?? '—') ?><?php endif; ?>
+          </div>
+        <?php endif; ?>
         <?php if (!empty($customer['comment'])): ?>
           <div class="order-comment">Комментарий: <?= esc($customer['comment']) ?></div>
         <?php endif; ?>
@@ -876,7 +889,7 @@ header('Cache-Control: no-store');
             </div>
           <?php endforeach; ?>
         </div>
-        <div class="order-total">Итого: <?= number_format((int) ($o['total'] ?? 0), 0, '', ' ') ?> ₽<?= !empty($o['promoCode']) ? ' · промокод ' . esc($o['promoCode']) : '' ?></div>
+        <div class="order-total">Итого: <?= number_format((int) ($o['total'] ?? 0), 0, '', ' ') ?> ₽<?php if (!$isShop && ($o['deliveryMethod'] ?? '') !== 'pickup'): ?><?= ($o['deliveryPriceKnown'] ?? true) === false ? ' + доставка ТК (рассчитать и сообщить)' : ' · доставка ' . ((int) ($o['deliveryPrice'] ?? 0) ? number_format((int) $o['deliveryPrice'], 0, '', ' ') . ' ₽' : 'бесплатно') ?><?php endif; ?><?= !empty($o['promoCode']) ? ' · промокод ' . esc($o['promoCode']) : '' ?></div>
         <?php $lastStock = is_array($o['stockLog'] ?? null) && $o['stockLog'] ? end($o['stockLog']) : null; ?>
         <?php if ($lastStock): ?>
           <div class="stock-note">
@@ -911,6 +924,11 @@ header('Cache-Control: no-store');
 <?php elseif ($tab === 'products'): ?>
 
   <?php productsRender($productsState); ?>
+
+<?php elseif ($tab === 'settings'): ?>
+
+  <?= settingsCss() ?>
+  <?php settingsRender($settingsState); ?>
 
 <?php elseif ($tab === 'users'): ?>
 

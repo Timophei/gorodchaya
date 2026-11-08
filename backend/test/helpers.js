@@ -33,7 +33,7 @@ async function startServer(extraEnv = {}) {
     SITE_DIR: path.join(dir, 'site'),
     GENERATOR_PATH: path.join(dir, 'no-generator.mjs'),
     CONSULTANT_KB_PATH: path.join(dir, 'kb', 'teas.json'),
-    NOTIFY_DISABLED: '1', // в тестах бот никуда не ходит, только пишет в outbox
+    TELEGRAM_API_BASE: 'http://127.0.0.1:9', // по умолчанию в никуда; тесты бота подставляют поддельный
     ...extraEnv,
   };
   const proc = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], { env, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -76,6 +76,7 @@ const sampleTea = (over = {}) => ({
 });
 
 const sampleOrder = (over = {}) => ({
+  deliveryMethod: 'city',
   items: [{ teaId: 'longjing', name: 'Лун Цзин', weightGrams: 50, qty: 1, unitPrice: 590 }],
   subtotal: 590, deliveryPrice: 0, total: 590,
   customer: { name: 'Иван', phone: '+7 900 000-00-01', address: 'Иркутск, ул. Ленина, 1' },
@@ -83,3 +84,42 @@ const sampleOrder = (over = {}) => ({
 });
 
 module.exports = { startServer, register, sampleTea, sampleOrder, API_KEY };
+
+// Поддельный внешний сервис (Telegram, DaData): записывает запросы и отвечает
+// тем, что вернёт handler(path, body). Для getUpdates отдаём накопленные
+// сообщения из очереди updates.
+const http = require('http');
+function startFake(handler) {
+  const requests = [];
+  const updates = [];
+  const srv = http.createServer((req, res) => {
+    let raw = '';
+    req.on('data', (d) => { raw += d; });
+    req.on('end', async () => {
+      let body = null; try { body = JSON.parse(raw); } catch { /* пусто */ }
+      requests.push({ path: req.url, body, headers: req.headers });
+      let out;
+      if (req.url.endsWith('/getUpdates')) {
+        if (!updates.length) await new Promise((r) => setTimeout(r, 100));
+        out = { ok: true, result: updates.splice(0) };
+      } else {
+        out = handler ? handler(req.url, body) : { ok: true, result: {} };
+      }
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(out));
+    });
+  });
+  return new Promise((resolve) => srv.listen(0, '127.0.0.1', () => resolve({
+    base: `http://127.0.0.1:${srv.address().port}`, requests, updates,
+    stop: () => new Promise((r) => srv.close(r)),
+  })));
+}
+
+const waitFor = async (fn, ms = 3000) => {
+  const until = Date.now() + ms;
+  while (Date.now() < until) { const v = fn(); if (v) return v; await new Promise((r) => setTimeout(r, 30)); }
+  return fn();
+};
+
+module.exports.startFake = startFake;
+module.exports.waitFor = waitFor;

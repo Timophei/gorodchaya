@@ -20,6 +20,16 @@
 </script>
 <noscript><div><img src="https://mc.yandex.ru/watch/112293654" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <!-- /Yandex.Metrika counter -->
+<style>
+  .dm-pills { display:flex; gap:6px; flex-wrap:wrap; margin:4px 0 10px; }
+  .dm-pill { border:1px solid #E3D9C2; background:#fff; border-radius:999px; padding:7px 12px; font:inherit; font-size:12.5px; color:#20291F; cursor:pointer; }
+  .dm-pill[aria-checked="true"] { background:#22392B; border-color:#22392B; color:#fff; }
+  .pickup-box { border:1px solid #E3D9C2; border-radius:10px; padding:10px 12px; font-size:13px; line-height:1.45; background:#F7F2E6; }
+  .addr-wrap { position:relative; }
+  .addr-list { position:absolute; left:0; right:0; top:100%; z-index:20; margin-top:4px; background:#fff; border:1px solid #E3D9C2; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,.08); max-height:240px; overflow:auto; }
+  .addr-item { padding:9px 12px; font-size:13px; cursor:pointer; line-height:1.35; }
+  .addr-item:hover, .addr-item[aria-selected="true"] { background:#F1EBDB; }
+</style>
 </head>
 <body data-nav="cart">
 <div id="site-header"></div>
@@ -38,6 +48,7 @@
     <div style="width:100%;max-width:360px;flex-shrink:0;border:1px solid #E3D9C2;border-radius:18px;background:#fff;padding:24px;">
       <div class="serif" style="font-size:19px;font-weight:700;margin-bottom:14px;">Сумма заказа</div>
       <div class="row muted" id="row-subtotal"><span>Товары</span><span>0 ₽</span></div>
+      <div class="dm-pills" id="delivery-methods" role="radiogroup" aria-label="Способ получения"></div>
       <div class="row muted"><span>Доставка</span><span id="delivery-label">Бесплатно</span></div>
       <div class="row" style="color:#B5432E;display:none;" id="row-discount"><span>Скидка по промокоду</span><span id="discount-amount">0 ₽</span></div>
 
@@ -52,14 +63,18 @@
       <div class="preorder-box" id="preorder-box" style="display:none;"></div>
 
       <button class="checkout" id="checkout-btn" style="margin-top:16px;">Оформить заказ</button>
-      <div id="checkout-hint" style="font-size:11.5px;color:#9AA192;text-align:center;margin-top:10px;line-height:1.4;">Доставка 2–4 дня по России.<br>Бесплатно от 3 000 ₽.</div>
+      <div id="checkout-hint" style="font-size:11.5px;color:#9AA192;text-align:center;margin-top:10px;line-height:1.4;"></div>
 
       <div id="checkout-form" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #E3D9C2;">
         <div style="font-size:14px;font-weight:700;margin-bottom:10px;">Оформление заказа</div>
         <div style="display:flex;flex-direction:column;gap:10px;">
           <input id="co-name" class="field" placeholder="Имя">
           <input id="co-phone" class="field" type="tel" placeholder="Телефон для связи">
-          <textarea id="co-address" class="field" placeholder="Адрес доставки" rows="2"></textarea>
+          <div id="co-pickup" class="pickup-box" style="display:none;"></div>
+          <div class="addr-wrap" id="co-address-wrap">
+            <textarea id="co-address" class="field" placeholder="Адрес доставки" rows="2" autocomplete="off" aria-autocomplete="list" aria-controls="addr-list"></textarea>
+            <div class="addr-list" id="addr-list" role="listbox" style="display:none;"></div>
+          </div>
           <textarea id="co-comment" class="field" placeholder="Комментарий (необязательно)" rows="2"></textarea>
         </div>
         <label class="consent-row">
@@ -88,6 +103,21 @@
   var promo = { code: '', applied: false, error: false };
   // Живой каталог — чтобы показать, что есть на полке, а что придётся привезти.
   var teasById = null;
+  // Способы получения — из настроек магазина (админка → «Настройки»).
+  // Пока настройки не пришли (или бэкенд недоступен) — то же, что по умолчанию на сервере.
+  var shop = {
+    pickup: { enabled: true, address: 'Чудотворная, 2в', city: 'Иркутск', hours: '' },
+    delivery: {
+      city: { enabled: true, name: 'Иркутск', price: 100, freeFrom: 3000, note: 'привезём в течение дня' },
+      russia: { enabled: true, note: 'по тарифам и срокам транспортной компании — стоимость сообщим после оформления' }
+    },
+    addressSuggest: false
+  };
+  var method = 'city';
+  function methodEnabled(m) { return m === 'pickup' ? shop.pickup.enabled : !!(shop.delivery[m] && shop.delivery[m].enabled); }
+  function methodLabel(m) { return m === 'pickup' ? 'Самовывоз' : (m === 'city' ? 'По ' + cityDative(shop.delivery.city.name) : 'По России'); }
+  function cityDative(name) { return name === 'Иркутск' ? 'Иркутску' : (name || 'городу'); }
+  function pickupAddress() { return [shop.pickup.city, shop.pickup.address].filter(Boolean).join(', '); }
   CG.apiGet('/teas').then(function (list) {
     teasById = {};
     list.forEach(function (t) { teasById[t.id] = t; });
@@ -130,7 +160,11 @@
 
   function computeTotals(items, promoState) {
     var subtotal = items.reduce(function (s, it) { return s + it.unitPrice * it.qty; }, 0);
-    var delivery = (subtotal >= 3000 || subtotal === 0) ? 0 : 300;
+    var delivery = 0;
+    if (method === 'city' && subtotal > 0) {
+      var c = shop.delivery.city;
+      delivery = (c.freeFrom && subtotal >= c.freeFrom) ? 0 : (c.price || 0);
+    }
     var discount = promoState.applied ? Math.round(subtotal * 0.1) : 0;
     var total = Math.max(0, subtotal + delivery - discount);
     return { subtotal: subtotal, delivery: delivery, discount: discount, total: total };
@@ -157,7 +191,9 @@
     var totals = computeTotals(items, promo);
 
     document.getElementById('row-subtotal').innerHTML = '<span>Товары (' + count + ')</span><span>' + CG.formatPrice(totals.subtotal) + ' ₽</span>';
-    document.getElementById('delivery-label').textContent = totals.delivery === 0 ? 'Бесплатно' : totals.delivery + ' ₽';
+    document.getElementById('delivery-label').textContent = method === 'russia' ? 'по тарифу ТК'
+      : (totals.delivery === 0 ? 'Бесплатно' : CG.formatPrice(totals.delivery) + ' ₽');
+    renderDelivery(totals);
     document.getElementById('row-discount').style.display = promo.applied ? 'flex' : 'none';
     document.getElementById('discount-amount').textContent = '−' + CG.formatPrice(totals.discount) + ' ₽';
     document.getElementById('promo-error').style.display = promo.error ? 'block' : 'none';
@@ -171,6 +207,76 @@
       : '';
   }
 
+  function renderDelivery(totals) {
+    var methods = ['pickup', 'city', 'russia'].filter(methodEnabled);
+    if (methods.indexOf(method) === -1 && methods.length) method = methods[0];
+    var wrap = document.getElementById('delivery-methods');
+    wrap.innerHTML = methods.map(function (m) {
+      return '<button type="button" class="dm-pill" role="radio" aria-checked="' + (m === method) + '" data-method="' + m + '">' + CG.escapeHtml(methodLabel(m)) + '</button>';
+    }).join('');
+    wrap.querySelectorAll('[data-method]').forEach(function (b) {
+      b.addEventListener('click', function () { method = b.getAttribute('data-method'); hideSuggest(); render(); });
+    });
+    var hint;
+    if (method === 'pickup') {
+      hint = 'Заберёте сами: ' + CG.escapeHtml(pickupAddress()) + '.' + (shop.pickup.hours ? '<br>' + CG.escapeHtml(shop.pickup.hours) : '');
+    } else if (method === 'city') {
+      var c = shop.delivery.city;
+      hint = CG.escapeHtml('Доставка по ' + cityDative(c.name) + ' — ' + CG.formatPrice(c.price) + ' ₽' + (c.note ? ', ' + c.note : '') + '.') +
+        (c.freeFrom ? '<br>' + CG.escapeHtml('Бесплатно от ' + CG.formatPrice(c.freeFrom) + ' ₽.') : '');
+    } else {
+      hint = CG.escapeHtml('Доставка по России ' + (shop.delivery.russia.note || '') + '.');
+    }
+    document.getElementById('checkout-hint').innerHTML = hint;
+    var pickup = method === 'pickup';
+    document.getElementById('co-address-wrap').style.display = pickup ? 'none' : '';
+    var pbox = document.getElementById('co-pickup');
+    pbox.style.display = pickup ? '' : 'none';
+    pbox.innerHTML = '<b>Забрать в чайной:</b> ' + CG.escapeHtml(pickupAddress()) + (shop.pickup.hours ? '<br>' + CG.escapeHtml(shop.pickup.hours) : '');
+    document.getElementById('co-address').placeholder = method === 'russia' ? 'Город, улица, дом, квартира, индекс' : 'Улица, дом, квартира';
+  }
+
+  // --- подсказки адреса (DaData через наш бэкенд; без ключа просто не показываются) ---
+  var suggestTimer = null, suggestSeq = 0, suggestIdx = -1;
+  var addrEl = document.getElementById('co-address');
+  var listEl = document.getElementById('addr-list');
+  function hideSuggest() { listEl.style.display = 'none'; listEl.innerHTML = ''; suggestIdx = -1; }
+  function pickSuggest(value) { addrEl.value = value; hideSuggest(); addrEl.focus(); }
+  addrEl.addEventListener('input', function () {
+    if (!shop.addressSuggest) return;
+    clearTimeout(suggestTimer);
+    var q = addrEl.value.trim();
+    if (q.length < 3) { hideSuggest(); return; }
+    suggestTimer = setTimeout(function () {
+      var seq = ++suggestSeq;
+      CG.apiGet('/address/suggest?method=' + method + '&q=' + encodeURIComponent(q)).then(function (data) {
+        if (seq !== suggestSeq) return; // пришёл ответ на устаревший запрос
+        var list = (data && data.suggestions) || [];
+        if (!list.length) { hideSuggest(); return; }
+        listEl.innerHTML = list.map(function (x, i) {
+          return '<div class="addr-item" role="option" aria-selected="false" data-i="' + i + '">' + CG.escapeHtml(x.value) + '</div>';
+        }).join('');
+        listEl.querySelectorAll('.addr-item').forEach(function (el, i) {
+          el.addEventListener('mousedown', function (e) { e.preventDefault(); pickSuggest(list[i].value); });
+        });
+        suggestIdx = -1;
+        listEl.style.display = 'block';
+      }).catch(hideSuggest);
+    }, 300);
+  });
+  addrEl.addEventListener('keydown', function (e) {
+    var items = listEl.querySelectorAll('.addr-item');
+    if (listEl.style.display === 'none' || !items.length) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      suggestIdx = (suggestIdx + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+      items.forEach(function (el, i) { el.setAttribute('aria-selected', String(i === suggestIdx)); });
+    } else if (e.key === 'Enter' && suggestIdx >= 0) {
+      e.preventDefault(); pickSuggest(items[suggestIdx].textContent);
+    } else if (e.key === 'Escape') { hideSuggest(); }
+  });
+  addrEl.addEventListener('blur', function () { setTimeout(hideSuggest, 150); });
+
   document.getElementById('promo-input').addEventListener('input', function (e) {
     promo.code = e.target.value; promo.error = false;
   });
@@ -183,7 +289,6 @@
   document.getElementById('checkout-btn').addEventListener('click', function () {
     if (!CG.cart.read().length) return;
     document.getElementById('checkout-btn').style.display = 'none';
-    document.getElementById('checkout-hint').style.display = 'none';
     document.getElementById('checkout-form').style.display = 'block';
     CG.authMe().then(function (user) {
       if (!user) return;
@@ -196,7 +301,6 @@
     e.preventDefault();
     document.getElementById('checkout-form').style.display = 'none';
     document.getElementById('checkout-btn').style.display = '';
-    document.getElementById('checkout-hint').style.display = '';
   });
 
   document.getElementById('checkout-submit').addEventListener('click', function () {
@@ -209,8 +313,8 @@
     var address = document.getElementById('co-address').value.trim();
     var comment = document.getElementById('co-comment').value.trim();
 
-    if (!name || !phone || !address) {
-      errEl.textContent = 'Заполните имя, телефон и адрес доставки.';
+    if (!name || !phone || (method !== 'pickup' && address.length < 5)) {
+      errEl.textContent = method === 'pickup' ? 'Заполните имя и телефон.' : 'Заполните имя, телефон и адрес доставки.';
       errEl.style.display = 'block';
       return;
     }
@@ -241,13 +345,15 @@
       discount: totals.discount,
       promoCode: promo.applied ? promo.code : null,
       total: totals.total,
-      customer: { name: name, phone: phone, address: address, comment: comment || undefined }
+      deliveryMethod: method,
+      customer: { name: name, phone: phone, address: method === 'pickup' ? undefined : address, comment: comment || undefined }
     }).then(function (data) {
       CG.cart.write([]);
       document.getElementById('checkout-form').style.display = 'none';
       document.getElementById('co-order-number').textContent = data.order.number;
       document.getElementById('co-preorder').style.display = data.order.hasPreorder ? 'block' : 'none';
       document.getElementById('checkout-success').style.display = 'block';
+      document.getElementById('checkout-hint').style.display = 'none';
       render();
     }).catch(function () {
       errEl.textContent = 'Не удалось оформить заказ. Попробуйте ещё раз или напишите мастеру в чате.';
@@ -258,6 +364,9 @@
   });
 
   render();
+  CG.apiGet('/settings/public').then(function (data) {
+    if (data && data.pickup && data.delivery) { shop = data; render(); }
+  }).catch(function () { /* остаёмся на значениях по умолчанию */ });
 })();
 </script>
 </body>

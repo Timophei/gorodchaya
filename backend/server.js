@@ -8,6 +8,8 @@ const userStore = require('./userStore');
 const ordersStore = require('./ordersStore');
 const visitorStore = require('./visitorStore');
 const catalog = require('./catalogSync');
+const settings = require('./settingsStore');
+const notify = require('./notify');
 
 // Cookie посетителя: cg_vid — метка браузера (ставит assets/common.js),
 // tea_cid — id диалога с мастером (ставит чат на главной).
@@ -446,9 +448,14 @@ const OrderItemSchema = z.object({
 const OrderCustomerSchema = z.object({
   name: z.string().trim().min(1).max(200),
   phone: z.string().trim().min(5).max(40),
-  address: z.string().trim().min(5).max(500),
+  // При самовывозе адрес не нужен — подставим адрес чайной из настроек.
+  address: z.string().trim().max(500).optional(),
   comment: z.string().trim().max(1000).optional(),
 });
+
+// pickup — забрать в чайной, city — по городу (Иркутск), russia — по России через ТК.
+// Старая корзина (закешированная в браузере) метод не присылает — это доставка по городу.
+const DELIVERY_METHODS = ['pickup', 'city', 'russia'];
 
 const OrderSchema = z.object({
   items: z.array(OrderItemSchema).min(1).max(50),
@@ -457,6 +464,7 @@ const OrderSchema = z.object({
   discount: z.coerce.number().int().nonnegative().optional(),
   promoCode: z.string().max(50).nullable().optional(),
   total: z.coerce.number().int().nonnegative(),
+  deliveryMethod: z.enum(DELIVERY_METHODS).optional(),
   customer: OrderCustomerSchema,
 });
 
@@ -486,12 +494,29 @@ app.post('/api/orders', (req, res) => {
   const user = auth.currentUser(req);
   const visitorId = visitorIdOf(req);
   if (visitorId) visitorStore.touch(visitorId, { userId: user ? user.id : null, cid: readCookies(req).tea_cid });
+  // Способ получения и цена доставки — по настройкам, а не по тому, что прислал браузер.
+  const method = parsed.data.deliveryMethod || 'city';
+  const conf = settings.get();
+  const enabled = method === 'pickup' ? conf.pickup.enabled : conf.delivery[method].enabled;
+  if (!enabled) return res.status(400).json({ error: 'delivery_method_unavailable' });
+  const customer = { ...parsed.data.customer };
+  if (method === 'pickup') {
+    customer.address = [conf.pickup.city, conf.pickup.address].filter(Boolean).join(', ');
+  } else if (!customer.address || customer.address.length < 5) {
+    return res.status(400).json({ error: 'validation_failed', details: [{ path: ['customer', 'address'], message: 'Укажите адрес доставки' }] });
+  }
+  const quote = settings.deliveryQuote(method, parsed.data.subtotal);
+  const discount = parsed.data.discount || 0;
   const items = markAvailability(parsed.data.items);
   const order = ordersStore.create({
-    ...parsed.data, items, source: 'site', hasPreorder: items.some((it) => it.preorderQty > 0),
+    ...parsed.data, customer, items, deliveryMethod: method,
+    deliveryPrice: quote.price, deliveryPriceKnown: quote.priceKnown,
+    total: Math.max(0, parsed.data.subtotal + quote.price - discount),
+    source: 'site', hasPreorder: items.some((it) => it.preorderQty > 0),
     userId: user ? user.id : null, visitorId,
   });
-  res.status(201).json({ order });
+  notify.notifyNewOrder(order);
+  res.status(201).json({ order: publicOrder(order) });
 });
 
 // «Мои заказы» — по тому же правилу, что карточка покупателя в админке:
@@ -658,6 +683,115 @@ app.post('/api/track', (req, res) => {
   res.status(204).end();
 });
 
+// --- настройки магазина (админка → «Настройки») ---
+app.get('/api/settings/public', (_req, res) => res.json(settings.publicSettings()));
+
+app.get('/api/admin/settings', requireApiKey, (_req, res) => res.json(settings.adminSettings()));
+
+const MoneySchema = z.coerce.number().int().nonnegative().max(1000000);
+const SettingsSchema = z.object({
+  pickup: z.object({
+    enabled: z.boolean().optional(),
+    address: z.string().trim().min(3).max(200).optional(),
+    city: z.string().trim().max(100).optional(),
+    hours: z.string().trim().max(200).optional(),
+  }).optional(),
+  delivery: z.object({
+    city: z.object({
+      enabled: z.boolean().optional(),
+      name: z.string().trim().min(1).max(100).optional(),
+      price: MoneySchema.optional(),
+      freeFrom: z.union([z.null(), MoneySchema]).optional(), // null раньше: coerce превратил бы его в 0
+      note: z.string().trim().max(300).optional(),
+    }).optional(),
+    russia: z.object({
+      enabled: z.boolean().optional(),
+      note: z.string().trim().max(300).optional(),
+    }).optional(),
+  }).optional(),
+  // Пустая строка — «не менять», null — стереть.
+  notifyBotToken: z.union([z.string().trim().max(200), z.null()]).optional(),
+  dadataToken: z.union([z.string().trim().max(200), z.null()]).optional(),
+});
+
+app.post('/api/admin/settings', requireApiKey, (req, res) => {
+  const parsed = SettingsSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'validation_failed', details: parsed.error.issues });
+  const { notifyBotToken, dadataToken, ...rest } = parsed.data;
+  const patch = { ...rest };
+  if (notifyBotToken === null || (notifyBotToken && notifyBotToken.length)) {
+    if (notifyBotToken && !/^\d+:[A-Za-z0-9_-]{20,}$/.test(notifyBotToken)) {
+      return res.status(400).json({ error: 'validation_failed', details: [{ path: ['notifyBotToken'], message: 'Не похоже на токен бота (вид 123456:ABC...)' }] });
+    }
+    patch.notify = { botToken: notifyBotToken || '', botUsername: '' };
+  }
+  if (dadataToken === null || (dadataToken && dadataToken.length)) patch.dadata = { token: dadataToken || '' };
+  settings.update(patch);
+  notify.restartPolling();
+  res.json(settings.adminSettings());
+});
+
+app.post('/api/admin/settings/notify/check', requireApiKey, async (_req, res) => {
+  try {
+    const bot = await notify.checkBot();
+    const n = settings.get().notify;
+    res.json({ bot, subscribeLink: `https://t.me/${bot.username}?start=${n.subscribeCode}` });
+  } catch (e) {
+    res.status(400).json({ error: 'bot_check_failed', message: e.message });
+  }
+});
+
+app.post('/api/admin/settings/notify/test', requireApiKey, async (_req, res) => {
+  const r = await notify.sendToAll('Проверка: уведомления о заказах «Чайного города» работают.');
+  res.json(r);
+});
+
+// Новый код подписки: старая ссылка перестаёт работать (уже подписанные остаются).
+app.post('/api/admin/settings/notify/new-code', requireApiKey, (_req, res) => {
+  settings.update({ notify: { subscribeCode: crypto.randomBytes(6).toString('hex') } });
+  res.json(settings.adminSettings());
+});
+
+app.delete('/api/admin/settings/notify/subscribers/:chatId', requireApiKey, (req, res) => {
+  const n = settings.get().notify;
+  settings.update({ notify: { subscribers: n.subscribers.filter((s) => String(s.chatId) !== req.params.chatId) } });
+  res.json(settings.adminSettings());
+});
+
+// --- подсказки адреса (DaData) ---
+// Ключ остаётся на сервере: корзина спрашивает здесь, бэкенд — у DaData.
+// Город доставки не ограничиваем; для доставки по городу только поднимаем
+// его адреса наверх списка.
+const DADATA_API = process.env.DADATA_API_BASE || 'https://suggestions.dadata.ru';
+const suggestHits = new Map(); // ip -> { n, resetAt }
+app.get('/api/address/suggest', async (req, res) => {
+  const token = settings.get().dadata.token;
+  if (!token) return res.json({ suggestions: [] });
+  const q = String(req.query.q || '').trim().slice(0, 200);
+  if (q.length < 3) return res.json({ suggestions: [] });
+  const ip = req.get('x-real-ip') || req.ip || 'unknown';
+  const now = Date.now();
+  let rec = suggestHits.get(ip);
+  if (!rec || now > rec.resetAt) { rec = { n: 0, resetAt: now + 60 * 1000 }; suggestHits.set(ip, rec); }
+  if ((rec.n += 1) > 60) return res.status(429).json({ suggestions: [] });
+  if (suggestHits.size > 5000) for (const [k, v] of suggestHits) if (now > v.resetAt) suggestHits.delete(k);
+  const body = { query: q, count: 7 };
+  if (req.query.method === 'city') body.locations_boost = [{ city: settings.get().delivery.city.name }];
+  try {
+    const r = await fetch(`${DADATA_API}/suggestions/api/4_1/rs/suggest/address`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: `Token ${token}` },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(4000),
+    });
+    const data = await r.json();
+    res.json({ suggestions: (data.suggestions || []).map((x) => ({ value: x.value, city: (x.data && (x.data.city || x.data.settlement)) || null })) });
+  } catch (e) {
+    console.error('DaData:', e.message);
+    res.json({ suggestions: [] }); // корзина просто даёт ввести адрес руками
+  }
+});
+
 // --- админка: пользователи (см. tea-consultant/public/admin/index.php, вкладка «Пользователи») ---
 // «Человек» — это либо аккаунт Telegram со всеми его браузерами, либо гость
 // (одна метка браузера). Ключи: u_<telegramId> и v_<visitorId>.
@@ -780,4 +914,5 @@ app.listen(PORT, '127.0.0.1', () => {
   console.log(`Чайный город API listening on :${PORT}`);
   catalog.ensureSlugsAndNumbers();
   catalog.onCatalogChanged(PORT); // страницы и база мастера — по актуальному каталогу
+  notify.restartPolling();
 });

@@ -194,6 +194,16 @@ var ORDER_STATUS_LABELS = { new: 'Новый', processing: 'В работе', sh
 // Завершённые — внизу, отдельным списком.
 var ORDER_CLOSED = { done: true, cancelled: true };
 
+function deliveryLine(CG, o) {
+  var how = { pickup: 'Самовывоз', city: 'Доставка по городу', russia: 'Доставка по России' }[o.deliveryMethod];
+  if (!how && !(o.customer && o.customer.address)) return '';
+  var price = o.deliveryMethod === 'russia' && o.deliveryPriceKnown === false ? 'по тарифу ТК'
+    : (o.deliveryPrice ? CG.formatPrice(o.deliveryPrice) + ' ₽' : 'бесплатно');
+  return '<div style="font-size:12.5px;color:#7A8173;margin-top:6px;line-height:1.4;">' +
+    CG.escapeHtml((how || 'Доставка') + (o.customer && o.customer.address ? ': ' + o.customer.address : '')) +
+    (o.source === 'offline' ? '' : ' · ' + CG.escapeHtml(price)) + '</div>';
+}
+
 function orderCardHtml(CG, o) {
   var itemsHtml = (o.items || []).map(function (it) {
     return '<div style="font-size:13px;color:#5B6357;padding:2px 0;">' + CG.escapeHtml(it.name) +
@@ -207,6 +217,7 @@ function orderCardHtml(CG, o) {
     '<div style="display:flex;justify-content:space-between;font-size:13px;color:#5B6357;margin-bottom:8px;">' +
     '<span>Заказ №' + CG.escapeHtml(o.number) + '</span><span>' + CG.escapeHtml(dateLabel) + '</span></div>' +
     itemsHtml +
+    deliveryLine(CG, o) +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">' +
     '<span style="font-size:12.5px;font-weight:700;color:#22392B;">' + CG.escapeHtml(ORDER_STATUS_LABELS[o.status] || o.status) + '</span>' +
     '<span style="font-weight:700;">' + CG.formatPrice(o.total) + ' ₽</span></div>' +
