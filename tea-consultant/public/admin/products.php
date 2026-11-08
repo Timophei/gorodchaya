@@ -25,6 +25,28 @@ const PRODUCT_CATEGORIES = [
     'teaware' => 'Посуда',
 ];
 
+/**
+ * Категории из бэкенда (админка → «Категории»): id => название, в порядке
+ * из админки, включая выключенные. Если бэкенд не ответил — старый список.
+ */
+function productsCategories(): array
+{
+    static $cache = null;
+    if ($cache !== null) {
+        return $cache;
+    }
+    $r = ordersApiRequest('GET', '/categories');
+    $cache = [];
+    if ($r['ok'] && is_array($r['data'])) {
+        foreach ($r['data'] as $c) {
+            if (isset($c['id'], $c['name'])) {
+                $cache[(string) $c['id']] = (string) $c['name'] . (empty($c['active']) ? ' (выкл.)' : '');
+            }
+        }
+    }
+    return $cache ?: PRODUCT_CATEGORIES;
+}
+
 const PRODUCT_REGIONS = [
     'china' => 'Китай',
     'thailand' => 'Таиланд',
@@ -127,7 +149,7 @@ function productsPayloadFromPost(array $p): array
         'subtitle' => trim((string) ($p['subtitle'] ?? '')) ?: null,
         'externalId' => trim((string) ($p['externalId'] ?? '')) ?: null,
         'category' => $category,
-        'categoryLabel' => PRODUCT_CATEGORIES[$category] ?? $category,
+        'categories' => array_values(array_unique(array_merge([$category], array_map('strval', (array) ($p['categories'] ?? []))))),
         'region' => $region !== '' ? $region : null,
         'regionLabel' => trim((string) ($p['regionLabel'] ?? '')) ?: null,
         'description' => trim((string) ($p['description'] ?? '')) ?: null,
@@ -284,7 +306,8 @@ function productsPageUrl(array $t): string
 
 function productsAutoTitle(array $t): string
 {
-    $cat = mb_strtolower((string) (PRODUCT_CATEGORIES[$t['category'] ?? ''] ?? 'чай'));
+    $cat = mb_strtolower((string) (productsCategories()[$t['category'] ?? ''] ?? 'чай'));
+    $cat = preg_replace('/ \(выкл\.\)$/u', '', $cat);
     return trim((string) ($t['name'] ?? '')) . ' — купить ' . $cat . ' | Чайный город';
 }
 
@@ -339,7 +362,7 @@ function productsRender(array $state): void
           </span>
           <span class="prod-meta">
             /tea/<?= esc($t['slug'] ?? '—') ?>
-            · <?= esc(PRODUCT_CATEGORIES[$t['category'] ?? ''] ?? ($t['category'] ?? '')) ?>
+            · <?= esc(implode(', ', array_map(static fn ($c) => productsCategories()[$c] ?? $c, (array) ($t['categories'] ?? [$t['category'] ?? ''])))) ?>
             <?= $prices ? '' : ' · <span class="warn">без цены</span>' ?>
           </span>
         </span>
@@ -397,9 +420,9 @@ function productsRenderForm(array $state): void
         <label class="f">Название*<input type="text" name="name" required maxlength="200" value="<?= esc($t['name'] ?? '') ?>" data-name></label>
         <label class="f">Подзаголовок<input type="text" name="subtitle" maxlength="300" value="<?= esc($t['subtitle'] ?? '') ?>" placeholder="Большой красный халат · тёмный уишаньский улун"></label>
         <div class="f-row">
-          <label class="f">Категория*
+          <label class="f">Основная категория*
             <select name="category" required data-category>
-              <?php foreach (PRODUCT_CATEGORIES as $val => $label): ?>
+              <?php foreach (productsCategories() as $val => $label): ?>
                 <option value="<?= esc($val) ?>" <?= ($t['category'] ?? '') === $val ? 'selected' : '' ?>><?= esc($label) ?></option>
               <?php endforeach; ?>
             </select>
@@ -415,6 +438,14 @@ function productsRenderForm(array $state): void
           <label class="f">Номер
             <input type="text" name="externalId" inputmode="numeric" pattern="\d{1,9}" maxlength="9" value="<?= esc($t['externalId'] ?? '') ?>" placeholder="авто">
           </label>
+        </div>
+        <div class="f">Также в категориях <span class="hint">(подборки, коллекции; основная отмечена автоматически)</span>
+          <div class="cat-checks">
+            <?php $teaCats = (array) ($t['categories'] ?? []); ?>
+            <?php foreach (productsCategories() as $val => $label): ?>
+              <label class="cat-check"><input type="checkbox" name="categories[]" value="<?= esc($val) ?>" <?= in_array($val, $teaCats, true) ? 'checked' : '' ?>> <?= esc($label) ?></label>
+            <?php endforeach; ?>
+          </div>
         </div>
         <label class="f">Регион подробно<input type="text" name="regionLabel" maxlength="200" value="<?= esc($t['regionLabel'] ?? '') ?>" placeholder="Уишань, провинция Фуцзянь, Китай"></label>
         <div class="f-row">
@@ -591,6 +622,8 @@ function productsCss(): string
   .review-box { background: #fff8e3; border: 1px solid #f0dca0; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-size: 13px; line-height: 1.5; }
   .review-box ul { margin: 4px 0 0; padding-left: 18px; }
   .hint { font-size: 12px; color: var(--tea-muted); line-height: 1.5; margin: 4px 0 8px; }
+  .cat-checks { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; font-weight: 400; }
+  .cat-check { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--tea-text); }
   .slug-input { display: flex; align-items: center; border: 1px solid var(--tea-border); border-radius: 8px; background: #fff; overflow: hidden; }
   .slug-input span { padding: 8px 0 8px 10px; color: var(--tea-muted); font-weight: 400; font-size: 13px; white-space: nowrap; }
   .slug-input input { border: none !important; padding-left: 2px !important; }

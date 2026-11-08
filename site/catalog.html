@@ -62,7 +62,7 @@
 <script>
 (function () {
   var CG = window.ChayGorod;
-  var state = { teas: [], categoryCounts: {}, regionCounts: {}, type: {}, region: {} };
+  var state = { teas: [], categories: [], regionCounts: {}, type: {}, region: {} };
 
   function cardHtml(t) {
     var price = CG.formatPrice(t.minPrice);
@@ -100,8 +100,9 @@
   }
 
   function render() {
-    var typeRows = Object.keys(CG.CATEGORY_LABELS).map(function (id) {
-      return { key: id, label: CG.CATEGORY_LABELS[id], count: state.categoryCounts[id] || 0, on: !!state.type[id] };
+    // Категории — из админки (только активные и непустые), в её порядке.
+    var typeRows = state.categories.filter(function (c) { return c.count > 0 || state.type[c.id]; }).map(function (c) {
+      return { key: c.id, label: c.name, count: c.count, on: !!state.type[c.id] };
     });
     var regionRows = Object.keys(CG.REGION_LABELS).map(function (id) {
       return { key: id, label: CG.REGION_LABELS[id], count: state.regionCounts[id] || 0, on: !!state.region[id] };
@@ -127,7 +128,10 @@
     var activeTypes = Object.keys(state.type).filter(function (k) { return state.type[k]; });
     var activeRegions = Object.keys(state.region).filter(function (k) { return state.region[k]; });
     var filtered = state.teas;
-    if (activeTypes.length) filtered = filtered.filter(function (t) { return activeTypes.indexOf(t.category) !== -1; });
+    if (activeTypes.length) filtered = filtered.filter(function (t) {
+      var cats = t.categories && t.categories.length ? t.categories : [t.category];
+      return cats.some(function (c) { return activeTypes.indexOf(c) !== -1; });
+    });
     if (activeRegions.length) filtered = filtered.filter(function (t) { return activeRegions.indexOf(t.region) !== -1; });
 
     document.getElementById('total-count').textContent = state.teas.length + ' товаров';
@@ -162,8 +166,8 @@
     state.teas = teas;
     // catalog.html?type=teaware — сразу нужный раздел (ссылка «Посуда» в шапке).
     var qType = new URLSearchParams(location.search).get('type');
-    if (qType && CG.CATEGORY_LABELS[qType]) state.type[qType] = true;
-    categories.forEach(function (c) { state.categoryCounts[c.id] = c.count; });
+    state.categories = categories;
+    if (qType && categories.some(function (c) { return c.id === qType; })) state.type[qType] = true;
     regions.forEach(function (r) { state.regionCounts[r.id] = r.count; });
     render();
   }).catch(function () {

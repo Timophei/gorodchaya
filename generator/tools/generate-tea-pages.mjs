@@ -192,10 +192,60 @@ function pageHtml(tea, allTeas) {
   );
 }
 
-function buildSitemap(teas) {
+// Страница категории /catalog/<id>: название, картинка, описание, карточки
+// чаёв и SEO-текст — сразу в разметке (для Яндекса), «в корзину» — через common.js.
+function categoryPageHtml(cat, teas) {
+  const title = CG.escapeHtml(cat.seoTitle || (cat.name + ' — купить в «Чайном городе»'));
+  const descText = cat.seoDescription || stripTags(cat.description).slice(0, 155) || (cat.name + ' в каталоге «Чайного города».');
+  const description = CG.escapeHtml(descText);
+  const canonical = SITE_ORIGIN + '/catalog/' + cat.id;
+  const img = cat.imageUrl ? (/^https?:/.test(cat.imageUrl) ? cat.imageUrl : SITE_ORIGIN + '/' + cat.imageUrl.replace(/^\/+/, '')) : SITE_ORIGIN + '/assets/og-share.jpg';
+  const cards = teas.map((t) => CG.relatedCardHtml(t, CG.defaultTeaHref)).join('');
+  const ld = {
+    '@context': 'https://schema.org/', '@type': 'CollectionPage', name: cat.name, description: descText, url: canonical,
+    mainEntity: { '@type': 'ItemList', itemListElement: teas.map((t, i) => ({ '@type': 'ListItem', position: i + 1, url: SITE_ORIGIN + '/' + CG.defaultTeaHref(t), name: t.name })) },
+  };
+  return (
+    '<!doctype html>\n<html lang="ru">\n<head>\n<meta charset="utf-8">\n<base href="/">\n' +
+    '<title>' + title + '</title>\n' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
+    '<meta name="description" content="' + description + '">\n' +
+    '<link rel="canonical" href="' + canonical + '">\n' +
+    '<meta property="og:type" content="website">\n<meta property="og:title" content="' + title + '">\n' +
+    '<meta property="og:description" content="' + description + '">\n<meta property="og:url" content="' + canonical + '">\n' +
+    '<meta property="og:image" content="' + CG.escapeHtml(img) + '">\n' +
+    FONT_LINK + '\n<link rel="stylesheet" href="assets/style.css?v=' + ASSET_VERSION + '">\n' +
+    '<script type="application/ld+json">' + embeddedJson(ld) + '</script>\n' + METRIKA_SNIPPET + '\n' +
+    '<style>.cat-hero{display:flex;gap:28px;align-items:center;flex-wrap:wrap;margin:8px 0 28px}.cat-hero img{width:180px;height:180px;object-fit:cover;border-radius:18px}' +
+    '.cat-hero .cat-desc{flex:1;min-width:260px;font-size:15px;line-height:1.6;color:#3F4A3C}.cat-seo{font-size:14.5px;line-height:1.65;color:#3F4A3C;max-width:820px;margin-top:40px}</style>\n' +
+    '</head>\n<body data-nav="catalog">\n' +
+    '<div id="site-header">' + CG.headerHtml('catalog') + '</div>\n' +
+    '<div class="crumbs wrap">\n  <a href="index.html">Главная</a> &nbsp;/&nbsp;\n  <a href="catalog.html">Каталог</a> &nbsp;/&nbsp;\n' +
+    '  <span class="current">' + CG.escapeHtml(cat.name) + '</span>\n</div>\n' +
+    '<main class="wrap container-pad" style="padding-top:16px;padding-bottom:56px;">\n' +
+    '<h1 class="serif section-title" style="margin:8px 0 16px;">' + CG.escapeHtml(cat.name) + '</h1>\n' +
+    ((cat.imageUrl || cat.description) ? '<div class="cat-hero">' + (cat.imageUrl ? '<img src="' + CG.escapeHtml(cat.imageUrl) + '" alt="' + CG.escapeHtml(cat.name) + '">' : '') +
+      (cat.description ? '<div class="cat-desc">' + cat.description + '</div>' : '') + '</div>\n' : '') +
+    '<div class="grid-4" id="cat-grid">' + cards + '</div>\n' +
+    '<div style="margin-top:22px;"><a href="catalog.html?type=' + encodeURIComponent(cat.id) + '">Весь каталог с фильтрами →</a></div>\n' +
+    (cat.seoText ? '<div class="cat-seo">' + cat.seoText + '</div>\n' : '') +
+    '</main>\n' +
+    '<div id="site-footer">' + CG.footerHtml() + '</div>\n' +
+    '<script src="assets/common.js?v=' + ASSET_VERSION + '"></script>\n' +
+    '<script>\nwindow.__TEAS__ = ' + embeddedJson(teas) + ';\n' +
+    '(function () {\n  function boot() {\n    var byId = {}; window.__TEAS__.forEach(function (t) { byId[t.id] = t; });\n' +
+    '    document.querySelectorAll("#cat-grid [data-add]").forEach(function (b) {\n' +
+    '      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); var t = byId[b.getAttribute("data-add")]; if (t) window.ChayGorod.cart.add(t, null, 1); });\n' +
+    '    });\n  }\n  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();\n})();\n</script>\n' +
+    '</body>\n</html>\n'
+  );
+}
+
+function buildSitemap(teas, categories) {
   const staticUrls = ['/', '/catalog.html', '/guild.html', '/about.html'];
   const teaUrls = teas.filter((t) => t.slug).map((t) => '/' + CG.defaultTeaHref(t));
-  const urls = staticUrls.concat(teaUrls);
+  const catUrls = (categories || []).map((c) => '/catalog/' + c.id);
+  const urls = staticUrls.concat(catUrls, teaUrls);
   const today = new Date().toISOString().slice(0, 10);
   const body = urls.map((u) =>
     '  <url><loc>' + SITE_ORIGIN + u + '</loc><lastmod>' + today + '</lastmod></url>'
@@ -270,8 +320,29 @@ async function main() {
   }
   if (removed) log('Удалено устаревших страниц товара: ' + removed);
 
-  fs.writeFileSync(path.join(OUT_DIR, 'sitemap.xml'), buildSitemap(teas));
-  log('sitemap.xml обновлён (' + (teas.length + 4) + ' адресов).');
+  // Страницы категорий: OUT_DIR/catalog/<id>.html, адрес — /catalog/<id>.
+  // Только активные и непустые; остальные файлы убираем.
+  let categories = [];
+  try { categories = (await fetchJson(API_BASE + '/categories')).filter((c) => c.count > 0); }
+  catch (e) { log('Категории не получены: ' + e.message); }
+  const catDir = path.join(OUT_DIR, 'catalog');
+  fs.mkdirSync(catDir, { recursive: true });
+  const catFiles = new Set();
+  for (const cat of categories) {
+    const inCat = teas.filter((t) => (t.categories && t.categories.length ? t.categories : [t.category]).includes(cat.id));
+    const fileName = cat.id + '.html';
+    const tmp = path.join(catDir, '.' + fileName + '.tmp');
+    fs.writeFileSync(tmp, categoryPageHtml(cat, inCat));
+    fs.renameSync(tmp, path.join(catDir, fileName));
+    catFiles.add(fileName);
+  }
+  for (const entry of fs.readdirSync(catDir)) {
+    if (/\.html$/.test(entry) && !catFiles.has(entry)) fs.unlinkSync(path.join(catDir, entry));
+  }
+  log('Записано страниц категорий: ' + catFiles.size);
+
+  fs.writeFileSync(path.join(OUT_DIR, 'sitemap.xml'), buildSitemap(teas, categories));
+  log('sitemap.xml обновлён (' + (teas.length + categories.length + 4) + ' адресов).');
 
   ensureRobotsTxt();
   log('Готово.');

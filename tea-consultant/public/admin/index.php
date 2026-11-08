@@ -132,10 +132,11 @@ function fetchOrders(): array
 
 require __DIR__ . '/products.php';
 require __DIR__ . '/settings.php';
+require __DIR__ . '/categories.php';
 
 // ---------- Параметры запроса ----------
 
-$tab = in_array($_GET['tab'] ?? '', ['orders', 'users', 'products', 'settings'], true) ? $_GET['tab'] : 'dialogs';
+$tab = in_array($_GET['tab'] ?? '', ['orders', 'users', 'products', 'categories', 'settings'], true) ? $_GET['tab'] : 'dialogs';
 // Карточка одного пользователя: ?tab=users&u=<ключ> (u_<telegramId> или v_<метка браузера>).
 $userKey = ($tab === 'users' && isset($_GET['u']) && is_string($_GET['u']) && preg_match('/^[uvp]_[A-Za-z0-9_-]{1,80}$/', $_GET['u'])) ? $_GET['u'] : null;
 
@@ -520,7 +521,7 @@ function saleOptions(array $teas): array
             $st = $p['stock'] ?? null;
             $label = ($t['name'] ?? '') . ($w ? ' · ' . $w . ' г' : '') . ' — ' . number_format((int) ($p['price'] ?? 0), 0, '', ' ') . ' ₽'
                 . ' (' . ($st === null ? 'остаток не ведётся' : 'ост. ' . $st) . ')';
-            $groups[PRODUCT_CATEGORIES[$t['category'] ?? ''] ?? 'Другое'][] = [
+            $groups[productsCategories()[$t['category'] ?? ''] ?? 'Другое'][] = [
                 'value' => ($t['id'] ?? '') . '|' . $w, 'label' => $label, 'price' => (int) ($p['price'] ?? 0),
             ];
         }
@@ -556,6 +557,7 @@ function orderPersonKey(array $o): ?string
 
 $productsState = $tab === 'products' ? productsHandle() : null;
 $settingsState = $tab === 'settings' ? settingsHandle() : null;
+$categoriesState = $tab === 'categories' ? categoriesHandle() : null;
 
 // ---------- Рендер ----------
 
@@ -759,6 +761,8 @@ header('Cache-Control: no-store');
           </div>
         <?php elseif ($tab === 'products'): ?>
           <div class="sub"><?= $productsState['tea'] !== null ? 'Карточка чая' : ($productsState['isNew'] ? 'Новый чай' : 'Чаёв: ' . count($productsState['list'])) ?></div>
+        <?php elseif ($tab === 'categories'): ?>
+          <div class="sub"><?= $categoriesState['cat'] !== null ? 'Категория' : ($categoriesState['isNew'] ? 'Новая категория' : 'Категорий: ' . count($categoriesState['list'])) ?></div>
         <?php elseif ($tab === 'settings'): ?>
           <div class="sub">Доставка, уведомления, подсказки адреса</div>
         <?php elseif ($tab === 'users'): ?>
@@ -774,6 +778,7 @@ header('Cache-Control: no-store');
       <a class="tab <?= $tab === 'orders' ? 'active' : '' ?>" href="?tab=orders">Заказы</a>
       <a class="tab <?= $tab === 'users' ? 'active' : '' ?>" href="?tab=users">Пользователи</a>
       <a class="tab <?= $tab === 'products' ? 'active' : '' ?>" href="?tab=products">Продукты</a>
+      <a class="tab <?= $tab === 'categories' ? 'active' : '' ?>" href="?tab=categories">Категории</a>
       <a class="tab <?= $tab === 'settings' ? 'active' : '' ?>" href="?tab=settings">Настройки</a>
     </div>
   </div>
@@ -924,6 +929,11 @@ header('Cache-Control: no-store');
 <?php elseif ($tab === 'products'): ?>
 
   <?php productsRender($productsState); ?>
+
+<?php elseif ($tab === 'categories'): ?>
+
+  <?= settingsCss() ?><?= categoriesCss() ?>
+  <?php categoriesRender($categoriesState); ?>
 
 <?php elseif ($tab === 'settings'): ?>
 

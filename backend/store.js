@@ -19,12 +19,13 @@ function load() {
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === 'object' && parsed.teas) {
       if (!Array.isArray(parsed.removed)) parsed.removed = [];
+      if (!parsed.categories || typeof parsed.categories !== 'object') parsed.categories = {};
       return parsed;
     }
   } catch {
     // no file yet, or corrupt — start fresh
   }
-  return { teas: {}, removed: [] };
+  return { teas: {}, removed: [], categories: {} };
 }
 
 const state = load();
@@ -87,4 +88,56 @@ function getByExternalId(num) {
   return getAll().find((t) => String(t.externalId) === String(num)) || null;
 }
 
-module.exports = { getAll, getById, getBySlug, getByOldSlug, getByExternalId, upsert, remove, isRemoved, STORE_PATH };
+// --- категории ---
+// Категория — раздел витрины («Зелёный чай», «Коллекция НГ 2027»): название,
+// описание, картинка, SEO, активность. Чай может входить в несколько:
+// tea.categories — все его категории, tea.category — основная (по ней
+// подпись на карточке и «похожие чаи»), она всегда есть и в categories.
+function getCategories() {
+  return Object.values(state.categories)
+    .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || (a.name || '').localeCompare(b.name || '', 'ru'));
+}
+
+function getCategory(id) {
+  return state.categories[id] || null;
+}
+
+function upsertCategory(id, patch) {
+  const existing = state.categories[id];
+  state.categories[id] = {
+    ...existing, ...patch, id,
+    createdAt: existing ? existing.createdAt : new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  persist();
+  return state.categories[id];
+}
+
+function removeCategory(id) {
+  if (!state.categories[id]) return false;
+  delete state.categories[id];
+  persist();
+  return true;
+}
+
+function teaCategories(t) {
+  const list = Array.isArray(t.categories) ? t.categories.slice() : [];
+  if (t.category && !list.includes(t.category)) list.unshift(t.category);
+  return list;
+}
+
+// Несколько изменений чаёв одной записью на диск (миграция, удаление категории).
+function patchTeasBulk(fn) {
+  let n = 0;
+  for (const t of Object.values(state.teas)) {
+    const patch = fn(t);
+    if (patch) { Object.assign(t, patch, { updatedAt: new Date().toISOString() }); n += 1; }
+  }
+  if (n) persist();
+  return n;
+}
+
+module.exports = {
+  getAll, getById, getBySlug, getByOldSlug, getByExternalId, upsert, remove, isRemoved, STORE_PATH,
+  getCategories, getCategory, upsertCategory, removeCategory, teaCategories, patchTeasBulk,
+};

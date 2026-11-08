@@ -30,8 +30,43 @@ function visitorIdOf(req) {
   return visitorStore.isValidId(vid) ? vid : null;
 }
 
-// teaware — посуда: продаётся поштучно, у цены weightGrams = 0.
-const CATEGORIES = ['green', 'black', 'oolong', 'puer', 'white', 'yellow', 'herbal', 'teaware'];
+// Категории, с которых начинался каталог. Теперь категории — отдельная
+// сущность (store.getCategories, админка → «Категории»); этот список нужен
+// только для разовой миграции старых данных. teaware — посуда: продаётся
+// поштучно, у цены weightGrams = 0.
+const DEFAULT_CATEGORIES = [
+  ['green', 'Зелёный чай'], ['black', 'Чёрный чай'], ['oolong', 'Улун'], ['puer', 'Пуэр'],
+  ['white', 'Белый чай'], ['yellow', 'Жёлтый чай'], ['herbal', 'Травяной сбор'], ['teaware', 'Посуда'],
+];
+const CATEGORY_ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+// Разовая миграция: создать категории из старого списка и у каждого чая
+// завести массив categories. Повторный запуск ничего не меняет.
+function ensureCategories() {
+  if (!store.getCategories().length) {
+    const labels = new Map();
+    for (const t of store.getAll()) if (t.category && t.categoryLabel && t.categoryLabel !== t.category) labels.set(t.category, t.categoryLabel);
+    DEFAULT_CATEGORIES.forEach(([id, name], i) => {
+      store.upsertCategory(id, {
+        name: labels.get(id) || name, description: '', imageUrl: null,
+        seoTitle: null, seoDescription: null, seoText: '', active: true, sortOrder: (i + 1) * 10,
+      });
+    });
+    // Категории, которые есть у чаёв, но которых не было в старом списке.
+    for (const t of store.getAll()) {
+      if (t.category && !store.getCategory(t.category) && CATEGORY_ID_RE.test(t.category)) {
+        store.upsertCategory(t.category, { name: t.categoryLabel || t.category, description: '', imageUrl: null, seoTitle: null, seoDescription: null, seoText: '', active: true, sortOrder: 900 });
+      }
+    }
+  }
+  store.patchTeasBulk((t) => (Array.isArray(t.categories) ? null : { categories: t.category ? [t.category] : [] }));
+}
+ensureCategories();
+
+function categoryName(id) {
+  const c = id ? store.getCategory(id) : null;
+  return c ? c.name : id;
+}
 const REGIONS = ['china', 'japan', 'india', 'russia', 'thailand'];
 
 // Write endpoints (POST/DELETE) require this key in an `x-api-key` header.
@@ -82,7 +117,9 @@ function withMinPrice(tea) {
   if (!tea) return tea;
   const prices = tea.prices || [];
   const minPrice = prices.length ? Math.min(...prices.map((p) => p.price)) : null;
-  return { ...tea, minPrice };
+  // Подпись категории — всегда по текущему названию категории (переименовали
+  // в админке — поменялось у всех чаёв сразу).
+  return { ...tea, minPrice, categories: store.teaCategories(tea), categoryLabel: categoryName(tea.category) || tea.categoryLabel };
 }
 
 // Parses a `featured`-style boolean query param strictly. Anything other
@@ -114,7 +151,7 @@ app.get('/api/teas', (req, res) => {
   const qLower = q ? q.toLowerCase() : null;
 
   let teas = store.getAll();
-  if (category) teas = teas.filter((t) => t.category === category);
+  if (category) teas = teas.filter((t) => store.teaCategories(t).includes(category));
   if (region) teas = teas.filter((t) => t.region === region);
   if (featured !== undefined) teas = teas.filter((t) => !!t.featured === featured);
   if (qLower) teas = teas.filter((t) => t.name && t.name.toLowerCase().includes(qLower));
@@ -134,13 +171,27 @@ app.get('/api/teas/:id', (req, res) => {
   res.json(publicTea(withMinPrice(tea), req));
 });
 
-app.get('/api/categories', (_req, res) => {
+// Категории для витрины: только активные, в порядке из админки, со счётчиком
+// чаёв. С ключом админки — все, включая выключенные.
+function categoryOut(c, counts) {
+  return { ...c, label: c.name, count: counts.get(c.id) || 0 };
+}
+function categoryCounts() {
   const counts = new Map();
-  for (const t of store.getAll()) {
-    if (!counts.has(t.category)) counts.set(t.category, { id: t.category, label: t.categoryLabel || t.category, count: 0 });
-    counts.get(t.category).count += 1;
-  }
-  res.json([...counts.values()].sort((a, b) => b.count - a.count));
+  for (const t of store.getAll()) for (const id of store.teaCategories(t)) counts.set(id, (counts.get(id) || 0) + 1);
+  return counts;
+}
+app.get('/api/categories', (req, res) => {
+  const admin = req.get('x-api-key') === API_KEY;
+  const counts = categoryCounts();
+  res.json(store.getCategories().filter((c) => admin || c.active).map((c) => categoryOut(c, counts)));
+});
+
+app.get('/api/categories/:id', (req, res) => {
+  const c = store.getCategory(req.params.id);
+  const admin = req.get('x-api-key') === API_KEY;
+  if (!c || (!c.active && !admin)) return res.status(404).json({ error: 'not_found' });
+  res.json(categoryOut(c, categoryCounts()));
 });
 
 app.get('/api/regions', (_req, res) => {
@@ -175,7 +226,9 @@ const TeaSchema = z.object({
   externalId: z.string().max(50).nullable().optional(),
   name: z.string().trim().min(1).max(200),
   subtitle: z.string().max(300).nullable().optional(),
-  category: z.enum(CATEGORIES),
+  // Основная категория (подпись на карточке) и все категории чая.
+  category: z.string().trim().min(1).max(60),
+  categories: z.array(z.string().trim().max(60)).max(30).optional(),
   categoryLabel: z.string().max(100).optional(),
   region: z.enum(REGIONS).nullable().optional(),
   regionLabel: z.string().max(200).nullable().optional(),
@@ -243,11 +296,15 @@ app.post('/api/teas', requireApiKey, (req, res) => {
     patch.oldSlugs = [...new Set([...(existing.oldSlugs || []), existing.slug])].filter((x) => x !== patch.slug);
   }
 
-  // categoryLabel defaults to the raw category if neither the request nor
-  // the existing row already has a nicer label.
-  if (!patch.categoryLabel) {
-    patch.categoryLabel = existing?.categoryLabel || patch.category;
+  // Категории: основная обязана существовать; список — только существующие,
+  // основная всегда в нём (первой).
+  if (!store.getCategory(patch.category)) {
+    return res.status(400).json({ error: 'validation_failed', details: [{ path: ['category'], message: `нет категории «${patch.category}»` }] });
   }
+  const cats = patch.categories !== undefined ? patch.categories : (existing ? store.teaCategories(existing) : []);
+  patch.categories = [patch.category, ...cats.filter((c) => c !== patch.category && store.getCategory(c))]
+    .filter((c, i, a) => a.indexOf(c) === i);
+  patch.categoryLabel = categoryName(patch.category);
   const saved = store.upsert(id, patch);
   catalog.onCatalogChanged(PORT);
   res.status(201).json(withMinPrice(saved));
@@ -299,6 +356,100 @@ app.post('/api/admin/catalog-sync', requireApiKey, (_req, res) => {
   catalog.syncNow(PORT);
   res.status(202).json({ ok: true });
 });
+
+// --- категории (админка → «Категории») ---
+const CategorySchema = z.object({
+  id: z.string().trim().max(60).regex(CATEGORY_ID_RE, 'адрес: латиница в нижнем регистре, цифры и дефисы').optional().or(z.literal('')),
+  name: z.string().trim().min(1).max(100),
+  description: z.string().max(5000).optional(),
+  imageUrl: z.string().max(1000).nullable().optional(),
+  seoTitle: z.string().trim().max(120).nullable().optional(),
+  seoDescription: z.string().trim().max(300).nullable().optional(),
+  seoText: z.string().max(20000).optional(),
+  active: z.boolean().optional(),
+  sortOrder: z.coerce.number().int().min(-100000).max(100000).optional(),
+  // Какие чаи в категории — весь список целиком (удобно для подборок).
+  teaIds: z.array(z.string().max(100)).max(1000).optional(),
+});
+
+app.post('/api/admin/categories', requireApiKey, (req, res) => {
+  const parsed = CategorySchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'validation_failed', details: parsed.error.issues });
+  let { id, teaIds, ...patch } = parsed.data;
+  const isNew = !id || !store.getCategory(id);
+  if (!id) {
+    const base = catalog.slugify(patch.name) || 'category';
+    id = base;
+    for (let i = 2; store.getCategory(id); i += 1) id = `${base}-${i}`;
+  }
+  if (isNew) {
+    patch = { description: '', imageUrl: null, seoTitle: null, seoDescription: null, seoText: '', active: true, ...patch };
+    if (patch.sortOrder === undefined) patch.sortOrder = Math.max(0, ...store.getCategories().map((c) => c.sortOrder || 0)) + 10;
+  }
+  const saved = store.upsertCategory(id, patch);
+  if (teaIds) {
+    const want = new Set(teaIds.filter((x) => store.getById(x)));
+    // Убрать из категории можно только если она у чая не основная.
+    const blocked = store.getAll().filter((t) => t.category === id && !want.has(t.id)).map((t) => t.name);
+    store.patchTeasBulk((t) => {
+      const cur = store.teaCategories(t);
+      const has = cur.includes(id);
+      if (want.has(t.id) && !has) return { categories: [...cur, id] };
+      if (!want.has(t.id) && has && t.category !== id) return { categories: cur.filter((c) => c !== id) };
+      return null;
+    });
+    if (blocked.length) {
+      catalog.onCatalogChanged(PORT);
+      return res.status(200).json({ ...categoryOut(saved, categoryCounts()), warning: `Для этих чаёв категория основная, они остались в ней: ${blocked.join(', ')}` });
+    }
+  }
+  catalog.onCatalogChanged(PORT);
+  res.status(isNew ? 201 : 200).json(categoryOut(saved, categoryCounts()));
+});
+
+// Удалить можно, только если категория ни у одного чая не основная;
+// из дополнительных она снимается автоматически.
+app.delete('/api/admin/categories/:id', requireApiKey, (req, res) => {
+  const id = req.params.id;
+  if (!store.getCategory(id)) return res.status(404).json({ error: 'not_found' });
+  const main = store.getAll().filter((t) => t.category === id);
+  if (main.length) {
+    return res.status(409).json({ error: 'category_in_use', message: `Это основная категория у ${main.length} чаёв: ${main.slice(0, 5).map((t) => t.name).join(', ')}${main.length > 5 ? '…' : ''}. Сначала смените им основную категорию.` });
+  }
+  store.patchTeasBulk((t) => (store.teaCategories(t).includes(id) ? { categories: store.teaCategories(t).filter((c) => c !== id) } : null));
+  store.removeCategory(id);
+  catalog.onCatalogChanged(PORT);
+  res.status(204).end();
+});
+
+app.post('/api/admin/categories/:id/photo', requireApiKey,
+  express.raw({ type: Object.keys(IMAGE_TYPES), limit: '10mb' }),
+  (req, res) => {
+    const c = store.getCategory(req.params.id);
+    if (!c) return res.status(404).json({ error: 'not_found' });
+    const ext = Buffer.isBuffer(req.body) ? sniffImage(req.body) : null;
+    if (!ext) return res.status(400).json({ error: 'not_an_image' });
+    const rel = saveUpload('categories', `${c.id}-${Date.now().toString(36)}.${ext}`, req.body);
+    if (!rel) return res.status(500).json({ error: 'write_failed' });
+    const saved = store.upsertCategory(c.id, { imageUrl: rel });
+    catalog.onCatalogChanged(PORT);
+    res.json(categoryOut(saved, categoryCounts()));
+  });
+
+// Файл в папку витрины assets/<dir>/; возвращает относительный путь или null.
+function saveUpload(dir, name, buf) {
+  const fs = require('fs');
+  const path = require('path');
+  try {
+    const full = path.join(catalog.SITE_DIR, 'assets', dir);
+    fs.mkdirSync(full, { recursive: true });
+    fs.writeFileSync(path.join(full, name), buf);
+    return `assets/${dir}/${name}`;
+  } catch (e) {
+    console.error('Загрузка файла:', e.message);
+    return null;
+  }
+}
 
 // --- короткие и старые ссылки (nginx отдаёт сюда /t/<номер>, tea-<id>.html и
 // неизвестные /tea/<адрес>) ---
