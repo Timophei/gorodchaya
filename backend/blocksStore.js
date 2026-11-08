@@ -11,7 +11,7 @@ const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const BLOCKS_PATH = process.env.BLOCKS_STORE_PATH || path.join(DATA_DIR, 'site-blocks.json');
 const HISTORY_MAX = 30;
 
-const BLOCK_NAMES = { header: 'Шапка', chat: 'Главный чат', showcase: 'Первая витрина', guild: 'Чайная гильдия', footer: 'Подвал' };
+const BLOCK_NAMES = { header: 'Шапка', chat: 'Главный чат', productChat: 'Чат в карточке товара', showcase: 'Первая витрина', guild: 'Чайная гильдия', footer: 'Подвал' };
 
 function defaults() {
   return {
@@ -38,6 +38,17 @@ function defaults() {
       ],
       catalogButton: true,
       catalogButtonLabel: 'Сразу в каталог',
+    },
+    // Чат с мастером справа от цены на странице чая. {чай} — название чая.
+    productChat: {
+      enabled: true,
+      title: 'Спросите мастера',
+      greeting: 'Расскажу про «{чай}»: как заварить, с чем пить и на что он похож. Спрашивайте!',
+      chips: [
+        { label: 'Как заварить?', text: '' },
+        { label: 'Чем он особенный?', text: '' },
+        { label: 'Что взять к нему?', text: '' },
+      ],
     },
     showcase: {
       enabled: true,

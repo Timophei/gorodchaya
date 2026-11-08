@@ -9,10 +9,11 @@ declare(strict_types=1);
  * версии можно откатиться. Данные — в бэкенде (data/site-blocks.json).
  */
 
-const BLOCKS_ORDER = ['header', 'chat', 'showcase', 'guild', 'footer'];
+const BLOCKS_ORDER = ['header', 'chat', 'productChat', 'showcase', 'guild', 'footer'];
 const BLOCKS_HINTS = [
     'header' => 'Логотип, пункты меню (порядок, названия, видимость), цитата справа.',
     'chat' => 'Приветствие мастера, быстрые кнопки под полем ввода, кнопка «в каталог».',
+    'productChat' => 'Чат с мастером справа от цены на странице каждого чая: заголовок, приветствие, быстрые вопросы.',
     'showcase' => 'Заголовок, описание и какие чаи показать: популярные, категория или вручную.',
     'guild' => 'Баннер «Чайная гильдия» на главной.',
     'footer' => 'Пункты подвала, контакты, соцсети, реквизиты.',
@@ -44,7 +45,7 @@ function blocksHandle(): array
             exit;
         };
         $res = null;
-        if ($action === 'toggle' && in_array($p['block'] ?? '', ['chat', 'showcase', 'guild', 'footer'], true)) {
+        if ($action === 'toggle' && in_array($p['block'] ?? '', ['chat', 'productChat', 'showcase', 'guild', 'footer'], true)) {
             $b = (string) $p['block'];
             $body = $cfg[$b];
             $body['enabled'] = ($p['enabled'] ?? '') === '1';
@@ -134,6 +135,18 @@ function blocksBodyFromPost(string $block, array $p, array $cur): array
                 'chips' => $chips,
                 'catalogButton' => isset($p['catalogButton']),
                 'catalogButtonLabel' => $txt('catalogButtonLabel') ?: 'Сразу в каталог',
+            ];
+        case 'productChat':
+            $chips = [];
+            foreach (blocksRows($p, 'chips') as $r) {
+                $label = trim((string) ($r['label'] ?? ''));
+                if ($label !== '') { $chips[] = ['label' => $label, 'text' => trim((string) ($r['text'] ?? ''))]; }
+            }
+            return [
+                'enabled' => isset($p['enabled']),
+                'title' => $txt('title') ?: 'Спросите мастера',
+                'greeting' => $txt('greeting'),
+                'chips' => $chips,
             ];
         case 'showcase':
             $order = array_filter(array_map('trim', explode(',', (string) ($p['teaOrder'] ?? ''))));
@@ -314,6 +327,46 @@ function blocksFormChat(array $c, array $state): void
         <h2>Настройки ИИ</h2>
         <p class="set-hint">Характер мастера, модель, подсказки и ограничения — будет отдельным разделом «Настройки ИИ». Пока они задаются в файлах консультанта на сервере.</p>
         <span class="btn btn-light" aria-disabled="true">Скоро</span>
+      </section>
+      <button class="btn" type="submit">Сохранить</button>
+    </form>
+    <?php
+}
+
+function blocksFormProductChat(array $c, array $state): void
+{
+    ?>
+    <form method="post" action="?tab=blocks&b=productChat">
+      <input type="hidden" name="action" value="save">
+      <section class="set-card">
+        <h2>Чат в карточке товара</h2>
+        <p class="set-hint">Окно чата справа от цены на странице каждого чая. Мастер знает, на каком чае стоит покупатель, и отвечает про него. Диалог общий с главной: начал здесь — продолжил там; в «Диалогах» такие вопросы помечены «из карточки чая».</p>
+        <label class="f-check"><input type="checkbox" name="enabled" <?= !empty($c['enabled']) ? 'checked' : '' ?>> Показывать на страницах чаёв</label>
+        <div class="set-grid" style="margin-top:10px;">
+          <label>Заголовок окна<input name="title" value="<?= esc($c['title'] ?? '') ?>" maxlength="60"></label>
+          <label class="wide">Приветствие (<b>{чай}</b> заменится на название)<textarea name="greeting" rows="2" maxlength="500" required><?= esc($c['greeting'] ?? '') ?></textarea></label>
+        </div>
+      </section>
+      <section class="set-card">
+        <h2>Быстрые вопросы</h2>
+        <p class="set-hint">Кнопки под приветствием, до 6. «Что уйдёт мастеру» — пусто: отправится сама надпись.</p>
+        <div class="blk-rows" data-rows data-max="6">
+          <?php foreach ($c['chips'] as $i => $chip): ?>
+            <div class="blk-item" data-row>
+              <input name="chips[<?= $i ?>][label]" value="<?= esc($chip['label']) ?>" maxlength="40" placeholder="Надпись" required>
+              <input name="chips[<?= $i ?>][text]" value="<?= esc($chip['text'] ?? '') ?>" maxlength="300" placeholder="Что уйдёт мастеру (необязательно)" class="grow">
+              <span class="blk-move"><button type="button" data-up>↑</button><button type="button" data-down>↓</button><button type="button" data-del title="Удалить">✕</button></span>
+            </div>
+          <?php endforeach; ?>
+        </div>
+        <button type="button" class="link-btn" data-add-row="chips" style="margin-top:8px;">+ добавить вопрос</button>
+        <template data-row-template="chips">
+          <div class="blk-item" data-row>
+            <input name="chips[__i__][label]" maxlength="40" placeholder="Надпись" required>
+            <input name="chips[__i__][text]" maxlength="300" placeholder="Что уйдёт мастеру (необязательно)" class="grow">
+            <span class="blk-move"><button type="button" data-up>↑</button><button type="button" data-down>↓</button><button type="button" data-del title="Удалить">✕</button></span>
+          </div>
+        </template>
       </section>
       <button class="btn" type="submit">Сохранить</button>
     </form>

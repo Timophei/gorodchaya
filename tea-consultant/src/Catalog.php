@@ -58,6 +58,12 @@ final class Catalog
         return json_encode($this->items, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]';
     }
 
+    /** Товар по номеру (externalId) или null. */
+    public function get(int $id): ?array
+    {
+        return $this->itemsById[$id] ?? null;
+    }
+
     public function exists(int $id): bool
     {
         return isset($this->itemsById[$id]);

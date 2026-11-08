@@ -988,6 +988,12 @@ const BlockSchemas = {
     catalogButton: z.boolean(),
     catalogButtonLabel: Txt(40).min(1),
   }),
+  productChat: z.object({
+    enabled: z.boolean(),
+    title: Txt(60).min(1),
+    greeting: Txt(500).min(1),
+    chips: z.array(z.object({ label: Txt(40).min(1), text: Txt(300) })).max(6),
+  }),
   showcase: z.object({
     enabled: z.boolean(),
     title: Txt(80).min(1),

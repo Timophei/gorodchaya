@@ -643,11 +643,15 @@
       '<div style="width:100%;height:340px;border-radius:20px;box-shadow:0 12px 30px rgba(32,41,31,0.08);' + photoStyleFor(tea) + '"></div>' +
       '</div>' +
       '<div style="flex:1;min-width:280px;">' +
+      '<div class="prod-top"><div class="prod-top-main">' +
       '<div style="display:inline-block;background:#EFE9DC;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600;color:#5B6357;margin-bottom:14px;">' + escapeHtml(categoryLabel(tea)) + (regionLabel(tea) ? ' · ' + escapeHtml(regionLabel(tea)) : '') + '</div>' +
       '<h1 class="serif" style="font-size:38px;font-weight:700;line-height:1.1;margin:0;">' + escapeHtml(tea.name) + '</h1>' +
       '<div style="font-style:italic;color:#5B6357;font-size:15px;margin-top:12px;line-height:1.5;max-width:480px;">' + escapeHtml(tea.subtitle || '') + '</div>' +
       '<div style="display:flex;align-items:baseline;gap:10px;margin-top:22px;">' + priceHtml + '</div>' + stockNote +
       (weightHtml ? '<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">' + weightHtml + '</div>' : '') +
+      // Справа от цены — чат с мастером про этот чай (mountProduct переносит сюда
+      // один и тот же узел после каждой перерисовки, переписка не теряется).
+      '</div><div class="pchat-slot" id="pchat-slot"></div></div>' +
       '<div style="display:flex;align-items:center;gap:16px;margin-top:24px;flex-wrap:wrap;">' +
       '<div style="display:flex;align-items:center;gap:6px;border:1px solid #E3D9C2;border-radius:999px;padding:4px 10px;">' +
       '<button class="qbtn" data-dec>−</button><span style="font-size:15px;font-weight:700;width:20px;text-align:center;display:inline-block;">' + qty + '</span><button class="qbtn" data-inc>+</button>' +
@@ -705,6 +709,108 @@
   // корзина). Работает поверх уже готовой (либо заранее запечённой, либо
   // пустой) разметки — используется и product.html (грузит товар через
   // fetch), и статическими tea-<id>.html (товар уже "вшит" в страницу).
+  // ---------- чат с мастером в карточке товара ----------
+  // Тот же мастер и тот же диалог (cookie tea_cid), что на главной: начали
+  // здесь — продолжили там. Серверу уходит номер чая, чтобы мастер понимал,
+  // о чём речь. Настраивается в админке: «Настройка блоков» → «Чат в карточке».
+  var CHAT_ENDPOINT = '/api/chat.php';
+  var CHAT_COOKIE = 'tea_cid';
+  function readCookie(name) {
+    var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  function writeCookie(name, value, days) {
+    var expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/; SameSite=Lax';
+  }
+
+  var PCHAT_DEFAULT = {
+    enabled: true,
+    title: 'Спросите мастера',
+    greeting: 'Расскажу про «{чай}»: как заварить, с чем пить и на что он похож. Спрашивайте!',
+    chips: [{ label: 'Как заварить?', text: '' }, { label: 'Чем он особенный?', text: '' }, { label: 'Что взять к нему?', text: '' }]
+  };
+
+  function createProductChat(tea, related, cfg) {
+    cfg = cfg || PCHAT_DEFAULT;
+    var byNum = {};
+    (related || []).forEach(function (t) { if (t && t.externalId != null) byNum[String(t.externalId)] = t; });
+    var el = document.createElement('div');
+    el.className = 'pchat';
+    el.innerHTML =
+      '<div class="pchat-head"><img src="assets/avatar-master.jpg" alt="" class="pchat-ava">' +
+      '<div><div class="pchat-title">' + escapeHtml(cfg.title || PCHAT_DEFAULT.title) + '</div>' +
+      '<div class="pchat-sub">про этот чай · отвечает за пару секунд</div></div></div>' +
+      '<div class="pchat-log" aria-live="polite"></div>' +
+      '<div class="pchat-chips"></div>' +
+      '<form class="pchat-form"><input type="text" maxlength="1000" autocomplete="off" placeholder="Ваш вопрос о чае…" aria-label="Вопрос мастеру">' +
+      '<button type="submit" aria-label="Отправить"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"></path><path d="M6 11l6-6 6 6"></path></svg></button></form>' +
+      '<div class="pchat-note">Отвечает нейросеть-помощник мастера (OpenAI). Не пишите сюда личные данные. <a href="privacy.html">Подробнее</a></div>';
+    var log = el.querySelector('.pchat-log');
+    var form = el.querySelector('form');
+    var input = form.querySelector('input');
+    var busy = false;
+
+    function bubble(role, html) {
+      var b = document.createElement('div');
+      b.className = 'pchat-msg ' + role;
+      b.innerHTML = html;
+      log.appendChild(b);
+      log.scrollTop = log.scrollHeight;
+      return b;
+    }
+    function teaLink(t) {
+      return '<a href="' + defaultTeaHref(t) + '">' + escapeHtml(t.name) + '</a>';
+    }
+    function ask(text) {
+      if (busy || !text) return;
+      busy = true;
+      bubble('me', escapeHtml(text));
+      var wait = bubble('master typing', '<span></span><span></span><span></span>');
+      fetch(CHAT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation_id: readCookie(CHAT_COOKIE), message: text, tea_id: tea.externalId != null ? String(tea.externalId) : undefined })
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; });
+      }).then(function (res) {
+        wait.remove();
+        var d = res.d || {};
+        if (!res.ok || !d.success) { bubble('master', escapeHtml(d.error || 'Мастер сейчас недоступен. Попробуйте чуть позже.')); return; }
+        if (d.conversation_id) { writeCookie(CHAT_COOKIE, d.conversation_id, 30); track(); }
+        var answer = escapeHtml(String(d.answer || '').replace(/\s*\(ID\s*\d+\)/g, '')).replace(/\n/g, '<br>');
+        // Посоветовал другие чаи — ссылками под ответом.
+        var others = (d.product_ids || []).map(function (id) { return byNum[String(id)]; })
+          .filter(function (t) { return t && t.id !== tea.id; });
+        if (others.length) answer += '<div class="pchat-recs">Мастер советует: ' + others.slice(0, 4).map(teaLink).join(', ') + '</div>';
+        if (d.follow_up_question) answer += '<div class="pchat-follow">' + escapeHtml(d.follow_up_question) + '</div>';
+        bubble('master', answer);
+      }).catch(function () {
+        wait.remove();
+        bubble('master', 'Не получилось связаться с мастером. Проверьте интернет и попробуйте ещё раз.');
+      }).then(function () { busy = false; });
+    }
+
+    bubble('master', escapeHtml((cfg.greeting || PCHAT_DEFAULT.greeting).replace(/\{чай\}/g, tea.name)));
+    el.querySelector('.pchat-chips').innerHTML = (cfg.chips || []).map(function (c, i) {
+      return '<button type="button" class="pchat-chip" data-i="' + i + '">' + escapeHtml(c.label) + '</button>';
+    }).join('');
+    el.querySelectorAll('.pchat-chip').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var c = cfg.chips[Number(b.getAttribute('data-i'))];
+        ask((c.text || c.label).trim());
+      });
+    });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      ask(text);
+    });
+    return el;
+  }
+
   function mountProduct(tea, related, opts) {
     if (typeof document === 'undefined') return;
     opts = opts || {};
@@ -713,6 +819,18 @@
     var crumbEl = document.getElementById(opts.crumbElId || 'crumb-name');
     var relatedGrid = document.getElementById(opts.relatedGridId || 'related-grid');
     var state = { weight: weightTiersFor(tea)[0], qty: 1, tab: 'desc', fav: false, added: false };
+    var chatEl = null; // один узел на страницу — переживает перерисовки карточки
+    function placeChat() {
+      var slot = document.getElementById('pchat-slot');
+      if (slot && chatEl && chatEl.parentNode !== slot) slot.appendChild(chatEl);
+    }
+    function setupChat(siteCfg) {
+      var pc = siteCfg && siteCfg.productChat;
+      if (pc && pc.enabled === false) { if (chatEl) { chatEl.remove(); chatEl = null; } return; }
+      if (chatEl) return;
+      chatEl = createProductChat(tea, related, pc);
+      placeChat();
+    }
 
     function draw() {
       if (titleEl) titleEl.textContent = tea.name + ' — Чайный город';
@@ -729,6 +847,7 @@
       });
       var favBtn = document.getElementById('fav-btn');
       if (favBtn) favBtn.addEventListener('click', function () { state.fav = !state.fav; draw(); });
+      placeChat();
       var addBtn = document.getElementById('add-btn');
       if (addBtn) addBtn.addEventListener('click', function () {
         addToCart(tea, state.weight, state.qty);
@@ -740,6 +859,15 @@
     }
 
     draw();
+    // Чат — по настройкам блоков (выключен в админке — не показываем).
+    var cachedCfg = cachedSiteConfig();
+    if (cachedCfg) setupChat(cachedCfg);
+    loadSiteConfig().then(function (cfg) {
+      if (!cfg) { setupChat(null); return; }
+      var off = cfg.productChat && cfg.productChat.enabled === false;
+      if (chatEl && (off || JSON.stringify(cfg.productChat) !== JSON.stringify(cachedCfg && cachedCfg.productChat))) { chatEl.remove(); chatEl = null; }
+      setupChat(cfg);
+    });
 
     if (relatedGrid && related && related.length) {
       var res = relatedMarkup(related, tea);

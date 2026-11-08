@@ -108,6 +108,21 @@ try {
     respond(500, ['success' => false, 'error' => 'Консультант временно недоступен. Попробуйте позже.']);
 }
 
+// Чат в карточке товара присылает номер чая, на странице которого спрашивают.
+// Подсказка модели идёт в текущее сообщение (не в инструкцию — та должна
+// оставаться неизменной ради prompt caching); в историю пишется чистый вопрос.
+$teaId = null;
+$modelMessage = $userMessage;
+if (isset($payload['tea_id']) && (is_int($payload['tea_id']) || (is_string($payload['tea_id']) && ctype_digit($payload['tea_id'])))) {
+    $teaItem = $catalog->get((int) $payload['tea_id']);
+    if ($teaItem !== null) {
+        $teaId = (int) $payload['tea_id'];
+        $modelMessage = '[Покупатель сейчас на странице товара (ID ' . $teaId . ') «' . ($teaItem['name'] ?? '') . '»: '
+            . 'если вопрос не про другой чай, отвечай про этот. Отвечай коротко — это маленькое окно чата рядом с кнопкой «В корзину».]'
+            . "\n" . $userMessage;
+    }
+}
+
 $historyLimit = Config::getInt('HISTORY_MESSAGE_LIMIT', 15);
 $historyStore = new HistoryStore($root . '/storage/conversations');
 $history = $historyStore->loadRecent($conversationId, $historyLimit);
@@ -134,7 +149,7 @@ $client = new OpenAiClient($apiKey, (string) $model, $projectId, $timeout);
 $startedAt = microtime(true);
 
 try {
-    $result = $client->chat($instructions, $history, $userMessage);
+    $result = $client->chat($instructions, $history, $modelMessage);
 } catch (OpenAiException $e) {
     $logger->log([
         'conversation_id' => $conversationId,
@@ -172,6 +187,7 @@ $historyStore->appendExchange($conversationId, $userMessage, $result['answer']);
 $logger->log([
     'conversation_id' => $conversationId,
     'question' => $userMessage,
+    'tea_id' => $teaId,
     'answer' => $result['answer'],
     'follow_up_question' => $followUp,
     'product_ids' => $idCheck['valid'],

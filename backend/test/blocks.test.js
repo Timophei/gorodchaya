@@ -66,6 +66,20 @@ test('Блоки сайта', async (t) => {
     assert.equal((await save('chat', { ...c, greeting: '' })).status, 400, 'пустое приветствие не сохраняется');
   });
 
+  await t.test('чат в карточке товара: по умолчанию включён, настраивается и выключается', async () => {
+    const pc = (await cfg()).productChat;
+    assert.equal(pc.enabled, true);
+    assert.match(pc.greeting, /\{чай\}/);
+    const r = await save('productChat', { enabled: false, title: 'Вопрос мастеру', greeting: 'Про «{чай}» — спрашивайте', chips: [{ label: 'Как заварить?', text: '' }] });
+    assert.equal(r.status, 200);
+    const c = (await cfg()).productChat;
+    assert.equal(c.enabled, false);
+    assert.equal(c.title, 'Вопрос мастеру');
+    const tooMany = Array.from({ length: 7 }, (_, i) => ({ label: `в${i}`, text: '' }));
+    assert.equal((await save('productChat', { ...c, chips: tooMany })).status, 400);
+    await save('productChat', { ...c, enabled: true });
+  });
+
   const showcase = (over) => save('showcase', { enabled: true, title: 'Витрина', description: '', source: 'featured', categoryId: null, teaIds: [], limit: 4, showAllCard: true, ...over });
   const shown = async () => (await s.api('GET', '/site-config/showcase')).body;
 

@@ -700,6 +700,7 @@ header('Cache-Control: no-store');
   .order-card .order-number { font-weight: 700; color: var(--tea-green-dark); }
   .order-card .order-customer { font-size: 14.5px; font-weight: 600; margin-bottom: 2px; }
   .order-card .order-address { font-size: 13.5px; color: var(--tea-text); margin-bottom: 6px; }
+  .msg-src { align-self: flex-end; font-size: 11px; color: var(--tea-muted); margin-bottom: -4px; }
   .dm-badge { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: #e8eef0; color: #2f4a57; margin-right: 4px; }
   .dm-badge.pickup { background: #eef3e6; color: var(--tea-green-dark); }
   .order-card .order-comment { font-size: 13px; color: var(--tea-muted); font-style: italic; margin-bottom: 6px; }
@@ -1119,6 +1120,7 @@ header('Cache-Control: no-store');
       </div>
 
       <?php if (isset($entry['question']) && trim((string) $entry['question']) !== ''): ?>
+        <?php if (!empty($entry['tea_id'])): ?><div class="msg-src">из карточки чая №<?= (int) $entry['tea_id'] ?></div><?php endif; ?>
         <div class="msg msg--user"><?= nl2br(esc($entry['question'])) ?></div>
       <?php endif; ?>
 
