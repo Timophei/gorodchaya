@@ -190,7 +190,9 @@ function onTelegramAuth(user) {
   });
 })();
 
-var ORDER_STATUS_LABELS = { new: 'Новый', processing: 'В работе', done: 'Выполнен', cancelled: 'Отменён' };
+var ORDER_STATUS_LABELS = { new: 'Новый', processing: 'В работе', shipped: 'Отправлен', done: 'Выполнен', cancelled: 'Отменён' };
+// Завершённые — внизу, отдельным списком.
+var ORDER_CLOSED = { done: true, cancelled: true };
 
 function orderCardHtml(CG, o) {
   var itemsHtml = (o.items || []).map(function (it) {
@@ -239,7 +241,12 @@ function orderCardHtml(CG, o) {
             'Заказов пока нет. <a href="catalog.html">Загляните в каталог</a> или <a href="index.html">спросите совета у мастера в чате</a>.</div>';
           return;
         }
-        listEl.innerHTML = orders.map(function (o) { return orderCardHtml(CG, o); }).join('');
+        var active = orders.filter(function (o) { return !ORDER_CLOSED[o.status]; });
+        var closed = orders.filter(function (o) { return ORDER_CLOSED[o.status]; });
+        var head = function (t) { return '<div style="font-size:13px;font-weight:700;color:#5B6357;text-transform:uppercase;letter-spacing:.04em;margin:18px 0 10px;">' + t + '</div>'; };
+        listEl.innerHTML =
+          (active.length ? head('Активные') + active.map(function (o) { return orderCardHtml(CG, o); }).join('') : '') +
+          (closed.length ? head('Завершённые') + closed.map(function (o) { return orderCardHtml(CG, o); }).join('') : '');
       }).catch(function () {
         listEl.innerHTML = '<div class="state-msg" style="text-align:left;padding:20px 0;">Не удалось загрузить заказы. Обновите страницу.</div>';
       });

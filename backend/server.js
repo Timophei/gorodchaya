@@ -494,11 +494,25 @@ app.post('/api/orders', (req, res) => {
   res.status(201).json({ order });
 });
 
+// «Мои заказы» — по тому же правилу, что карточка покупателя в админке:
+// заказы аккаунта, заказы из его браузеров (оформленные до входа) и продажи
+// в магазине с тем же телефоном. Раньше брались только заказы с userId, и
+// покупатель не видел у себя то, что админка ему уже приписала.
 app.get('/api/orders/mine', (req, res) => {
   const user = auth.currentUser(req);
   if (!user) return res.status(401).json({ error: 'not_authenticated' });
-  res.json({ orders: ordersStore.getByUserId(user.id) });
+  const { people } = buildPeople();
+  const person = [...people.values()].find((p) => p.userId === user.id);
+  const orders = (person ? person.orders : ordersStore.getByUserId(user.id))
+    .slice().sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  res.json({ orders: orders.map(publicOrder) });
 });
+
+// Покупателю — без служебных полей (метка браузера, движения остатков).
+function publicOrder(o) {
+  const { visitorId, stockLog, stockWrittenOff, seller, test, ...rest } = o;
+  return rest;
+}
 
 // Для внутренней админки (см. tea-consultant/public/admin/index.php) — тот
 // же x-api-key, что и у /api/teas на запись; страница ходит сюда напрямую
